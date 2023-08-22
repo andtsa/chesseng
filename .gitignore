@@ -11,4 +11,14 @@ Cargo.lock
 **/*.rs.bk
 
 # MSVC Windows builds of rustc generate these, which store debugging information
-*.pdb
+*.ddb
+
+# arbitrary dev resources
+*.txt
+.DS_Store
+.idea/
+
+# LiChess database download, ignore to save space
+test.db
+# opening book PolyGlot file
+openings.bin
