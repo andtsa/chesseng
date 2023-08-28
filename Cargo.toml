@@ -14,9 +14,9 @@ bincode = "1.3"
 [dev-dependencies]
 criterion = "0.5.1"
 
-[[bench]]
-name = "movegen_bench"
-harness = false
+#[[bench]]
+#name = "movegen_bench"
+#harness = false
 
 [[bench]]
 name = "full_gen_bench"

@@ -162,3 +162,41 @@ pub fn dx(deg:f64) ->f64{
     let x : f64 = gn.gen();
     (x-0.5)*deg
 }
+
+impl Clone for Bot {
+    fn clone(&self) -> Self {
+        let mut r = Bot {
+            params: vec![
+                self.params[0],
+                self.params[1],
+                self.params[2],
+                self.params[3],
+                self.params[4],
+                self.params[5],
+                self.params[6],
+                self.params[7],
+                self.params[8],
+                self.params[9],
+                self.params[10],
+                self.params[11],
+                self.params[12],
+                self.params[13],
+                self.params[14],
+                self.params[15],
+                self.params[16]
+            ],
+
+            piece_values_map: HashMap::new(),
+            search_depth: self.search_depth,
+        };
+
+        r.piece_values_map.insert(chess::Piece::Pawn, r.params[0]);
+        r.piece_values_map.insert(chess::Piece::Rook, r.params[1]);
+        r.piece_values_map.insert(chess::Piece::Knight, r.params[2]);
+        r.piece_values_map.insert(chess::Piece::Bishop, r.params[3]);
+        r.piece_values_map.insert(chess::Piece::Queen, r.params[4]);
+        r.piece_values_map.insert(chess::Piece::King, r.params[5]);
+
+        return r;
+    }
+}

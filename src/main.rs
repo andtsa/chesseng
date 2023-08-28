@@ -49,15 +49,15 @@ use ndarray::{arr2, Array2};
 use crate::bot::{Bot, dx};
 use crate::evaluation::{squares_covered_by_side};
 use crate::move_generation::{all_moves, compute_best_move, ordered_moves};
-use crate::opening_book::OpeningBook;
-use crate::read_book::read_binary_opening_book;
+// use crate::opening_book::OpeningBook;
+// use crate::read_book::read_binary_opening_book;
 use crate::util::{fen_to_str, fen_to_string_highlighted, make_cm, Stringify};
 
 
 
 // dev options, discard when finished.
-pub const TEST_RUN : bool = true;
-pub const COMPUTER_ONLY : bool = false;
+pub const TEST_RUN : bool = false;
+pub const COMPUTER_ONLY : bool = true;
 
 pub const COMPUTER_PLAYER : Color = White;
 pub const SEARCH_DEPTH : u32 = 4;
@@ -114,9 +114,9 @@ fn main() {
 
     let mut b1 = Bot::new();
     let mut b2 = Bot::new();
-    // b1.search_depth = 2;
-    // b2.search_depth = 3;
-    b2.mutate(2.0, 0.5);
+    b1.search_depth = 4;
+    b2.search_depth = 3;
+    // b2.mutate(2.0, 0.5);
     // b1.mutate(2.0, 1.0);
     // let mut mut_vec : Vec<f64> = Vec::new();
     // for _ in 0..289 {
@@ -198,7 +198,7 @@ fn main() {
 fn test_run() {
     let bot = Bot::new();
     let mut board : Board = Board::default();
-    let book = OpeningBook::new();
+    // let book = OpeningBook::new();
     // println!("{}", book.next(&board).unwrap().to_string());
 
     // read_binary_opening_book("openings.bin");

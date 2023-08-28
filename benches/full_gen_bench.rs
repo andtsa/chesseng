@@ -25,7 +25,7 @@ fn full_move_generation_benchmark(c : &mut Criterion) {
     );
     c.bench_function(
         "final move generation benchmark",
-        |b| b.iter(|| compute_best_move(&board, 4, &bot))
+        |b| b.iter(|| compute_best_move(&board, 6, &bot))
     );
 }
 

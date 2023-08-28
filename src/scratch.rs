@@ -324,3 +324,30 @@ pub fn printout(&self) -> String {
 //         Some(self.cmp(other))
 //     }
 // }
+//
+//
+//
+// pub fn compute_best_move_untheaded(board : &Board, depth : u32, bot : &Bot) -> ChessMove {
+//     if !IS_THREADED {
+//         return compute_best_move_untheaded(board, depth, bot);
+//     }
+//     let maximizing = board.side_to_move() == White;
+//     let mut best_move = None;
+//     let mut best_value = if maximizing {f64::MIN} else {f64::MAX};
+//     let legal_moves = all_moves(board);
+//
+//     for &mv in &legal_moves {
+//         let bd = board.make_move_new(mv);
+//
+//         let value = minimax(&bd, depth - 1, maximizing, f64::MIN, f64::MAX, bot);
+//
+//         if (value > best_value && maximizing) || (value < best_value && !maximizing) {
+//             best_value = value;
+//             best_move = Some(mv);
+//         }
+//     }
+//
+//     best_move.unwrap() // Return the best move found
+// }
+
+
