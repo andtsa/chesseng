@@ -1,8 +1,12 @@
-use chess::{ChessMove, Color, File, Rank, Square};
+use chess::{Board, ChessMove, Color, File, MoveGen, Rank, Square};
 use chess::File::{A,B,C,D,E,F,G,H};
 use chess::Piece::Queen;
 use chess::Rank::{First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth};
 
+pub fn all_moves(board : &Board) -> Vec<ChessMove> {
+    let mg = MoveGen::new_legal(board);
+    return mg.collect();
+}
 pub fn make_cm(s : &str) -> ChessMove {
     let spl : Vec<&str> = s.split(" ").collect();
     return as_cm(spl[0].parse().unwrap(), spl[1].parse().unwrap());
@@ -162,7 +166,6 @@ pub fn fen_to_string_highlighted(full_fen : String, mv : ChessMove, capture : bo
     return r;
 }
 
-
 pub trait Stringify {
     fn stringify(&self) -> String;
 }
@@ -175,3 +178,4 @@ impl Stringify for Color {
         }.parse().unwrap()
     }
 }
+

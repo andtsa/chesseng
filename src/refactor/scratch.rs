@@ -225,32 +225,32 @@ fn single_piece_value() -> HashMap<Piece, f64> {
     HashMap::from([(Pawn, PAWN_VAL),(Rook, ROOK_VAL),(Knight, KNIGHT_VAL),(Bishop, BISHOP_VAL),(Queen, QUEEN_VAL),(King, KING_VAL)])
 }
 
-pub fn printout(&self) -> String {
-    let mut r = String::new();
-    r += &*("            piece_value_weight: ".to_owned() + &self.piece_value_weight.to_string() + ",
-            n_of_moves_weight: " + &self.n_of_moves_weight.to_string() + ",
-            covered_squares_weight: " + &self.covered_squares_weight.to_string() + ",
-
-            pawn_val: " + &self.pawn_val.to_string() + ",
-            rook_val: " + &self.rook_val.to_string() + ",
-            bishop_val: " + &self.bishop_val.to_string() + ",
-            knight_val: " + &self.knight_val.to_string() + ",
-            king_val: " + &self.king_val.to_string() + ",
-            queen_val: " + &self.queen_val.to_string() + ",
-
-            piece_values_map: HashMap::new(),
-
-            pinning_val: " + &self.pinning_val.to_string() + ",
-            check_val: " + &self.check_val.to_string() + ",
-            check_piece_multiplier: " + &self.check_piece_multiplier.to_string() + ",
-
-            knight_movement_base: " + &self.knight_movement_base.to_string() + ",
-            knight_movement_coef: " + &self.knight_movement_coef.to_string() + ",
-
-            stalemate_val: " + &self.stalemate_val.to_string() + ",
-            checkmate_val: " + &self.checkmate_val.to_string() + ",");
-    return r;
-}
+// pub fn printout(&self) -> String {
+//     let mut r = String::new();
+//     r += &*("            piece_value_weight: ".to_owned() + &self.piece_value_weight.to_string() + ",
+//             n_of_moves_weight: " + &self.n_of_moves_weight.to_string() + ",
+//             covered_squares_weight: " + &self.covered_squares_weight.to_string() + ",
+// 
+//             pawn_val: " + &self.pawn_val.to_string() + ",
+//             rook_val: " + &self.rook_val.to_string() + ",
+//             bishop_val: " + &self.bishop_val.to_string() + ",
+//             knight_val: " + &self.knight_val.to_string() + ",
+//             king_val: " + &self.king_val.to_string() + ",
+//             queen_val: " + &self.queen_val.to_string() + ",
+// 
+//             piece_values_map: HashMap::new(),
+// 
+//             pinning_val: " + &self.pinning_val.to_string() + ",
+//             check_val: " + &self.check_val.to_string() + ",
+//             check_piece_multiplier: " + &self.check_piece_multiplier.to_string() + ",
+// 
+//             knight_movement_base: " + &self.knight_movement_base.to_string() + ",
+//             knight_movement_coef: " + &self.knight_movement_coef.to_string() + ",
+// 
+//             stalemate_val: " + &self.stalemate_val.to_string() + ",
+//             checkmate_val: " + &self.checkmate_val.to_string() + ",");
+//     return r;
+// }
 
 
 
