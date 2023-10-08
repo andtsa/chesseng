@@ -1,3 +1,6 @@
+extern crate chesseng;
+extern crate chess;
+
 use std::str::FromStr;
 use chess::Board;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};

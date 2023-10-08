@@ -22,3 +22,6 @@ Cargo.lock
 test.db
 # opening book PolyGlot file
 openings.bin
+
+# temp files from refactoring
+#temp/

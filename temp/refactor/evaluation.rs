@@ -1,10 +1,3 @@
-use std::collections::{HashMap};
-use std::ops::{BitAnd, BitAndAssign, BitOrAssign, BitXor, Not};
-use chess::{Board, BitBoard, Piece, Color, get_pawn_attacks, get_king_moves, get_rook_moves, get_bishop_moves, get_knight_moves};
-use chess::Color::{Black, White};
-use chess::Piece::{Bishop, King, Knight, Pawn, Queen, Rook};
-use crate::move_generation::all_moves;
-
 
 // /// how many pieces can [side] capture in the next move.
 // fn hanging_pieces(board : Board, side : Color) -> usize {

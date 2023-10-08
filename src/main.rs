@@ -24,8 +24,14 @@ white queens   |  black queens
 white kings    |  black kings
  */
 extern crate chesseng;
+extern crate chess;
 
-use chesseng::{trial, uci};
+use chess::{Board, ChessMove};
+use chesseng::{Engine, experiments, game};
+use chesseng::trial;
+use chesseng::engine;
+use chesseng::game::stockfish_evaluation::{eval, Stockfish};
+use chesseng::util::fen_to_str;
 
 fn main() {
     println!("Sandy Chess Engine v0.0");
@@ -33,11 +39,17 @@ fn main() {
     if args.len() > 1 {
         match args[1].as_str() {
             "test" => { trial::run(); },
-            "uci" => { uci::run(); },
+            "engine" => { engine::play() }
+            // "uci" => { uci::run(); },
+            "try" | "experiment" | "experiments" => { experiments::run() }
+            "play" | "game" => { game::run() }
             _ => {
-
+                println!("Hello World!");
             },
         }
+    } else {
+        println!("Default execution");
+        println!("{}",fen_to_str(Board::default().to_string()));
     }
 }
 

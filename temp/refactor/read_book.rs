@@ -1,7 +1,3 @@
-use std::fs::File;
-use std::io::{Read, Result};
-use bincode;
-// use crate::opening_book::OpeningBook;
 
 pub fn read_binary_opening_book(file_path: &str) {
     let mut file = File::open(file_path);

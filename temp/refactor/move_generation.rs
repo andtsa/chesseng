@@ -1,16 +1,3 @@
-use std::ops::{BitAnd, BitOr, Deref, Not};
-use std::rc::Rc;
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::{Duration, Instant};
-use chess::{BitBoard, Board, ChessMove, EMPTY, MoveGen};
-use chess::BoardStatus::Ongoing;
-use chess::Color::{White};
-use chess::Piece::{Bishop, Knight, Pawn, Queen, Rook};
-use crate::bot::Bot;
-
-const IS_THREADED : bool = true;
-
 
 pub fn ordered_moves(board : &Board) -> Vec<ChessMove> {
     let mut mg = MoveGen::new_legal(board);

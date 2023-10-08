@@ -1,12 +1,12 @@
+extern crate regex;
 use std::process::{Command, Stdio};
 use std::io::{Write, BufRead, BufReader};
 use std::str::FromStr;
 use chess::Board;
 use regex::Regex;
+use crate::Engine;
 
-pub trait Engine {
-    fn evaluate(&self, board : Board) -> f64;
-}
+
 pub struct Stockfish {
     process: std::process::Child,
     stdin: std::process::ChildStdin,
@@ -39,7 +39,7 @@ impl Engine for Stockfish {
         writeln!(self.stdin, "eval {}", board.to_string()).unwrap();
 
         let mut out : f64 = 0.0;
-        let reader = BufReader::new(self.stdout);
+        let reader = BufReader::new(&self.stdout);
         for line in reader.lines() {
             let l = line.unwrap();
             if l.starts_with("Final evaluation") {

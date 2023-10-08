@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use chess::{Board, ChessMove};
-use rand::{random, Rng};
 
 pub struct OpeningBook{
     positions : HashMap<Board, Vec<(ChessMove, f64)>>

@@ -179,27 +179,3 @@ impl Stringify for Color {
     }
 }
 
-/// return the same board but set the side_to_move arg[1]
-/// note: will return none if current player is in check.
-pub fn to_side(board : &Board, side : Color) -> Option<Board> {
-    return if board.side_to_move() == side {
-        Some(Board::from(*board))
-    } else {
-        board.null_move()
-    }
-}
-
-pub fn pick_max(a : f64, b : f64) -> f64 {
-    return if a > b {
-        a
-    } else {
-        b
-    }
-}
-pub fn pick_min(a : f64, b : f64) -> f64 {
-    return if a < b {
-        a
-    } else {
-        b
-    }
-}

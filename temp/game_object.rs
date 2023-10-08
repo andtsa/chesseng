@@ -1,13 +1,15 @@
-use std::io::{Error, ErrorKind};
+use std::io::ErrorKind;
+use std::io::Error;
+use std::io::Result;
 use std::time::Instant;
-use chess::{Board, BoardStatus, ChessMove};
+use chess::{Board, ChessMove, BoardStatus};
 use chess::BoardStatus::Checkmate;
 use chess::Color::{Black, White};
-use crate::bot::Bot;
-use crate::Engine;
-use crate::game::stockfish_evaluation::Stockfish;
-use crate::util::{fen_to_str, fen_to_string_highlighted};
 use chess::Piece::Pawn;
+use crate::{bot, Engine};
+use crate::bot::Bot;
+use crate::game::evaluate::Stockfish;
+use crate::util::{fen_to_str, fen_to_string_highlighted};
 
 pub(crate) struct Game<T : Engine> {
     pub(crate) board : Board,
@@ -31,8 +33,8 @@ impl Game<Stockfish> {
     pub fn new() -> Self {
         Game {
             board : Board::default(),
-            white : Option::from(Bot::new()),
-            black : Option::from(Bot::new()),
+            white : bot::new(),
+            black : bot::new(),
             start : Instant::now(),
             moves_since_capture : 0,
             turn_count : 0,
@@ -53,7 +55,7 @@ impl Game<Stockfish> {
         self.black = Some(bot);
     }
 
-    pub fn null_move(&mut self) -> Result<(),Error> {
+    pub fn null_move(&mut self) -> Result<()> {
         let new_board = self.board.null_move();
         return if new_board == None {
             Err(Error::new(ErrorKind::PermissionDenied, "You are in check!"))
@@ -69,14 +71,14 @@ impl Game<Stockfish> {
         let mut new_move : ChessMove;
         match self.board.side_to_move() {
             White => {
-                if self.white.is_none() {
+                if self.white == None {
                     new_move = self.player_move();
                 } else {
                     new_move = self.bot_move(White);
                 }
             }
             Black => {
-                if self.black.is_none() {
+                if self.black == None {
                     new_move = self.player_move();
                 } else {
                     new_move = self.bot_move(Black);
@@ -98,12 +100,8 @@ impl Game<Stockfish> {
 
         let mut e = 0.0;
         if let Some(engine) = &self.engine {
-            e = engine.evaluate(&self.board);
+            e = engine.evaluate(self.board);
         }
-
-        // finally, we make the move.
-        self.board = self.board.make_move_new(new_move);
-
         println!("\n{}\nTurn #{} Move #{}. [{}{}]", fen_to_string_highlighted(self.board.to_string(), new_move, captures_exist, is_pawn_move), self.turn_count>>1, self.turn_count, if e>0.0{"+"}else{""}, e);
         self.turn_count+=1;
     }
@@ -125,15 +123,6 @@ impl Game<Stockfish> {
         } else if self.board.status() == BoardStatus::Stalemate {
             self.end_game(Some("Stalemate!"));
         }
-    }
-
-    /// Play a game.
-    pub fn play(&mut self) {
-        self.start = Instant::now();
-        while self.ongoing {
-            self.next_move();
-        }
-        println!("Game Ended.");
     }
 }
 

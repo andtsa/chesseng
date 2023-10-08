@@ -2,12 +2,10 @@ use std::io::stdin;
 use std::process::exit;
 use std::time::Instant;
 use chess::{ChessMove, Color};
-use crate::Engine;
-use crate::game::game_object::Game;
-use crate::game::stockfish_evaluation::Stockfish;
+use crate::game::evaluate::Stockfish;
+use crate::game::Game;
 use crate::util::{all_moves, Stringify};
 
-// TODO make these methods not ugly
 impl Game<Stockfish> {
     pub(crate) fn player_move(&self) -> ChessMove {
         let move_list = &all_moves(&self.board);
@@ -31,18 +29,18 @@ impl Game<Stockfish> {
         return mv.clone().unwrap();
     }
 
-    pub(crate) fn bot_move(&mut self, side : Color) -> ChessMove {
+    pub(crate) fn bot_move(&self, side : Color) -> ChessMove {
         let bot = match side {
-            Color::White => self.white.as_mut().unwrap(),
-            Color::Black => self.black.as_mut().unwrap(),
+            White => self.white.as_ref().unwrap(),
+            Black => self.black.as_ref().unwrap(),
         };
         let now = Instant::now();
         println!("computing best move for {}", self.board.side_to_move().stringify());
-        let mut mv = bot.next_move(&self.board);
+        let mv = bot.compute_best_move(self.board.clone(), 5, side);
         let mut repeat_q: bool = !self.board.legal(mv);
         while repeat_q {
             println!("Computer made illegal move {}, retrying", mv.to_string());
-            mv = bot.next_move(&self.board);
+            // mv = compute_best_move(self.board, sd, bot);
             repeat_q = !self.board.legal(mv);
         }
 
