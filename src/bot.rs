@@ -76,8 +76,13 @@ impl Engine for Bot {
         if f64::abs(eval) >= 8.0 {
             return eval;
         }
-
-
+        // good position = good evaluation
+        eval += self.get_piece_position_values(board, White);
+        eval -= self.get_piece_position_values(board, Black);
+        // finally, if the game is getting boring we want to
+        // spice things up by telling everyone they are losing
+        // if they don't capture stuff (kinda)
+        // TODO: this doesn't work in searching i think
         if self.idle_moves > 20 {
             eval *= self.game_state.draw;
         }

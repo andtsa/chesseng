@@ -89,7 +89,7 @@ pub fn fen_to_str(fen : String) -> String {
 
     }
 
-    r = r.replace("p","♟︎");
+    r = r.replace("p","♟");
     r = r.replace("P","♙");
     r = r.replace("r","♜");
     r = r.replace("R","♖");
@@ -148,7 +148,7 @@ pub fn fen_to_string_highlighted(full_fen : String, mv : ChessMove, capture : bo
         }
     }
 
-    r = r.replace("p","♟︎");
+    r = r.replace("p","♟");
     r = r.replace("P","♙");
     r = r.replace("r","♜");
     r = r.replace("R","♖");

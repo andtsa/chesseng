@@ -24,4 +24,4 @@ test.db
 openings.bin
 
 # temp files from refactoring
-#temp/
+temp/

@@ -1,7 +1,10 @@
 #![allow(dead_code, unused)]
+
+use std::ops::{BitAnd, Not};
 use std::process::exit;
-use chess::{Board, ChessMove};
+use chess::{Board, ChessMove, Square, BitBoard};
 use chess::Color::{Black, White};
+use chess::Piece::Pawn;
 use crate::Engine;
 use crate::game::stockfish_evaluation::Stockfish;
 // use crate::bot::Bot;
@@ -10,8 +13,39 @@ use crate::game::stockfish_evaluation::Stockfish;
 
 pub fn run() {
     let board = Board::default();
-    // println!("{:b}", board.get_hash());
+    let mut bb = board.color_combined(White).bitand(board.pieces(Pawn)).to_size(0);
+    let mut i : Vec<u64> = Vec::new();
+    println!("{:b}", bb);
+    println!("{:b}", (bb.not()+1));
+    println!("{:b}", bb&(bb.not()+1)); // least significant bit
+
+    let mut pointer = 0u64;
+    while bb > 0 {
+        if bb & 1<<pointer != 0 {
+            bb = bb ^ 1<<pointer;
+            i.push(pointer);
+        }
+        pointer += 1;
+    }
+
+    println!("{}", board.king_square(White).to_index());
 }
+
+/*
+You already know how to do it by successive division by 2.
+
+x >> 1 is the same as x / 2 for any unsigned integer in C.
+
+If you need to make this faster, you can do a
+"divide and conquer"—shift, say, 4 bits at a time until you
+reach 0, then go back and look at the last 4 bits. That
+means at most 16 shifts and 19 compares instead of 63 of each.
+Whether it's actually faster on a modern CPU, I couldn't say
+without testing. And you can take this a step farther, to
+first do groups of 16, then 4, then 1. Probably not useful
+here, but if you had some 1024-bit integers, it might be
+worth considering.
+ */
 
 // // let bot = Bot::new();
 // let mut board : Board = Board::default();

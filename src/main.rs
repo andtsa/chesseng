@@ -26,11 +26,11 @@ white kings    |  black kings
 extern crate chesseng;
 extern crate chess;
 
-use chess::{Board, ChessMove};
-use chesseng::{Engine, experiments, game};
+use chess::{Board};
+use chesseng::{experiments, game};
 use chesseng::trial;
 use chesseng::engine;
-use chesseng::game::stockfish_evaluation::{eval, Stockfish};
+// use chesseng::game::stockfish_evaluation::{eval, Stockfish};
 use chesseng::util::fen_to_str;
 
 fn main() {
@@ -40,9 +40,10 @@ fn main() {
         match args[1].as_str() {
             "test" => { trial::run(); },
             "engine" => { engine::play() }
+            "default" | "def" | "d" => { game::run_default() }
             // "uci" => { uci::run(); },
             "try" | "experiment" | "experiments" => { experiments::run() }
-            "play" | "game" => { game::run() }
+            "play" | "game" | "continue" | "resume" => { game::run(args) }
             _ => {
                 println!("Hello World!");
             },
