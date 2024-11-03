@@ -4,6 +4,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 use chess::{Board, ChessMove};
 use chess::BoardStatus::Ongoing;
+use rayon::join;
+use rayon::prelude::*;
 use crate::bot::Bot;
 use crate::Engine;
 use crate::engine::move_generation::generate_moves;
@@ -27,18 +29,15 @@ impl Bot {
 
         while Instant::now() < end {
             println!("Searching to a depth of {}", depth);
-            thread::scope(|s| {
-                for &mv in move_list {
+            move_list.iter().for_each(|&mv| {
                     let moves = Arc::clone(&moves);
                     let new_board = board.make_move_new(mv);
-                    s.spawn(move || {
+                    
                         let value = self.minimax(&new_board, end, depth - 1, depth - 1, maximizing, f64::MIN, f64::MAX);
                         if value != None {
-                            moves.lock().unwrap().push((value.unwrap_or(best_value/2.0), mv));
+                            moves.lock().unwrap().push((value.unwrap_or(best_value / 2.0), mv));
                         }
-                    });
-                }
-            });
+                });
             let binding = moves.lock().unwrap();
             for (value, mv) in binding.deref() {
                 if (value > &best_value && maximizing) || (value < &best_value && !maximizing) {

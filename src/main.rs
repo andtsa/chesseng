@@ -28,8 +28,10 @@ extern crate chess;
 
 use chess::{Board};
 use chesseng::{experiments, game};
+use chesseng::bot::Bot;
 use chesseng::trial;
 use chesseng::engine;
+use chesseng::game::game_object::Game;
 // use chesseng::game::stockfish_evaluation::{eval, Stockfish};
 use chesseng::util::fen_to_str;
 
@@ -50,7 +52,11 @@ fn main() {
         }
     } else {
         println!("Default execution");
-        println!("{}",fen_to_str(Board::default().to_string()));
+        let mut game = Game::new();
+        game.set_black(Bot::new().thinking_time(5000));
+        game.set_white(Bot::new().thinking_time(5000));
+        game.play();
+        // println!("{}",fen_to_str(Board::default().to_string()));
     }
 }
 
