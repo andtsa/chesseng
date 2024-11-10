@@ -1,23 +1,51 @@
 [package]
 name = "chesseng"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Andreas Tsatsanis"]
+
+[lib]
+name = "sandy_engine"
+path = "src/engine/lib.rs"
+
+[[bin]]
+name = "chesseng"
+path = "src/sandy/main.rs"
 
 [dependencies]
 chess = "3.2.0"
 rand = "0.8.5"
 bincode = "1.3"
 regex = { version = "1.9.3", features = [] }
-chrono = { version = "0.4.31", features = [] }
+rayon = "1.10.0"
+anyhow = "1.0.92"
+vampirc-uci = {version = "0.11", features = ["chess"]}
+log = { version = "0.4", features = [] }
+colog = "1.3.0"
+chrono = "0.4.38"
+inquire = "0.7.5"
+smallvec = "1.13.2"
+crossbeam-deque = "0.8.5"
+lockfree = "0.5.1"
+once_cell = "1.20.2"
+#jja = { version = "0.9.1", features = [] }
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = { version = "0.5.1", features = [] }
+iai = "0.1.1"
 
-##[[bench]]
-##name = "movegen_bench"
-##harness = false
-#
-#[[bench]]
-#name = "full_gen_bench"
-#harness = false
+[[bench]]
+name = "ngm"
+path = "src/benches/ngm.rs"
+harness = false
+
+[[bench]]
+name = "eval"
+path = "src/benches/eval.rs"
+harness = false
+
+[[bench]]
+name = "eval_grind"
+path = "src/benches/eval_grind.rs"
+harness = false
+
