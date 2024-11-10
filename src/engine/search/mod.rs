@@ -4,17 +4,20 @@ mod nodes;
 mod process;
 
 use std::thread;
+use std::time::Duration;
 use std::time::Instant;
 
 use anyhow::bail;
 use anyhow::Result;
 use chess::ChessMove;
-use lockfree::channel::spsc::{Receiver, Sender};
+use lockfree::channel::spsc::Receiver;
+use lockfree::channel::spsc::Sender;
 use log::debug;
 use log::trace;
 
 use crate::search::moveordering::ordered_moves;
-use crate::search::negamax::{DbOpt, negamax};
+use crate::search::negamax::negamax;
+use crate::search::negamax::DbOpt;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
@@ -37,6 +40,7 @@ pub struct SearchInfo {
     pub depth: Depth,
     pub score: Value,
     pub nodes: usize,
+    pub time: Duration,
 }
 
 pub fn exit_condition() -> bool {
@@ -69,6 +73,8 @@ impl Engine {
 
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
+            let start_time = Instant::now();
+
             while !exit_condition() && target_depth < unsafe { SEARCH_TO } {
                 // go one level deeper
                 target_depth += ONE_PLY;
@@ -89,7 +95,11 @@ impl Engine {
                         target_depth - 1,
                         -beta,
                         -alpha,
-                        DbOpt { debug, trace, ab: true },
+                        DbOpt {
+                            debug,
+                            trace,
+                            ab: true,
+                        },
                     );
 
                     trace!(
@@ -109,22 +119,28 @@ impl Engine {
                         }
                     }
                     alpha = alpha.max(search_result.next_position_value);
-                    
+
                     if exit_condition() {
                         return;
                     }
                 } // we have checked all moves for this depth
 
                 best_move = new_best_move;
-                
+
                 // new depth info
-                info(&mut publisher, target_depth, best_value, total_nodes);
+                info(
+                    &mut publisher,
+                    target_depth,
+                    best_value,
+                    total_nodes,
+                    start_time.elapsed(),
+                );
 
                 if let Some(mv) = best_move {
                     publisher.send(Message::BestMove(mv, best_value)).unwrap();
                 }
             }
-            
+
             debug!("sending best move {:?}", best_move);
 
             if let Some(mv) = best_move {
@@ -136,34 +152,61 @@ impl Engine {
     }
 }
 
-fn info(publisher: &mut Sender<Message>, target_depth: Depth, best_value: Value, total_nodes: usize) {
+fn info(
+    publisher: &mut Sender<Message>,
+    target_depth: Depth,
+    best_value: Value,
+    total_nodes: usize,
+    el: Duration,
+) {
     publisher
         .send(Message::Info(SearchInfo {
             depth: target_depth,
             score: best_value,
             nodes: total_nodes,
+            time: el,
         }))
         .unwrap();
 }
 
 impl DbOpt {
     pub fn ab(v: bool) -> Self {
-        Self { ab: v, debug: false, trace: false }
+        Self {
+            ab: v,
+            debug: false,
+            trace: false,
+        }
     }
-    
+
     pub fn abd(v: bool) -> Self {
-        Self { ab: v, debug: v, trace: false }
+        Self {
+            ab: v,
+            debug: v,
+            trace: false,
+        }
     }
-    
+
     pub fn abt(v: bool) -> Self {
-        Self { ab: v, debug: v, trace: v }
+        Self {
+            ab: v,
+            debug: v,
+            trace: v,
+        }
     }
-    
+
     pub fn dt(v: bool) -> Self {
-        Self { ab: false, debug: v, trace: v }
+        Self {
+            ab: false,
+            debug: v,
+            trace: v,
+        }
     }
-    
+
     pub fn d(v: bool) -> Self {
-        Self { ab: false, debug: v, trace: false }
+        Self {
+            ab: false,
+            debug: v,
+            trace: false,
+        }
     }
 }

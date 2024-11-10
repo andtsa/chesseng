@@ -30,11 +30,17 @@ fn searching() -> bool {
 #[inline(always)]
 #[allow(dead_code)]
 pub fn ngm(pos: Board, to_depth: Depth, alpha: Value, beta: Value) -> SearchResult {
-    negamax(pos, to_depth, alpha, beta, DbOpt {
-        debug: false,
-        trace: false,
-        ab: true,
-    })
+    negamax(
+        pos,
+        to_depth,
+        alpha,
+        beta,
+        DbOpt {
+            debug: false,
+            trace: false,
+            ab: true,
+        },
+    )
 }
 
 pub fn negamax(

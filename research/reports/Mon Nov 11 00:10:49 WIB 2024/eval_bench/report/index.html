@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>eval_bench Summary - Criterion.rs</title>
+    <style type="text/css">
+        body {
+            font: 14px Helvetica Neue;
+            text-rendering: optimizelegibility;
+        }
+
+        .body {
+            width: 960px;
+            margin: auto;
+        }
+
+        a:link {
+            color: #1F78B4;
+            text-decoration: none;
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: 300;
+        }
+
+        h3 {
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        #footer {
+            height: 40px;
+            background: #888;
+            color: white;
+            font-size: larger;
+            font-weight: 300;
+        }
+
+        #footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        #footer p {
+            text-align: center
+        }
+    </style>
+</head>
+
+<body>
+    <div class="body">
+        <h2>eval_bench</h2>
+        <h3>Violin Plot</h3>
+        <a href="violin.svg">
+            <img src="violin.svg" alt="Violin Plot" />
+        </a>
+        <p>This chart shows the relationship between function/parameter and iteration time. The thickness of the shaded
+            region indicates the probability that a measurement of the given function/parameter would take a particular
+            length of time.</p>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_0/report/index.html">
+                <h4>eval_bench/eval_pos_0</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_0/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_0/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_0/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_0/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_1/report/index.html">
+                <h4>eval_bench/eval_pos_1</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_1/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_1/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_1/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_1/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_10/report/index.html">
+                <h4>eval_bench/eval_pos_10</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_10/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_10/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_10/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_10/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_11/report/index.html">
+                <h4>eval_bench/eval_pos_11</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_11/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_11/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_11/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_11/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_12/report/index.html">
+                <h4>eval_bench/eval_pos_12</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_12/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_12/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_12/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_12/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_13/report/index.html">
+                <h4>eval_bench/eval_pos_13</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_13/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_13/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_13/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_13/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_14/report/index.html">
+                <h4>eval_bench/eval_pos_14</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_14/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_14/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_14/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_14/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_15/report/index.html">
+                <h4>eval_bench/eval_pos_15</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_15/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_15/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_15/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_15/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_16/report/index.html">
+                <h4>eval_bench/eval_pos_16</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_16/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_16/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_16/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_16/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_17/report/index.html">
+                <h4>eval_bench/eval_pos_17</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_17/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_17/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_17/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_17/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_18/report/index.html">
+                <h4>eval_bench/eval_pos_18</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_18/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_18/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_18/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_18/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_19/report/index.html">
+                <h4>eval_bench/eval_pos_19</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_19/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_19/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_19/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_19/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_2/report/index.html">
+                <h4>eval_bench/eval_pos_2</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_2/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_2/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_2/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_2/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_20/report/index.html">
+                <h4>eval_bench/eval_pos_20</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_20/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_20/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_20/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_20/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_21/report/index.html">
+                <h4>eval_bench/eval_pos_21</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_21/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_21/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_21/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_21/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_22/report/index.html">
+                <h4>eval_bench/eval_pos_22</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_22/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_22/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_22/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_22/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_23/report/index.html">
+                <h4>eval_bench/eval_pos_23</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_23/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_23/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_23/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_23/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_24/report/index.html">
+                <h4>eval_bench/eval_pos_24</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_24/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_24/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_24/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_24/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_25/report/index.html">
+                <h4>eval_bench/eval_pos_25</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_25/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_25/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_25/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_25/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_26/report/index.html">
+                <h4>eval_bench/eval_pos_26</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_26/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_26/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_26/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_26/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_27/report/index.html">
+                <h4>eval_bench/eval_pos_27</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_27/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_27/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_27/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_27/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_28/report/index.html">
+                <h4>eval_bench/eval_pos_28</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_28/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_28/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_28/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_28/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_29/report/index.html">
+                <h4>eval_bench/eval_pos_29</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_29/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_29/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_29/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_29/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_3/report/index.html">
+                <h4>eval_bench/eval_pos_3</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_3/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_3/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_3/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_3/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_30/report/index.html">
+                <h4>eval_bench/eval_pos_30</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_30/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_30/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_30/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_30/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_31/report/index.html">
+                <h4>eval_bench/eval_pos_31</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_31/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_31/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_31/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_31/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_32/report/index.html">
+                <h4>eval_bench/eval_pos_32</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_32/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_32/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_32/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_32/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_33/report/index.html">
+                <h4>eval_bench/eval_pos_33</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_33/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_33/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_33/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_33/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_34/report/index.html">
+                <h4>eval_bench/eval_pos_34</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_34/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_34/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_34/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_34/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_35/report/index.html">
+                <h4>eval_bench/eval_pos_35</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_35/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_35/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_35/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_35/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_36/report/index.html">
+                <h4>eval_bench/eval_pos_36</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_36/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_36/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_36/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_36/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_37/report/index.html">
+                <h4>eval_bench/eval_pos_37</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_37/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_37/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_37/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_37/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_38/report/index.html">
+                <h4>eval_bench/eval_pos_38</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_38/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_38/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_38/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_38/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_39/report/index.html">
+                <h4>eval_bench/eval_pos_39</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_39/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_39/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_39/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_39/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_4/report/index.html">
+                <h4>eval_bench/eval_pos_4</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_4/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_4/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_4/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_4/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_40/report/index.html">
+                <h4>eval_bench/eval_pos_40</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_40/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_40/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_40/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_40/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_5/report/index.html">
+                <h4>eval_bench/eval_pos_5</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_5/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_5/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_5/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_5/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_6/report/index.html">
+                <h4>eval_bench/eval_pos_6</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_6/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_6/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_6/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_6/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_7/report/index.html">
+                <h4>eval_bench/eval_pos_7</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_7/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_7/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_7/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_7/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_8/report/index.html">
+                <h4>eval_bench/eval_pos_8</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_8/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_8/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_8/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_8/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="plots">
+            <a href="../../eval_bench/eval_pos_9/report/index.html">
+                <h4>eval_bench/eval_pos_9</h4>
+            </a>
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_9/report/pdf.svg">
+                                <img src="../../eval_bench/eval_pos_9/report/pdf_small.svg" alt="PDF of Slope" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="../../eval_bench/eval_pos_9/report/regression.svg">
+                                <img src="../../eval_bench/eval_pos_9/report/regression_small.svg" alt="Regression" width="450"
+                                    height="300" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+    <div id="footer">
+        <p>This report was generated by
+            <a href="https://github.com/bheisler/criterion.rs">Criterion.rs</a>, a statistics-driven benchmarking
+            library in Rust.</p>
+    </div>
+</body>
+
+</html>

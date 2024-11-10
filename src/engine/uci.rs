@@ -40,8 +40,16 @@ impl Engine {
                             depth,
                             nodes,
                             score,
+                            time,
                         }) => {
-                            println!("info depth {} score {}, nodes {}", depth.0, score, nodes);
+                            println!(
+                                "info depth {} score {} nodes {} nps {} time {}",
+                                depth.0,
+                                score,
+                                nodes,
+                                (nodes as f64 / time.as_secs_f64()) as usize,
+                                time.as_millis()
+                            );
                         }
                     },
                     Err(RecvErr::NoMessage) => {

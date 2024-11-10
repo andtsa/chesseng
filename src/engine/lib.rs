@@ -99,7 +99,12 @@ impl Engine {
                 Ok(msg) => match msg {
                     Message::BestMove(mv, _val) => return Ok(mv),
                     Message::BestGuess(_mv, _val) => {}
-                    Message::Info(si) => trace!("depth: {}, score: {}, nodes: {}", si.depth.0, si.score, si.nodes),
+                    Message::Info(si) => trace!(
+                        "depth: {}, score: {}, nodes: {}",
+                        si.depth.0,
+                        si.score,
+                        si.nodes
+                    ),
                 },
                 Err(RecvErr::NoMessage) => {
                     thread::sleep(Duration::from_millis(50));
