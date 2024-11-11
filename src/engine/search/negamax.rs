@@ -8,6 +8,11 @@ use crate::search::SEARCHING;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 use crate::Opts;
+use crate::transposition_table::TranspositionTable;
+
+fn tt() -> Box<TranspositionTable> {
+    todo!()
+}
 
 #[inline(always)]
 fn searching() -> bool {
@@ -27,16 +32,18 @@ pub fn negamax(
     beta: Value,
     db: Opts,
 ) -> SearchResult {
+    let original_alpha = alpha;
+    let tt_box = tt();
+    let entry = tt_box.get(&pos.get_hash());
+    
     let moves = ordered_moves(&pos);
-    if db.st() {
-        println!("ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
-        println!("moves: {}", moves);
-    }
+    
+    db.stp(&format!("ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}"));
+    db.stp(&format!("moves: {}", moves));
+    
     if to_depth == Depth::ZERO || moves.is_empty() {
         let ev = eval(&pos, &moves);
-        if db.st() {
-            println!("return eval: {:?}", ev);
-        }
+        db.stp(&format!("return eval: {:?}", ev));
         return SearchResult {
             pv: vec![],
             next_position_value: ev,
@@ -53,9 +60,7 @@ pub fn negamax(
         total_nodes += deeper.nodes_searched + 1;
 
         if !searching() {
-            if db.st() {
-                println!("searching() == false, breaking early");
-            }
+            db.stp("searching() == false, breaking early");
             deeper.new_eval(eval(&pos, &moves));
             deeper.set_nodes(total_nodes);
             return deeper;
@@ -73,16 +78,12 @@ pub fn negamax(
         alpha = alpha.max(deeper.next_position_value);
 
         if db.ab && alpha >= beta {
-            if db.st() {
-                println!("alpha {alpha:?} >= beta {beta:?}");
-            }
+            db.stp(&format!("alpha {alpha:?} >= beta {beta:?}"));
             break;
         }
     }
 
-    if db.st() {
-        println!("return max_val: {:?}", best);
-    }
+    db.stp(&format!("return max_val: {:?}", best));
 
     SearchResult {
         pv,

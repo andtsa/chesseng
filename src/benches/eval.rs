@@ -4,6 +4,7 @@ use criterion::criterion_main;
 use criterion::Criterion;
 use sandy_engine::search::moveordering::ordered_moves;
 use sandy_engine::util::bench_positions;
+use sandy_engine::Opts;
 
 fn evaluation_benches(c: &mut Criterion) {
     let mut group = c.benchmark_group("eval_bench");
@@ -11,7 +12,11 @@ fn evaluation_benches(c: &mut Criterion) {
     for (p_idx, pos) in bench_positions().iter().enumerate() {
         group.bench_function(format!("eval_pos_{p_idx}"), |b| {
             b.iter(|| {
-                let _ = sandy_engine::evaluation::evaluate(black_box(&pos), &ordered_moves(&pos));
+                let _ = sandy_engine::evaluation::evaluate(
+                    black_box(&pos),
+                    &ordered_moves(&pos),
+                    Opts::new(),
+                );
             })
         });
     }
