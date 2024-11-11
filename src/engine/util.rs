@@ -63,7 +63,7 @@ pub fn bench_positions() -> Vec<Board> {
         .collect()
 }
 
-fn short_benches() -> Vec<Board> {
+pub fn short_benches() -> Vec<Board> {
     let positions = [
         // starting position
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",

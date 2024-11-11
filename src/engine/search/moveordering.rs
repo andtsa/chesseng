@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use chess::BitBoard;
 use chess::Board;
 use chess::ChessMove;
 use chess::MoveGen;
@@ -7,6 +8,34 @@ use chess::Piece;
 use chess::EMPTY;
 
 pub struct MoveOrdering(pub Vec<ChessMove>);
+
+pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
+    let mut moves = vec![];
+    let mut mg = MoveGen::new_legal(b);
+
+    mg.set_iterator_mask(BitBoard::from_square(pv.get_dest()));
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    mg.set_iterator_mask(*b.pieces(Piece::Queen));
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    mg.set_iterator_mask(*b.pieces(Piece::Rook));
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    mg.set_iterator_mask(*b.pieces(Piece::Bishop));
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    mg.set_iterator_mask(*b.pieces(Piece::Knight));
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    mg.set_iterator_mask(*b.pieces(Piece::Pawn));
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    mg.set_iterator_mask(!EMPTY);
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    MoveOrdering(moves)
+}
 
 pub fn ordered_moves(b: &Board) -> MoveOrdering {
     let mut moves = vec![];

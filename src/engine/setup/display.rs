@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use std::fmt::Formatter;
 
-use crate::setup::depth::MAX_PLY;
 use crate::setup::values::Value;
 
 impl Display for Value {

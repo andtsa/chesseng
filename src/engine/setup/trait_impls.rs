@@ -188,3 +188,9 @@ impl Mul<f64> for Value {
         Value((self.0 as f64 * rhs) as i16)
     }
 }
+
+impl From<f64> for Value {
+    fn from(value: f64) -> Self {
+        Value(value as i16)
+    }
+}

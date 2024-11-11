@@ -4,13 +4,14 @@ use chess::Board;
 use chess::Color;
 use chess::Piece;
 
+use crate::evaluation::Interp;
 use crate::setup::values::Value;
 
 pub const MIDDLEGAME_SCORE: Value = Value(6666);
 pub const ENDGAME_SCORE: Value = Value(3333);
 pub const START_COUNT: Value = Value(8810);
 
-pub const PIECE_TYPES: [Piece; 5] = [
+pub const MAT_PIECE_TYPES: [Piece; 5] = [
     Piece::Pawn,
     Piece::Knight,
     Piece::Bishop,
@@ -42,19 +43,17 @@ pub const ENDGAME_VALUES: [Value; 5] = [
     Value(1050), // Queen
 ];
 
-pub fn material(board: &Board, side: Color) -> Value {
+pub fn material(board: &Board, side: Color, interp: Interp) -> Value {
     let mut value = Value::ZERO;
 
-    let (early, mid, end) = interp(board);
-
-    for (idx, piece) in PIECE_TYPES.iter().enumerate() {
+    for (idx, piece) in MAT_PIECE_TYPES.iter().enumerate() {
         let count = board
             .pieces(*piece)
             .bitand(board.color_combined(side))
             .popcnt();
-        value += (INITIAL_VALUES[idx] * Value::from(count)) * early;
-        value += (MIDGAME_VALUES[idx] * Value::from(count)) * mid;
-        value += (ENDGAME_VALUES[idx] * Value::from(count)) * end;
+        value += (INITIAL_VALUES[idx] * Value::from(count)) * interp.0;
+        value += (MIDGAME_VALUES[idx] * Value::from(count)) * interp.1;
+        value += (ENDGAME_VALUES[idx] * Value::from(count)) * interp.2;
     }
 
     value
@@ -65,7 +64,7 @@ pub fn material_count_for_side(pos: &Board, color: Color) -> Value {
     let side = pos.color_combined(color);
     let mut value = Value::ZERO;
 
-    for (idx, piece) in PIECE_TYPES.iter().enumerate() {
+    for (idx, piece) in MAT_PIECE_TYPES.iter().enumerate() {
         let count = pos.pieces(*piece).bitand(side).popcnt();
         value += INITIAL_VALUES[idx] * Value::from(count);
     }
@@ -76,7 +75,7 @@ pub fn material_count_for_side(pos: &Board, color: Color) -> Value {
 pub fn total_material(pos: &Board) -> Value {
     let mut value = Value::ZERO;
 
-    for (idx, piece) in PIECE_TYPES.iter().enumerate() {
+    for (idx, piece) in MAT_PIECE_TYPES.iter().enumerate() {
         let count = pos.pieces(*piece).popcnt();
         value += INITIAL_VALUES[idx] * count;
     }
@@ -88,7 +87,7 @@ pub fn total_material(pos: &Board) -> Value {
 /// the board.
 ///
 /// Returns a multiplier for each (EARLY_VALUES, MG_VALUES, EG_VALUES).
-pub fn interp(pos: &Board) -> (f64, f64, f64) {
+pub fn interpolate(pos: &Board) -> Interp {
     let total_value = total_material(pos).0 as f64;
     // Calculate the midpoint between middlegame and endgame thresholds
     let midpoint = (MIDDLEGAME_SCORE + ENDGAME_SCORE).0 as f64 / 2.0;

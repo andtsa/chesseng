@@ -3,10 +3,10 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 
 pub mod book;
+mod debug;
 pub mod evaluation;
 pub mod search;
 pub mod setup;
-mod threads;
 pub mod timing;
 pub mod transposition_table;
 pub mod uci;
@@ -16,6 +16,7 @@ use std::thread;
 use std::time::Duration;
 use std::time::Instant;
 
+use anyhow::anyhow;
 use anyhow::Result;
 use chess::Board;
 use chess::ChessMove;
@@ -34,20 +35,40 @@ use crate::transposition_table::TranspositionTable;
 
 #[derive(Debug)]
 pub struct Engine {
-    pub debug: bool,
-    pub trace: bool,
+    pub opts: Opts,
     pub board: Board,
     // pub opening_book:
     pub tt: TranspositionTable,
     // pub slaves: SandPool,
 }
 
+/// Debug options for the engine
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Opts {
+    pub search: DebugLevel,
+    pub eval: DebugLevel,
+    pub comm: DebugLevel,
+    pub tt: DebugLevel,
+    pub ab: bool,
+    pub use_pv: bool,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum DebugLevel {
+    Off,
+    Error,
+    Warn,
+    #[default]
+    Info,
+    Debug,
+    Trace,
+}
+
 impl Engine {
     pub fn new() -> Result<Self> {
         info!("creating engine at version {}", env!("CARGO_PKG_VERSION"));
         Ok(Self {
-            debug: false,
-            trace: false,
+            opts: Opts::new(),
             board: Board::default(),
             tt: TranspositionTable::with_incin(SharedIncin::new()),
         })
@@ -94,11 +115,17 @@ impl Engine {
         self.set_search_until(Instant::now() + move_time);
 
         let mut move_listener = self.begin_search()?;
+
+        let mut best = None;
         loop {
             match move_listener.recv() {
                 Ok(msg) => match msg {
-                    Message::BestMove(mv, _val) => return Ok(mv),
-                    Message::BestGuess(_mv, _val) => {}
+                    Message::BestMove(mv) => {
+                        trace!("new bestmove {}/{}", mv.0, mv.1);
+                        best = Some(mv);
+                    }
+                    Message::Ponder(_) => {}
+                    Message::BestGuess(_) => {}
                     Message::Info(si) => trace!(
                         "depth: {}, score: {}, nodes: {}",
                         si.depth.0,
@@ -108,12 +135,19 @@ impl Engine {
                 },
                 Err(RecvErr::NoMessage) => {
                     thread::sleep(Duration::from_millis(50));
-                    if exit_condition() {
-                        self.set_search(false);
-                    }
                 }
                 Err(RecvErr::NoSender) => {
-                    return Err(anyhow::anyhow!("no sender"));
+                    if let Some(mv) = best {
+                        return Ok(mv.0);
+                    } else {
+                        return Err(anyhow!("sender dropped before best move found"));
+                    }
+                }
+            }
+            if exit_condition() {
+                self.set_search(false);
+                if let Some(mv) = best {
+                    return Ok(mv.0);
                 }
             }
         }

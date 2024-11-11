@@ -14,6 +14,8 @@ use log::trace;
 use log::warn;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::Print;
+use sandy_engine::DebugLevel::Debug;
+use sandy_engine::DebugLevel::Info;
 use sandy_engine::Engine;
 use vampirc_uci::parse_one;
 use vampirc_uci::UciMessage;
@@ -39,8 +41,13 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
         match msg {
             UciMessage::Uci => warn!("already in uci mode!"),
             UciMessage::Debug(value) => {
-                engine.debug = value;
-                info!("debug mode: {}, {:?}", value, log::max_level());
+                engine.opts.debug(if value { Debug } else { Info });
+                info!(
+                    "debug mode: {}, log_level: {:?}, engine opts: {:?}",
+                    value,
+                    log::max_level(),
+                    engine.opts
+                );
             }
             UciMessage::IsReady => {
                 // if this is the first time, do setup such as loading the opening book
@@ -68,7 +75,8 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                 for mv in moves {
                     engine.board = engine.board.make_move_new(mv);
                 }
-                if engine.debug {
+                info!("fen position: {}", engine.board);
+                if engine.opts.cd() {
                     info!("{}", engine.board.print());
                     debug!("{}", engine.board);
                 }
@@ -114,7 +122,7 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                 }
                 warn!("unrecognised message: {}", msg);
                 if let Some(err) = err {
-                    if engine.debug {
+                    if engine.opts.cd() {
                         error!("{:?}", err);
                     } else {
                         error!("{}", err);

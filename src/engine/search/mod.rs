@@ -1,37 +1,45 @@
+mod main_search;
 pub mod moveordering;
 pub mod negamax;
-mod nodes;
-mod process;
 
-use std::thread;
+use std::ops::Neg;
 use std::time::Duration;
 use std::time::Instant;
 
-use anyhow::bail;
-use anyhow::Result;
+use chess::Board;
 use chess::ChessMove;
-use lockfree::channel::spsc::Receiver;
 use lockfree::channel::spsc::Sender;
 use log::debug;
-use log::trace;
 
-use crate::search::moveordering::ordered_moves;
-use crate::search::negamax::negamax;
-use crate::search::negamax::DbOpt;
 use crate::setup::depth::Depth;
-use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
-use crate::Engine;
 
 pub static mut SEARCH_UNTIL: Option<Instant> = None;
 pub static mut SEARCH_TO: Depth = Depth(0);
 pub static mut SEARCHING: bool = false;
 pub static mut EXIT: bool = false;
 
+#[derive(Debug, Clone)]
+pub struct MV(pub ChessMove, pub Value);
+
+pub struct RootNode {
+    pub board: Board,
+    pub pv: Vec<MV>,
+    pub eval: Value,
+    pub previous_eval: Value,
+}
+
+pub struct SearchResult {
+    pub pv: Vec<MV>,
+    pub next_position_value: Value,
+    pub nodes_searched: usize,
+}
+
 #[derive(Debug)]
 pub enum Message {
-    BestMove(ChessMove, Value),
-    BestGuess(ChessMove, Value),
+    BestMove(MV),
+    Ponder(MV),
+    BestGuess(MV),
     Info(SearchInfo),
 }
 
@@ -41,6 +49,7 @@ pub struct SearchInfo {
     pub score: Value,
     pub nodes: usize,
     pub time: Duration,
+    pub pv: Vec<MV>,
 }
 
 pub fn exit_condition() -> bool {
@@ -54,159 +63,48 @@ pub fn exit_condition() -> bool {
     }
 }
 
-impl Engine {
-    pub fn begin_search(&mut self) -> Result<Receiver<Message>> {
-        debug!("begin_search called with depth {:?}", unsafe { SEARCH_TO });
-        self.set_search(true);
-        if exit_condition() {
-            bail!("begin_search called with exit_condition true!");
-        }
-
-        let (mut publisher, receiver) = lockfree::channel::spsc::create();
-        let board = self.board;
-        let debug = self.debug;
-        let trace = self.trace;
-
-        thread::spawn(move || {
-            let mut best_move: Option<ChessMove> = None;
-            let mut best_value: Value = Value::MIN;
-
-            let mut target_depth = Depth(0);
-            let mut total_nodes = 0;
-            let start_time = Instant::now();
-
-            while !exit_condition() && target_depth < unsafe { SEARCH_TO } {
-                // go one level deeper
-                target_depth += ONE_PLY;
-                debug!("iterative deepening searching to depth {:?}", target_depth);
-
-                // reset best move
-                best_value = Value::MIN;
-                let mut new_best_move: Option<ChessMove> = None;
-                let mut alpha = Value::MIN;
-                let beta = Value::MAX;
-
-                let moves = ordered_moves(&board);
-                trace!("ordered moves: {}", moves);
-
-                for mv in moves {
-                    let search_result = -negamax(
-                        board.make_move_new(mv),
-                        target_depth - 1,
-                        -beta,
-                        -alpha,
-                        DbOpt {
-                            debug,
-                            trace,
-                            ab: true,
-                        },
-                    );
-
-                    trace!(
-                        "move {} has value {} ({} nodes)",
-                        mv,
-                        search_result.next_position_value,
-                        search_result.nodes_searched
-                    );
-                    total_nodes += search_result.nodes_searched + 1;
-
-                    if search_result.next_position_value > best_value {
-                        best_value = search_result.next_position_value;
-                        new_best_move = Some(mv);
-                        // UCI guess, not final move but have one ready in case stop is received
-                        if let Some(mv) = best_move {
-                            publisher.send(Message::BestGuess(mv, best_value)).unwrap();
-                        }
-                    }
-                    alpha = alpha.max(search_result.next_position_value);
-
-                    if exit_condition() {
-                        return;
-                    }
-                } // we have checked all moves for this depth
-
-                best_move = new_best_move;
-
-                // new depth info
-                info(
-                    &mut publisher,
-                    target_depth,
-                    best_value,
-                    total_nodes,
-                    start_time.elapsed(),
-                );
-
-                if let Some(mv) = best_move {
-                    publisher.send(Message::BestMove(mv, best_value)).unwrap();
-                }
-            }
-
-            debug!("sending best move {:?}", best_move);
-
-            if let Some(mv) = best_move {
-                publisher.send(Message::BestMove(mv, best_value)).unwrap();
-            }
-        });
-
-        Ok(receiver)
-    }
-}
-
 fn info(
     publisher: &mut Sender<Message>,
     target_depth: Depth,
     best_value: Value,
     total_nodes: usize,
     el: Duration,
+    pv: &[MV],
 ) {
-    publisher
-        .send(Message::Info(SearchInfo {
-            depth: target_depth,
-            score: best_value,
-            nodes: total_nodes,
-            time: el,
-        }))
-        .unwrap();
+    if let Err(e) = publisher.send(Message::Info(SearchInfo {
+        depth: target_depth,
+        score: best_value,
+        nodes: total_nodes,
+        time: el,
+        pv: pv.to_vec(),
+    })) {
+        debug!("error sending info message: {:?}", e);
+    }
 }
 
-impl DbOpt {
-    pub fn ab(v: bool) -> Self {
-        Self {
-            ab: v,
-            debug: false,
-            trace: false,
-        }
+fn send(publisher: &mut Sender<Message>, msg: Message) {
+    if let Err(e) = publisher.send(msg) {
+        debug!("error sending message: {:?}", e);
     }
+}
 
-    pub fn abd(v: bool) -> Self {
-        Self {
-            ab: v,
-            debug: v,
-            trace: false,
-        }
+impl SearchResult {
+    pub fn new_eval(&mut self, ev: Value) {
+        self.next_position_value = ev;
     }
-
-    pub fn abt(v: bool) -> Self {
-        Self {
-            ab: v,
-            debug: v,
-            trace: v,
-        }
+    pub fn add_nodes(&mut self, nodes: usize) {
+        self.nodes_searched += nodes;
     }
-
-    pub fn dt(v: bool) -> Self {
-        Self {
-            ab: false,
-            debug: v,
-            trace: v,
-        }
+    pub fn set_nodes(&mut self, nodes: usize) {
+        self.nodes_searched = nodes;
     }
+}
 
-    pub fn d(v: bool) -> Self {
-        Self {
-            ab: false,
-            debug: v,
-            trace: false,
-        }
+impl Neg for SearchResult {
+    type Output = Self;
+
+    fn neg(mut self) -> Self::Output {
+        self.next_position_value = -self.next_position_value;
+        self
     }
 }

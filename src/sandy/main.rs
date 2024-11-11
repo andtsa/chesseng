@@ -13,10 +13,8 @@ use std::str::FromStr;
 use anyhow::anyhow;
 use anyhow::Result;
 use chess::Board;
-use chess::Color;
 use log::info;
 use log::warn;
-use sandy_engine::util::bench_positions;
 use sandy_engine::util::fen_to_str;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
@@ -31,7 +29,7 @@ fn main() -> Result<()> {
     println!("Sandy Chess Engine v0.0.0");
 
     colog::basic_builder()
-        .filter(None, log::LevelFilter::Info)
+        .filter(None, log::LevelFilter::Trace)
         .init();
 
     let engine = Engine::new()?;
@@ -77,17 +75,6 @@ fn main() -> Result<()> {
             }
             ("other", _) => {
                 // used for testing/prototyping snippets
-
-                println!(
-                    "{:?}",
-                    sandy_engine::evaluation::material::material(&Board::default(), Color::White)
-                );
-                for b in bench_positions() {
-                    println!(
-                        "{:?}",
-                        sandy_engine::evaluation::material::material(&b, b.side_to_move())
-                    );
-                }
             }
             _ => {
                 warn!("unrecognised command {command:?}");
