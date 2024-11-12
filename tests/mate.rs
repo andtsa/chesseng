@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+// 1r2k3/8/K3p3/4p3/4q3/8/5bpr/6q1 b - - 0 44
+
+//! How deep can we reach in 10 seconds?
+
+>>>>>>> 5a70444 (i think i unsafed too hard)
 use std::io::BufRead;
 use std::io::Write;
 use std::path::PathBuf;
@@ -16,7 +23,7 @@ fn main() {
     let startpos = "1r2k3/8/K3p3/4p3/4q3/8/5bpr/6q1 b - - 0 44";
     let valid_best_moves = ["b8a8", "e4a4", "e4a8", "g1a1"];
     test_mating(startpos, &valid_best_moves);
-
+    
     let mate_in_2 = "8/1k6/8/8/7n/4Nn2/8/1rq2R1K b - - 0 1";
     let valid_best_moves = ["c1f1"];
     test_mating(mate_in_2, &valid_best_moves);
@@ -86,6 +93,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
                 )
                 .black()
                 .on_cyan()
+
             );
         } else if parts.iter().any(|x| x.eq_ignore_ascii_case("quitting")) {
             break;
@@ -99,6 +107,6 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
         valid_mates,
         best_move
     );
-
+    
     child.kill().unwrap();
 }

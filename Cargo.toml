@@ -28,6 +28,7 @@ smallvec = "1.13.2"
 crossbeam-deque = "0.8.5"
 lockfree = "0.5.1"
 once_cell = "1.20.2"
+colored = "2.1.0"
 #jja = { version = "0.9.1", features = [] }
 
 [dev-dependencies]
@@ -46,7 +47,7 @@ path = "src/benches/d6.rs"
 harness = false
 
 [[bench]]
-name = "qs"
+name = "qs" # quick search benches, fewer samples
 path = "src/benches/quick_search.rs"
 harness = false
 

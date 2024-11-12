@@ -9,15 +9,21 @@ use anyhow::Result;
 use chess::Board;
 use log::info;
 use log::warn;
+<<<<<<< HEAD
 use sandy_engine::debug::DebugLevel::debug;
 use sandy_engine::debug::DebugLevel::info;
 use sandy_engine::optlog;
 use sandy_engine::opts::opts;
 use sandy_engine::opts::setopts;
 use sandy_engine::opts::Opts;
+=======
+use sandy_engine::opts;
+>>>>>>> e981bb0 (i think i unsafed too hard)
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
+use sandy_engine::Opts;
+use sandy_engine::OPTS;
 use vampirc_uci::parse_one;
 use vampirc_uci::Serializable;
 use vampirc_uci::UciMessage;
@@ -119,6 +125,10 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             UciMessage::Quit => {
                 // clean up and EXIT
                 optlog!(uci;info;"quitting");
+                println!(
+                    "quitting (total runtime: {:.2}s)",
+                    engine.created_at.elapsed().as_secs_f32()
+                );
                 break;
             }
             UciMessage::Id { .. } => {}

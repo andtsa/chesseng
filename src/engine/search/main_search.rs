@@ -47,6 +47,7 @@ impl Engine {
 
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
+            let mut table_hits = 0;
             let start_time = Instant::now();
 
             while !exit_condition() && target_depth < search_to() {
@@ -88,6 +89,9 @@ impl Engine {
 
                     // add up all the recursively searched nodes, and the one the search begun from
                     total_nodes += search_result.nodes_searched + 1;
+
+                    // add up all the transposition table hits
+                    table_hits += search_result.tt_hits;
 
                     // we found a better match, update:
                     // * best available value for a next position
@@ -131,6 +135,7 @@ impl Engine {
                     target_depth,
                     best_value,
                     total_nodes,
+                    table_hits,
                     start_time.elapsed(),
                     &root.pv,
                 );
@@ -139,7 +144,7 @@ impl Engine {
                     send(&mut publisher, Message::BestMove(MV(mv, best_value)));
                 }
                 if let Some(ponder) = root.pv.get(1) {
-                    send(&mut publisher, Message::Ponder(ponder.clone()));
+                    send(&mut publisher, Message::Ponder(*ponder));
                 }
             }
 
@@ -149,10 +154,13 @@ impl Engine {
             if let Some(mv) = best_move {
                 send(&mut publisher, Message::BestMove(MV(mv, best_value)))
             }
-
+            
+            // looks sketchy, but it's to prevent dropping the sender before the receiver
+            // has gotten the best move.
             thread::sleep(Duration::from_millis(
                 (SEARCH_THREADS * 2 * UCI_LISTENING_FREQUENCY) as u64,
             ));
+            
         });
 
         Ok(receiver)

@@ -14,6 +14,7 @@ pub mod uci;
 pub mod util;
 
 use std::sync::atomic::Ordering;
+use std::sync::RwLock;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -32,18 +33,24 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
+use crate::transposition_table::{TranspositionTable, TT_INITIALISED};
+use crate::transposition_table::TT;
 
 #[derive(Debug)]
 pub struct Engine {
     pub board: Board,
+    pub created_at: Instant,
 }
 
 impl Engine {
     pub fn new() -> Result<Self> {
         info!("creating engine at version {}", env!("CARGO_PKG_VERSION"));
-        Ok(Self {
+        let mut s = Self {
             board: Board::default(),
-        })
+            created_at: Instant::now(),
+        };
+        s.setup()?;
+        Ok(s)
     }
 
     pub fn set_search(&self, x: bool) {
@@ -77,6 +84,11 @@ impl Engine {
     /// 4. ...
     pub fn setup(&mut self) -> Result<()> {
         // ...
+        unsafe {
+            TT.write(RwLock::new(TranspositionTable::new()?));
+        }
+        TT_INITIALISED.store(true, Ordering::Relaxed);
+
         Ok(())
     }
 

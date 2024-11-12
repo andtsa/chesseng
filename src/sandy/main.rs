@@ -9,15 +9,18 @@
 
 use std::io::stdin;
 use std::str::FromStr;
+use std::time::Duration;
 
 use anyhow::anyhow;
 use anyhow::Result;
 use chess::Board;
 use log::info;
 use log::warn;
+use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::fen_to_str;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
+use sandy_engine::Opts;
 
 use crate::player::terminal_loop;
 use crate::uci::uci_loop;
@@ -28,11 +31,29 @@ mod uci;
 fn main() -> Result<()> {
     println!("Sandy Chess Engine v0.0.0");
 
+    #[cfg(debug_assertions)]
     colog::basic_builder()
         .filter(None, log::LevelFilter::Trace)
         .init();
+    #[cfg(not(debug_assertions))]
+    colog::basic_builder()
+        .filter(None, log::LevelFilter::Info)
+        .init();
 
-    let engine = Engine::new()?;
+    debug_assert!(
+        size_of::<Opts>() <= 16,
+        "does Opts really need to be {} bytes?",
+        size_of::<Opts>()
+    );
+
+    let mut engine = Engine::new()?;
+
+    // println!(
+    //     "depth 4 best move: {}",
+    //     engine.best_move(Depth(4), Duration::from_secs(600))?
+    // );
+    //
+    // return Ok(());
 
     let mut read_line = String::new();
     loop {
@@ -75,6 +96,12 @@ fn main() -> Result<()> {
             }
             ("other", _) => {
                 // used for testing/prototyping snippets
+            }
+            ("debug", _) => {
+                println!(
+                    "depth 6 best move: {}",
+                    engine.best_move(Depth(6), Duration::from_secs(60))?
+                );
             }
             _ => {
                 warn!("unrecognised command {command:?}");
