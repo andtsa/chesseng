@@ -1,0 +1,31 @@
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   1 sandy_debug_no_tt             154     218      12   70.8%   25.0% 
+   2 sandy_debug_with_tt            89     165      12   62.5%   41.7% 
+   3 sandy_release_no_tt           -58     148      12   41.7%   50.0% 
+   4 sandy_release_with_tt        -191     204      12   25.0%   33.3% 
+
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+24 of 24 games finished.
+
+Player: sandy_debug_no_tt
+   "Draw by 3-fold repetition": 3
+   "Loss: Black mates": 2
+   "Win: Black mates": 4
+   "Win: White mates": 3
+Player: sandy_debug_with_tt
+   "Draw by 3-fold repetition": 5
+   "Loss: Black mates": 1
+   "Loss: White mates": 1
+   "Win: Black mates": 3
+   "Win: White mates": 2
+Player: sandy_release_with_tt
+   "Draw by 3-fold repetition": 4
+   "Loss: Black mates": 4
+   "Loss: White mates": 3
+   "Win: Black mates": 1
+Player: sandy_release_no_tt
+   "Draw by 3-fold repetition": 6
+   "Loss: Black mates": 2
+   "Loss: White mates": 2
+   "Win: Black mates": 1
+   "Win: White mates": 1
