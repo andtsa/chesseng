@@ -6,54 +6,62 @@ use chess::Board;
 use chess::BoardStatus;
 use chess::Color;
 
+use crate::debug::DebugLevel::debug;
+use crate::opts::opts;
+use crate::opts::setopts;
 use crate::search::moveordering::ordered_moves;
-use crate::search::negamax::negamax;
-use crate::search::negamax::ngm;
+use crate::search::negamax::ng_test;
 use crate::search::negamax::Opts;
 use crate::search::SEARCHING;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 use crate::util::short_benches;
 use crate::util::Print;
-use crate::DebugLevel::Trace;
 use crate::Engine;
 
 #[test]
 fn startpos_is_positive() {
     let pos = Board::default();
     SEARCHING.store(true, Ordering::Relaxed);
-    assert!(ngm(pos, Depth(4), Value::MIN, Value::MAX).next_position_value > Value::ZERO);
+    assert!(
+        ng_test(pos, Depth(4), Value::MIN, Value::MAX, Opts::new())
+            .unwrap()
+            .next_position_value
+            > Value::ZERO
+    );
 }
 
 #[test]
 fn mate_is_mate() {
     let pos = Board::from_str("8/8/8/8/8/8/8/5KQk b - - 0 1").unwrap();
     for x in 1..10 {
-            SEARCHING.store(true, Ordering::Relaxed);
+        SEARCHING.store(true, Ordering::Relaxed);
         // println!("x: {}", x);
         assert_eq!(pos.side_to_move(), Color::Black);
         assert_eq!(
-            ngm(pos, Depth(x), Value::MIN, Value::MAX).next_position_value,
+            ng_test(pos, Depth(x), Value::MIN, Value::MAX, Opts::new())
+                .unwrap()
+                .next_position_value,
             -Value::MATE
         );
     }
 }
 
-// #[test]
-// fn mate_in_1_is_mate() {
-//     let pos = Board::from_str("8/8/8/6Q1/8/8/8/5K1k w - - 0 1").unwrap();
-//     for x in 1..5 {
-//         unsafe {
-//             SEARCHING = true;
-//         }
-//         assert_eq!(
-//             negamax(pos, Depth(x), Value::MIN, Value::MAX,
-// DbOpt::dt(false)).next_position_value,             Value::MATE,
-//             "depth = {x} pos={}",
-//             pos.print()
-//         );
-//     }
-// }
+#[test]
+fn mate_in_1_is_mate() {
+    let pos = Board::from_str("8/8/8/6Q1/8/8/8/5K1k w - - 0 1").unwrap();
+    for x in 1..5 {
+        SEARCHING.store(true, Ordering::Relaxed);
+        assert_eq!(
+            ng_test(pos, Depth(x), Value::MIN, Value::MAX, Opts::new())
+                .unwrap()
+                .next_position_value,
+            Value::MATE,
+            "depth = {x} pos={}",
+            pos.print()
+        );
+    }
+}
 
 #[test]
 fn will_mate_in_1_() {
@@ -61,15 +69,19 @@ fn will_mate_in_1_() {
     for d in 1..4 {
         let mut engine = Engine::new().unwrap();
         engine.board = pos;
-        engine.opts.search = Trace;
-        engine.opts.ab = false;
-        engine.opts.use_pv = false;
+        let mut opts = opts().unwrap();
+        opts.search = debug;
+        opts.use_ab = false;
+        opts.use_pv = false;
+        {
+            setopts(opts).unwrap();
+        }
 
         eprintln!("all possible moves: {}", ordered_moves(&engine.board));
 
         let mv = engine
             .best_move(Depth(d), Duration::from_millis(2000))
-            .expect(&format!("died at depth {d}"));
+            .unwrap_or_else(|e| panic!("died at depth {d}: {e}"));
         engine.board = engine.board.make_move_new(mv);
 
         assert_eq!(
@@ -85,9 +97,11 @@ fn will_mate_in_1_() {
 fn mate_in_1_is_mate_ngm() {
     let pos = Board::from_str("8/8/8/6Q1/8/8/8/5K1k w - - 0 1").unwrap();
     for x in 1..5 {
-            SEARCHING.store(true, Ordering::Relaxed);
+        SEARCHING.store(true, Ordering::Relaxed);
         assert_eq!(
-            ngm(pos, Depth(x), Value::MIN, Value::MAX).next_position_value,
+            ng_test(pos, Depth(x), Value::MIN, Value::MAX, Opts::new())
+                .unwrap()
+                .next_position_value,
             Value::MATE,
             "depth = {x} pos={}",
             pos.print()
@@ -98,15 +112,19 @@ fn mate_in_1_is_mate_ngm() {
 #[test]
 fn mate_in_2_is_mate_ngm() {
     let pos = Board::from_str("8/8/8/6Q1/8/8/8/4K2k w - - 0 1").unwrap();
-        SEARCHING.store(true, Ordering::Relaxed);
+    SEARCHING.store(true, Ordering::Relaxed);
     assert_ne!(
-        ngm(pos, Depth(1), Value::MIN, Value::MAX).next_position_value,
+        ng_test(pos, Depth(1), Value::MIN, Value::MAX, Opts::new())
+            .unwrap()
+            .next_position_value,
         Value::MATE,
         "depth = 1 pos={}",
         pos.print()
     );
     assert_ne!(
-        ngm(pos, Depth(2), Value::MIN, Value::MAX).next_position_value,
+        ng_test(pos, Depth(2), Value::MIN, Value::MAX, Opts::new())
+            .unwrap()
+            .next_position_value,
         Value::MATE,
         "depth = 2 pos={}",
         pos.print()
@@ -114,10 +132,12 @@ fn mate_in_2_is_mate_ngm() {
     for x in 3..5 {
         SEARCHING.store(true, Ordering::Relaxed);
         assert_eq!(
-            ngm(pos, Depth(x), Value::MIN, Value::MAX).next_position_value,
+            ng_test(pos, Depth(x), Value::MIN, Value::MAX, Opts::new())
+                .unwrap()
+                .next_position_value,
             Value::MATE,
             "depth = {x} pos={}",
-            pos.print()
+            pos.print(),
         );
     }
 }
@@ -159,26 +179,28 @@ fn will_mate_in_2_() {
 
 #[test]
 fn score_same_with_or_without_ab_pv() {
-    for (_p_idx, pos) in short_benches().into_iter().enumerate() {
+    for pos in short_benches().into_iter() {
         for x in 1..4 {
-            SEARCHING.store(true, Ordering::Relaxed);
+            SEARCHING.store(true, Ordering::SeqCst);
             // println!("testing pos_{p_idx}_depth_{x}");
             assert_eq!(
-                negamax(
+                ng_test(
                     pos,
                     Depth(x),
                     Value::MIN,
                     Value::MAX,
                     Opts::new().ab(false).pv(false)
                 )
+                .unwrap()
                 .next_position_value,
-                negamax(
+                ng_test(
                     pos,
                     Depth(x),
                     Value::MIN,
                     Value::MAX,
                     Opts::new().ab(true).pv(true)
                 )
+                .unwrap()
                 .next_position_value,
                 "depth = {x} pos={}",
                 pos.print()

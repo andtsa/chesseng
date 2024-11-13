@@ -2,6 +2,7 @@ mod main_search;
 pub mod moveordering;
 pub mod negamax;
 
+use std::fmt::Display;
 use std::ops::Neg;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicU16;
@@ -18,6 +19,8 @@ use log::debug;
 
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
+
+pub const SEARCH_THREADS: usize = 1;
 
 pub static SEARCH_UNTIL: RwLock<Option<Instant>> = RwLock::new(None);
 pub static SEARCH_TO: AtomicU16 = AtomicU16::new(0);
@@ -115,5 +118,17 @@ impl Neg for SearchResult {
     fn neg(mut self) -> Self::Output {
         self.next_position_value = -self.next_position_value;
         self
+    }
+}
+
+impl Display for MV {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} [{:+}]", self.0, self.1 .0)
+    }
+}
+
+impl Default for MV {
+    fn default() -> Self {
+        MV(ChessMove::default(), Value::ZERO)
     }
 }

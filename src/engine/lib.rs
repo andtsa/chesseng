@@ -3,8 +3,9 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 
 pub mod book;
-mod debug;
+pub mod debug;
 pub mod evaluation;
+pub mod opts;
 pub mod search;
 pub mod setup;
 pub mod timing;
@@ -22,7 +23,6 @@ use anyhow::Result;
 use chess::Board;
 use chess::ChessMove;
 use lockfree::channel::RecvErr;
-use lockfree::map::SharedIncin;
 use log::info;
 use log::trace;
 
@@ -32,46 +32,17 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
-use crate::transposition_table::TranspositionTable;
 
 #[derive(Debug)]
 pub struct Engine {
-    pub opts: Opts,
     pub board: Board,
-    // pub opening_book:
-    pub tt: TranspositionTable,
-    // pub slaves: SandPool,
-}
-
-/// Debug options for the engine
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct Opts {
-    pub search: DebugLevel,
-    pub eval: DebugLevel,
-    pub comm: DebugLevel,
-    pub tt: DebugLevel,
-    pub ab: bool,
-    pub use_pv: bool,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub enum DebugLevel {
-    Off,
-    Error,
-    Warn,
-    #[default]
-    Info,
-    Debug,
-    Trace,
 }
 
 impl Engine {
     pub fn new() -> Result<Self> {
         info!("creating engine at version {}", env!("CARGO_PKG_VERSION"));
         Ok(Self {
-            opts: Opts::new(),
             board: Board::default(),
-            tt: TranspositionTable::with_incin(SharedIncin::new()),
         })
     }
 

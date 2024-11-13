@@ -1,13 +1,13 @@
 use std::thread;
+use std::time::Duration;
 use std::time::Instant;
 
 use anyhow::bail;
 use anyhow::Result;
 use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
-use log::debug;
-use log::trace;
 
+use crate::optlog;
 use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
@@ -18,13 +18,16 @@ use crate::search::send;
 use crate::search::Message;
 use crate::search::RootNode;
 use crate::search::MV;
+use crate::search::SEARCH_THREADS;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
+use crate::uci::UCI_LISTENING_FREQUENCY;
 use crate::Engine;
+
 impl Engine {
     pub fn begin_search(&mut self) -> Result<Receiver<Message>> {
-        debug!("begin_search called with depth {:?}", search_to());
+        optlog!(search;debug;"begin_search called with depth {:?}", search_to());
         self.set_search(true);
         if exit_condition() {
             bail!("begin_search called with exit_condition true!");
@@ -38,8 +41,6 @@ impl Engine {
             previous_eval: Value::MIN,
         };
 
-        let opt = self.opts;
-
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
             let mut best_value: Value = Value::MIN;
@@ -51,7 +52,7 @@ impl Engine {
             while !exit_condition() && target_depth < search_to() {
                 // go one level deeper
                 target_depth += ONE_PLY;
-                debug!("iterative deepening searching to depth {:?}", target_depth);
+                optlog!(search;debug;"iterative deepening searching to depth {:?}", target_depth);
 
                 // reset best move
                 best_value = Value::MIN;
@@ -64,7 +65,8 @@ impl Engine {
                 } else {
                     ordered_moves(&root.board)
                 };
-                trace!("ordered moves: {}", moves);
+
+                optlog!(search;trace;"ordered moves: {}", moves);
 
                 // iterate through all the possible moves from [`RootNode`]
                 for mv in moves {
@@ -74,12 +76,12 @@ impl Engine {
                         target_depth - 1,
                         -beta,
                         -alpha,
-                        opt,
                     );
 
-                    trace!(
-                        "move {} has value {} ({} nodes)",
-                        mv,
+                    optlog!(
+                        search;
+                        debug;
+                        "move {mv} has value {} ({} nodes)",
                         search_result.next_position_value,
                         search_result.nodes_searched
                     );
@@ -104,7 +106,7 @@ impl Engine {
                         // UCI guess, not final move but have one ready in case stop is received
                         if let Some(mv) = best_move {
                             if let Err(e) = publisher.send(Message::BestGuess(MV(mv, best_value))) {
-                                debug!("error sending best guess: {:?}", e);
+                                optlog!(comm;debug;"error sending best guess: {:?}", e);
                                 break;
                             }
                         }
@@ -118,11 +120,6 @@ impl Engine {
                         return;
                     }
                 } // we have checked all moves for this depth
-
-                // also add this best move to the principal variation
-                if let Some(mv) = best_move {
-                    root.pv.insert(0, MV(mv, best_value));
-                }
 
                 // save previous evaluation of the root node
                 root.previous_eval = root.eval;
@@ -146,11 +143,16 @@ impl Engine {
                 }
             }
 
-            debug!("sending best move {:?}", best_move);
+            optlog!(search;debug;"sending best move {:?}", best_move);
+            optlog!(comm;debug;"sending best move {:?}", best_move);
 
             if let Some(mv) = best_move {
                 send(&mut publisher, Message::BestMove(MV(mv, best_value)))
             }
+
+            thread::sleep(Duration::from_millis(
+                (SEARCH_THREADS * 2 * UCI_LISTENING_FREQUENCY) as u64,
+            ));
         });
 
         Ok(receiver)
