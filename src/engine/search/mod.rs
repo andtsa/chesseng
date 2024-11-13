@@ -3,9 +3,14 @@ pub mod moveordering;
 pub mod negamax;
 
 use std::ops::Neg;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::AtomicU16;
+use std::sync::atomic::Ordering;
+use std::sync::RwLock;
 use std::time::Duration;
 use std::time::Instant;
 
+use anyhow::anyhow;
 use chess::Board;
 use chess::ChessMove;
 use lockfree::channel::spsc::Sender;
@@ -14,10 +19,10 @@ use log::debug;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 
-pub static mut SEARCH_UNTIL: Option<Instant> = None;
-pub static mut SEARCH_TO: Depth = Depth(0);
-pub static mut SEARCHING: bool = false;
-pub static mut EXIT: bool = false;
+pub static SEARCH_UNTIL: RwLock<Option<Instant>> = RwLock::new(None);
+pub static SEARCH_TO: AtomicU16 = AtomicU16::new(0);
+pub static SEARCHING: AtomicBool = AtomicBool::new(false);
+pub static EXIT: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone)]
 pub struct MV(pub ChessMove, pub Value);
@@ -53,13 +58,17 @@ pub struct SearchInfo {
 }
 
 pub fn exit_condition() -> bool {
-    unsafe {
-        if EXIT || SEARCH_UNTIL.is_some_and(|u| u < Instant::now()) {
-            SEARCHING = false;
-            true
-        } else {
-            false
-        }
+    if EXIT.load(Ordering::Relaxed)
+        || SEARCH_UNTIL
+            .try_read()
+            .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))
+            .unwrap()
+            .is_some_and(|u| u < Instant::now())
+    {
+        SEARCHING.store(false, Ordering::Relaxed);
+        true
+    } else {
+        false
     }
 }
 

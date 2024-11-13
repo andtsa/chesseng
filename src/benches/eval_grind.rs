@@ -1,7 +1,7 @@
 use chess::Board;
 use iai::black_box;
-use sandy_engine::Opts;
 use sandy_engine::search::moveordering::ordered_moves;
+use sandy_engine::Opts;
 
 fn board_setup() {
     let _ = Board::default();

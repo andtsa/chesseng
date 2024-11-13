@@ -100,7 +100,7 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             }
             UciMessage::Stop => {
                 // stop the search
-                engine.set_search_until(Instant::now());
+                engine.set_search_until(Instant::now())?;
             }
             UciMessage::PonderHit => {}
             UciMessage::Quit => {
