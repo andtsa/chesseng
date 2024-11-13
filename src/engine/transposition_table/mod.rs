@@ -12,7 +12,7 @@ use chess::ChessMove;
 use chess::Piece;
 use chess::Square;
 
-use crate::opts;
+use crate::opts::opts;
 use crate::search::MV;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
@@ -65,7 +65,7 @@ pub fn table_ref() -> &'static RwLock<TranspositionTable> {
 
 impl TranspositionTable {
     pub fn new() -> Result<Self> {
-        let size = (opts().hash_size * 1024 / size_of::<TableEntry>())
+        let size = (opts()?.hash_size * 1024 / size_of::<TableEntry>())
             .checked_next_power_of_two()
             .ok_or(anyhow!("invalid hash map size (overflowed)"))?;
         let mut table = Vec::with_capacity(size);

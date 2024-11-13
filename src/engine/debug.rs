@@ -50,7 +50,7 @@ macro_rules! optlog {
         }
     }
 }
-            
+
 impl DebugLevel {
     /// This [`DebugLevel`] is TRACE
     #[inline(always)]

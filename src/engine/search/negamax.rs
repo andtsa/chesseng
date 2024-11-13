@@ -46,6 +46,11 @@ pub fn ng_test(
     {
         setopts(opts)?;
     }
+    unsafe {
+        TT.write(RwLock::new(TranspositionTable::new().unwrap()));
+    }
+    TT_INITIALISED.store(true, Ordering::Relaxed);
+
     Ok(negamax(pos, to_depth, alpha, beta))
 }
 
@@ -105,7 +110,6 @@ pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, mut beta: Value) -
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
     optlog!(search;trace;"moves: {}", moves);
-
 
     if to_depth == Depth::ZERO || moves.is_empty() {
         let ev = evaluate(&pos, &moves);
@@ -192,7 +196,7 @@ pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, mut beta: Value) -
         }
     }
 
-    opts().stp(&format!("return max_val: {:?}", best));
+    optlog!(search;trace;"return max_val: {:?}", best);
     this_search_result
 }
 

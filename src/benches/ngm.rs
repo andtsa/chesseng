@@ -2,7 +2,6 @@ use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
 use criterion::Criterion;
-<<<<<<< HEAD
 use sandy_engine::opts::Opts;
 use sandy_engine::search::negamax::ng_test;
 use sandy_engine::setup::depth::Depth;

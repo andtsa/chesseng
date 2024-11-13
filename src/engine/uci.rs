@@ -5,13 +5,9 @@ use std::time::Instant;
 
 use anyhow::Result;
 use lockfree::channel::RecvErr;
+use log::error;
 
 use crate::optlog;
-use log::{debug, error};
-use log::debug;
-use log::error;
-use log::trace;
-
 use crate::search::exit_condition;
 use crate::search::Message;
 use crate::search::SearchInfo;

@@ -25,7 +25,7 @@ fn test_pack_then_unpack() {
     assert_eq!(depth, entry.depth());
     assert_eq!(mv, entry.mv());
     assert_eq!(bound, entry.bound());
-    assert_eq!(true, entry.is_pv());
+    assert!(entry.is_pv());
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn test_pack_then_unpack_with_promotion() {
     assert_eq!(depth, entry.depth());
     assert_eq!(mv, entry.mv());
     assert_eq!(bound, entry.bound());
-    assert_eq!(true, entry.is_pv());
+    assert!(entry.is_pv());
 }
 
 #[test]
@@ -63,7 +63,7 @@ fn test_pack_then_unpack_with_no_promotion() {
     assert_eq!(depth, entry.depth());
     assert_eq!(mv, entry.mv());
     assert_eq!(bound, entry.bound());
-    assert_eq!(false, entry.is_pv());
+    assert!(!entry.is_pv());
 }
 
 #[test]
@@ -82,5 +82,5 @@ fn test_pack_then_unpack_edge_case_values() {
     assert_eq!(depth, entry.depth());
     assert_eq!(mv, entry.mv());
     assert_eq!(bound, entry.bound());
-    assert_eq!(true, entry.is_pv());
+    assert!(entry.is_pv());
 }

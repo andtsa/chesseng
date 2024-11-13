@@ -16,11 +16,11 @@ use anyhow::Result;
 use chess::Board;
 use log::info;
 use log::warn;
+use sandy_engine::opts::Opts;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::fen_to_str;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
-use sandy_engine::Opts;
 
 use crate::player::terminal_loop;
 use crate::uci::uci_loop;
@@ -41,19 +41,12 @@ fn main() -> Result<()> {
         .init();
 
     debug_assert!(
-        size_of::<Opts>() <= 16,
+        size_of::<Opts>() <= 24,
         "does Opts really need to be {} bytes?",
         size_of::<Opts>()
     );
 
     let mut engine = Engine::new()?;
-
-    // println!(
-    //     "depth 4 best move: {}",
-    //     engine.best_move(Depth(4), Duration::from_secs(600))?
-    // );
-    //
-    // return Ok(());
 
     let mut read_line = String::new();
     loop {
