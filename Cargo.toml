@@ -41,6 +41,16 @@ path = "src/benches/ngm.rs"
 harness = false
 
 [[bench]]
+name = "d6"
+path = "src/benches/d6.rs"
+harness = false
+
+[[bench]]
+name = "qs"
+path = "src/benches/quick_search.rs"
+harness = false
+
+[[bench]]
 name = "eval"
 path = "src/benches/eval.rs"
 harness = false

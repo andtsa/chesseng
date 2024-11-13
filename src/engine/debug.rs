@@ -12,13 +12,42 @@ pub enum DebugLevel {
     trace,
 }
 
+/// # `optlog!`
+/// ###### optional logging based on the debug level from global options
+/// examples:
+/// ```rust
+/// # use sandy_engine::optlog;
+/// // suppose we are doing some calculations 
+/// // in the evaluation function...
+/// let x = 5;
+/// optlog!(eval;trace;"x is {}", x);
+/// // this will only print if the global option for `eval` is set to trace,
+/// // and debug_assertions is turned on
+/// ```
+/// ```rust
+/// # use sandy_engine::optlog;
+/// // in the universal chess interface...
+/// optlog!(uci;error;"not allowed!");
+/// // this will only *not* print if the global option for `uci` is set to `off`,
+/// ```
 #[macro_export]
 macro_rules! optlog {
     ($module:ident;$level:ident;$($arg:tt)*) => {
         {
-            if $crate::opts::opts().unwrap().$module.$level() {
-                log::$level!("{}: {}", stringify!($module), format!($($arg)*));
+            match $crate::debug::DebugLevel::$level {
+                $crate::debug::DebugLevel::debug | $crate::debug::DebugLevel::trace => {
+                    #[cfg(debug_assertions)]
+                    if $crate::opts::opts().unwrap().$module.$level() {
+                        log::$level!("{}: {}", stringify!($module), format!($($arg)*));
+                    }
+                }
+                _ => {
+                    if $crate::opts::opts().unwrap().$module.$level() {
+                        log::$level!("{}: {}", stringify!($module), format!($($arg)*));
+                    }
+                }
             }
+            
         }
     };
 }
