@@ -2,11 +2,11 @@ use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
 use criterion::Criterion;
+use sandy_engine::opts::Opts;
 use sandy_engine::search::negamax::ng_test;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::setup::values::Value;
 use sandy_engine::util::bench_positions;
-use sandy_engine::opts::Opts;
 
 fn search_benches(c: &mut Criterion) {
     let positions = bench_positions();
@@ -33,8 +33,8 @@ fn search_benches(c: &mut Criterion) {
 }
 
 criterion_group! {
-     name = benches;
-     config = Criterion::default();
-     targets = search_benches
- }
+    name = benches;
+    config = Criterion::default();
+    targets = search_benches
+}
 criterion_main!(benches);

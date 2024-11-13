@@ -17,7 +17,7 @@ pub enum DebugLevel {
 /// examples:
 /// ```rust
 /// # use sandy_engine::optlog;
-/// // suppose we are doing some calculations 
+/// // suppose we are doing some calculations
 /// // in the evaluation function...
 /// let x = 5;
 /// optlog!(eval;trace;"x is {}", x);
@@ -47,7 +47,7 @@ macro_rules! optlog {
                     }
                 }
             }
-            
+
         }
     };
 }
