@@ -8,6 +8,8 @@ use lockfree::channel::RecvErr;
 
 use crate::optlog;
 use log::{debug, error};
+use log::debug;
+use log::error;
 use log::trace;
 
 use crate::search::exit_condition;

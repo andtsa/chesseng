@@ -18,17 +18,17 @@ use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 use crate::transposition_table::bounds::EvalBound;
-use crate::transposition_table::{table_mut_ref, TT_INITIALISED};
+use crate::transposition_table::table_mut_ref;
 use crate::transposition_table::table_ref;
 use crate::transposition_table::TableEntry;
 use crate::transposition_table::TranspositionTable;
 use crate::transposition_table::TT;
+use crate::transposition_table::TT_INITIALISED;
 
 #[inline(always)]
 pub fn searching() -> bool {
     SEARCHING.load(Ordering::Relaxed)
 }
-
 
 #[inline(always)]
 pub fn search_to() -> Depth {

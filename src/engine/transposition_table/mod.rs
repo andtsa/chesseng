@@ -1,20 +1,22 @@
 pub mod bounds;
 
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicBool, AtomicU64};
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 use std::sync::RwLock;
 
+use anyhow::anyhow;
+use anyhow::Result;
 use chess::ChessMove;
 use chess::Piece;
 use chess::Square;
-use crate::opts;
 
+use crate::opts;
 use crate::search::MV;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 use crate::transposition_table::bounds::EvalBound;
-use anyhow::{anyhow, Result};
 
 /// # A single transposition table entry.
 /// [`TranspositionTable`]
@@ -63,7 +65,9 @@ pub fn table_ref() -> &'static RwLock<TranspositionTable> {
 
 impl TranspositionTable {
     pub fn new() -> Result<Self> {
-        let size = (opts().hash_size * 1024 / size_of::<TableEntry>()).checked_next_power_of_two().ok_or(anyhow!("invalid hash map size (overflowed)"))?;
+        let size = (opts().hash_size * 1024 / size_of::<TableEntry>())
+            .checked_next_power_of_two()
+            .ok_or(anyhow!("invalid hash map size (overflowed)"))?;
         let mut table = Vec::with_capacity(size);
         for _ in 0..size {
             table.push(TableEntry {

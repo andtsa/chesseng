@@ -33,8 +33,9 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
-use crate::transposition_table::{TranspositionTable, TT_INITIALISED};
+use crate::transposition_table::TranspositionTable;
 use crate::transposition_table::TT;
+use crate::transposition_table::TT_INITIALISED;
 
 #[derive(Debug)]
 pub struct Engine {
