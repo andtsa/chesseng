@@ -27,7 +27,7 @@ pub static SEARCH_TO: AtomicU16 = AtomicU16::new(0);
 pub static SEARCHING: AtomicBool = AtomicBool::new(false);
 pub static EXIT: AtomicBool = AtomicBool::new(false);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct MV(pub ChessMove, pub Value);
 
 pub struct RootNode {
@@ -37,10 +37,12 @@ pub struct RootNode {
     pub previous_eval: Value,
 }
 
+#[derive(Debug, Clone)]
 pub struct SearchResult {
     pub pv: Vec<MV>,
     pub next_position_value: Value,
-    pub nodes_searched: usize,
+    pub nodes_searched: u32,
+    pub tt_hits: u32,
 }
 
 #[derive(Debug)]
@@ -55,9 +57,10 @@ pub enum Message {
 pub struct SearchInfo {
     pub depth: Depth,
     pub score: Value,
-    pub nodes: usize,
+    pub nodes: u32,
     pub time: Duration,
     pub pv: Vec<MV>,
+    pub tt_hits: u32,
 }
 
 pub fn exit_condition() -> bool {
@@ -79,7 +82,8 @@ fn info(
     publisher: &mut Sender<Message>,
     target_depth: Depth,
     best_value: Value,
-    total_nodes: usize,
+    total_nodes: u32,
+    tt_hits: u32,
     el: Duration,
     pv: &[MV],
 ) {
@@ -89,6 +93,7 @@ fn info(
         nodes: total_nodes,
         time: el,
         pv: pv.to_vec(),
+        tt_hits,
     })) {
         debug!("error sending info message: {:?}", e);
     }
@@ -104,10 +109,13 @@ impl SearchResult {
     pub fn new_eval(&mut self, ev: Value) {
         self.next_position_value = ev;
     }
-    pub fn add_nodes(&mut self, nodes: usize) {
+    pub fn add_nodes(&mut self, nodes: u32) {
         self.nodes_searched += nodes;
     }
-    pub fn set_nodes(&mut self, nodes: usize) {
+    pub fn add_tt_hits(&mut self, nodes: u32) {
+        self.tt_hits += nodes;
+    }
+    pub fn set_nodes(&mut self, nodes: u32) {
         self.nodes_searched = nodes;
     }
 }

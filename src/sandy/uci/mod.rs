@@ -119,6 +119,10 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             UciMessage::Quit => {
                 // clean up and EXIT
                 optlog!(uci;info;"quitting");
+                println!(
+                    "quitting (total runtime: {:.2}s)",
+                    engine.created_at.elapsed().as_secs_f32()
+                );
                 break;
             }
             UciMessage::Id { .. } => {}

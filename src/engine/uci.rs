@@ -5,11 +5,13 @@ use std::time::Instant;
 
 use anyhow::Result;
 use lockfree::channel::RecvErr;
+use log::error;
 
 use crate::optlog;
 use crate::search::exit_condition;
 use crate::search::Message;
 use crate::search::SearchInfo;
+use crate::transposition_table::table_ref;
 use crate::Engine;
 
 /// How often to check for new uci messages from the search threads, in *ms*
@@ -55,14 +57,20 @@ impl Engine {
                             score,
                             time,
                             pv,
+                            tt_hits,
                         }) => {
                             println!(
-                                "info depth {} score {} nodes {} nps {} time {} pv {}",
+                                "info depth {} score {} nodes {} nps {} time {} hashfull {} tt_hits {} pv {}",
                                 depth.0,
                                 score,
                                 nodes,
                                 (nodes as f64 / time.as_secs_f64()) as usize,
                                 time.as_millis(),
+                                table_ref().try_read().map_or_else(|e| {
+                                    error!("tt lock poisoned when reading hashfull: {e}");
+                                    -1
+                                }, |l| l.hashfull() as i64),
+                                tt_hits,
                                 pv.iter().fold(String::new(), |mut acc, m| {
                                     write!(acc, "{} ", m.0).expect("strings shouldn't fail");
                                     acc
