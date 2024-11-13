@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use chess::Board;
@@ -20,9 +21,7 @@ use crate::Engine;
 #[test]
 fn startpos_is_positive() {
     let pos = Board::default();
-    unsafe {
-        SEARCHING = true;
-    }
+    SEARCHING.store(true, Ordering::Relaxed);
     assert!(ngm(pos, Depth(4), Value::MIN, Value::MAX).next_position_value > Value::ZERO);
 }
 
@@ -30,9 +29,7 @@ fn startpos_is_positive() {
 fn mate_is_mate() {
     let pos = Board::from_str("8/8/8/8/8/8/8/5KQk b - - 0 1").unwrap();
     for x in 1..10 {
-        unsafe {
-            SEARCHING = true;
-        }
+            SEARCHING.store(true, Ordering::Relaxed);
         // println!("x: {}", x);
         assert_eq!(pos.side_to_move(), Color::Black);
         assert_eq!(
@@ -88,9 +85,7 @@ fn will_mate_in_1_() {
 fn mate_in_1_is_mate_ngm() {
     let pos = Board::from_str("8/8/8/6Q1/8/8/8/5K1k w - - 0 1").unwrap();
     for x in 1..5 {
-        unsafe {
-            SEARCHING = true;
-        }
+            SEARCHING.store(true, Ordering::Relaxed);
         assert_eq!(
             ngm(pos, Depth(x), Value::MIN, Value::MAX).next_position_value,
             Value::MATE,
@@ -103,9 +98,7 @@ fn mate_in_1_is_mate_ngm() {
 #[test]
 fn mate_in_2_is_mate_ngm() {
     let pos = Board::from_str("8/8/8/6Q1/8/8/8/4K2k w - - 0 1").unwrap();
-    unsafe {
-        SEARCHING = true;
-    }
+        SEARCHING.store(true, Ordering::Relaxed);
     assert_ne!(
         ngm(pos, Depth(1), Value::MIN, Value::MAX).next_position_value,
         Value::MATE,
@@ -119,9 +112,7 @@ fn mate_in_2_is_mate_ngm() {
         pos.print()
     );
     for x in 3..5 {
-        unsafe {
-            SEARCHING = true;
-        }
+        SEARCHING.store(true, Ordering::Relaxed);
         assert_eq!(
             ngm(pos, Depth(x), Value::MIN, Value::MAX).next_position_value,
             Value::MATE,
@@ -170,9 +161,7 @@ fn will_mate_in_2_() {
 fn score_same_with_or_without_ab_pv() {
     for (_p_idx, pos) in short_benches().into_iter().enumerate() {
         for x in 1..4 {
-            unsafe {
-                SEARCHING = true;
-            }
+            SEARCHING.store(true, Ordering::Relaxed);
             // println!("testing pos_{p_idx}_depth_{x}");
             assert_eq!(
                 negamax(

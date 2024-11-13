@@ -13,7 +13,7 @@ impl TimeControl for Engine {
     fn time_control(&mut self, tc: UciTimeControl) -> Result<()> {
         match tc {
             UciTimeControl::Ponder => unimplemented!("ponder not yet implemented"),
-            UciTimeControl::Infinite => self.set_search_until(max_instant()),
+            UciTimeControl::Infinite => self.set_search_until(max_instant())?,
             UciTimeControl::TimeLeft {
                 white_time,      // Option<Duration>,
                 black_time,      // Option<Duration>,
@@ -27,10 +27,10 @@ impl TimeControl for Engine {
                     white_increment.map(cdt),
                     black_increment.map(cdt),
                     moves_to_go,
-                );
+                )?;
             }
             UciTimeControl::MoveTime(d) => {
-                self.set_search_until(Instant::now() + d.to_std().unwrap())
+                self.set_search_until(Instant::now() + d.to_std().unwrap())?
             }
         }
         Ok(())

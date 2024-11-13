@@ -148,7 +148,7 @@ impl Opts {
             println!("{}", msg);
         }
     }
-    
+
     /// if trace level, print the message
     pub fn stp(&self, msg: &str) {
         if self.st() {

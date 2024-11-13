@@ -2,6 +2,7 @@ use std::thread;
 use std::time::Instant;
 
 use anyhow::bail;
+use anyhow::Result;
 use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
 use log::debug;
@@ -12,19 +13,18 @@ use crate::search::info;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
 use crate::search::negamax::negamax;
+use crate::search::negamax::search_to;
 use crate::search::send;
 use crate::search::Message;
 use crate::search::RootNode;
 use crate::search::MV;
-use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
 use crate::Engine;
-
 impl Engine {
-    pub fn begin_search(&mut self) -> anyhow::Result<Receiver<Message>> {
-        debug!("begin_search called with depth {:?}", unsafe { SEARCH_TO });
+    pub fn begin_search(&mut self) -> Result<Receiver<Message>> {
+        debug!("begin_search called with depth {:?}", search_to());
         self.set_search(true);
         if exit_condition() {
             bail!("begin_search called with exit_condition true!");
@@ -48,7 +48,7 @@ impl Engine {
             let mut total_nodes = 0;
             let start_time = Instant::now();
 
-            while !exit_condition() && target_depth < unsafe { SEARCH_TO } {
+            while !exit_condition() && target_depth < search_to() {
                 // go one level deeper
                 target_depth += ONE_PLY;
                 debug!("iterative deepening searching to depth {:?}", target_depth);

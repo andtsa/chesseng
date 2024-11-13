@@ -12,6 +12,7 @@ pub mod transposition_table;
 pub mod uci;
 pub mod util;
 
+use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -75,21 +76,27 @@ impl Engine {
     }
 
     pub fn set_search(&self, x: bool) {
-        unsafe { SEARCHING = x }
+        SEARCHING.store(x, Ordering::Relaxed);
     }
 
     pub fn set_search_to(&self, x: Depth) {
-        unsafe { SEARCH_TO = x }
+        SEARCH_TO.store(x.0, Ordering::Relaxed);
     }
 
-    pub fn set_search_until(&self, until: Instant) {
+    pub fn set_search_until(&self, until: Instant) -> Result<()> {
         let until = until - Duration::from_millis(1);
-        unsafe {
-            SEARCH_UNTIL = Some(until);
-            if SEARCH_UNTIL.is_some_and(|u| u < Instant::now()) {
-                SEARCHING = false;
-            }
+        let _ = SEARCH_UNTIL
+            .try_write()
+            .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))?
+            .insert(until);
+        if SEARCH_UNTIL
+            .try_read()
+            .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))?
+            .is_some_and(|u| u < Instant::now())
+        {
+            SEARCHING.store(false, Ordering::Relaxed);
         }
+        Ok(())
     }
 
     /// # begin setting up the engine
@@ -112,7 +119,7 @@ impl Engine {
 
     pub fn best_move(&mut self, to_depth: Depth, move_time: Duration) -> Result<ChessMove> {
         self.set_search_to(to_depth);
-        self.set_search_until(Instant::now() + move_time);
+        self.set_search_until(Instant::now() + move_time)?;
 
         let mut move_listener = self.begin_search()?;
 
@@ -137,10 +144,10 @@ impl Engine {
                     thread::sleep(Duration::from_millis(50));
                 }
                 Err(RecvErr::NoSender) => {
-                    if let Some(mv) = best {
-                        return Ok(mv.0);
+                    return if let Some(mv) = best {
+                        Ok(mv.0)
                     } else {
-                        return Err(anyhow!("sender dropped before best move found"));
+                        Err(anyhow!("sender dropped before best move found"))
                     }
                 }
             }

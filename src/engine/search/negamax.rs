@@ -1,3 +1,5 @@
+use std::sync::atomic::Ordering;
+
 use chess::Board;
 
 use crate::evaluation::eval;
@@ -5,18 +7,19 @@ use crate::search::moveordering::ordered_moves;
 use crate::search::SearchResult;
 use crate::search::MV;
 use crate::search::SEARCHING;
+use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 use crate::Opts;
-use crate::transposition_table::TranspositionTable;
 
-fn tt() -> Box<TranspositionTable> {
-    todo!()
+#[inline(always)]
+pub fn searching() -> bool {
+    SEARCHING.load(Ordering::Relaxed)
 }
 
 #[inline(always)]
-fn searching() -> bool {
-    unsafe { SEARCHING }
+pub fn search_to() -> Depth {
+    Depth(SEARCH_TO.load(Ordering::Relaxed))
 }
 
 #[inline(always)]
@@ -32,15 +35,13 @@ pub fn negamax(
     beta: Value,
     db: Opts,
 ) -> SearchResult {
-    let original_alpha = alpha;
-    let tt_box = tt();
-    let entry = tt_box.get(&pos.get_hash());
-    
     let moves = ordered_moves(&pos);
-    
-    db.stp(&format!("ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}"));
+
+    db.stp(&format!(
+        "ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}"
+    ));
     db.stp(&format!("moves: {}", moves));
-    
+
     if to_depth == Depth::ZERO || moves.is_empty() {
         let ev = eval(&pos, &moves);
         db.stp(&format!("return eval: {:?}", ev));
