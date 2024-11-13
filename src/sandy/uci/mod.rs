@@ -7,17 +7,19 @@ use std::time::Instant;
 
 use anyhow::Result;
 use chess::Board;
-use log::debug;
-use log::error;
 use log::info;
-use log::trace;
 use log::warn;
+use sandy_engine::debug::DebugLevel::debug;
+use sandy_engine::debug::DebugLevel::info;
+use sandy_engine::optlog;
+use sandy_engine::opts::opts;
+use sandy_engine::opts::setopts;
+use sandy_engine::opts::Opts;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::Print;
-use sandy_engine::DebugLevel::Debug;
-use sandy_engine::DebugLevel::Info;
 use sandy_engine::Engine;
 use vampirc_uci::parse_one;
+use vampirc_uci::Serializable;
 use vampirc_uci::UciMessage;
 
 use crate::uci::search_controls::SearchControl;
@@ -31,22 +33,26 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
     println!("id name Sandy Chess Engine");
     println!("id author {}", env!("CARGO_PKG_AUTHORS"));
 
-    // options, todo.
+    // options
+    for opt in Opts::register_options() {
+        println!("{}", opt.serialize());
+    }
 
     println!("uciok");
 
     for line in std::io::stdin().lock().lines() {
         let msg: UciMessage = parse_one(&line?);
-        trace!("Received message: {}", msg);
+        optlog!(uci;trace;"Received message: {}", msg);
         match msg {
             UciMessage::Uci => warn!("already in uci mode!"),
             UciMessage::Debug(value) => {
-                engine.opts.debug(if value { Debug } else { Info });
+                let curr = opts()?;
+                setopts(curr.debug(if value { debug } else { info }))?;
                 info!(
                     "debug mode: {}, log_level: {:?}, engine opts: {:?}",
                     value,
                     log::max_level(),
-                    engine.opts
+                    opts()
                 );
             }
             UciMessage::IsReady => {
@@ -55,7 +61,16 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                 println!("readyok");
             }
             UciMessage::SetOption { name, value } => {
-                println!("unrecognised option: {}, ignoring value {value:?}", name)
+                match opts()?.receive_option(&name, value.as_deref()) {
+                    Err(e) => optlog!(uci;error;"error setting option: {}", e),
+                    Ok(opt) => {
+                        setopts(opt)?;
+                        optlog!(uci;info;
+                             "option {name} set to {}.",
+                             value.unwrap_or("None".to_string())
+                        );
+                    }
+                }
             }
             UciMessage::Register { .. } => {}
             UciMessage::UciNewGame => {
@@ -75,11 +90,9 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                 for mv in moves {
                     engine.board = engine.board.make_move_new(mv);
                 }
-                info!("fen position: {}", engine.board);
-                if engine.opts.cd() {
-                    info!("{}", engine.board.print());
-                    debug!("{}", engine.board);
-                }
+                optlog!(uci;info;"fen position: {}", engine.board);
+                optlog!(uci;debug;"{}", engine.board.print());
+                optlog!(uci;debug;"{}", engine.board);
             }
             UciMessage::Go {
                 time_control,
@@ -87,11 +100,11 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             } => {
                 engine.set_search_to(Depth::MAX);
                 if let Some(tc) = time_control {
-                    debug!("time control: {:?}", tc);
+                    optlog!(uci;debug;"time control: {:?}", tc);
                     engine.time_control(tc)?;
                 }
                 if let Some(sc) = search_control {
-                    debug!("search control: {:?}", sc);
+                    optlog!(uci;debug;"search control: {:?}", sc);
                     engine.search_control(sc)?;
                 }
 
@@ -105,7 +118,7 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             UciMessage::PonderHit => {}
             UciMessage::Quit => {
                 // clean up and EXIT
-                info!("quitting");
+                optlog!(uci;info;"quitting");
                 break;
             }
             UciMessage::Id { .. } => {}
@@ -120,12 +133,12 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                 if msg.trim().is_empty() {
                     continue;
                 }
-                warn!("unrecognised message: {}", msg);
+                optlog!(uci;warn;"unrecognised message: {}", msg);
                 if let Some(err) = err {
-                    if engine.opts.cd() {
-                        error!("{:?}", err);
+                    if opts()?.comm.debug() {
+                        optlog!(uci;error;"{:?}", err);
                     } else {
-                        error!("{}", err);
+                        optlog!(uci;error;"{}", err);
                     }
                 }
             }

@@ -1,8 +1,13 @@
 use std::sync::atomic::Ordering;
 
+use anyhow::Result;
 use chess::Board;
 
-use crate::evaluation::eval;
+use crate::evaluation::evaluate;
+use crate::optlog;
+use crate::opts::opts;
+use crate::opts::setopts;
+use crate::opts::Opts;
 use crate::search::moveordering::ordered_moves;
 use crate::search::SearchResult;
 use crate::search::MV;
@@ -10,7 +15,6 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
-use crate::Opts;
 
 #[inline(always)]
 pub fn searching() -> bool {
@@ -23,28 +27,28 @@ pub fn search_to() -> Depth {
 }
 
 #[inline(always)]
-#[allow(dead_code)]
-pub fn ngm(pos: Board, to_depth: Depth, alpha: Value, beta: Value) -> SearchResult {
-    negamax(pos, to_depth, alpha, beta, Opts::new())
-}
-
-pub fn negamax(
+pub fn ng_test(
     pos: Board,
     to_depth: Depth,
-    mut alpha: Value,
+    alpha: Value,
     beta: Value,
-    db: Opts,
-) -> SearchResult {
+    opts: Opts,
+) -> Result<SearchResult> {
+    {
+        setopts(opts)?;
+    }
+    Ok(negamax(pos, to_depth, alpha, beta))
+}
+
+pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> SearchResult {
     let moves = ordered_moves(&pos);
 
-    db.stp(&format!(
-        "ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}"
-    ));
-    db.stp(&format!("moves: {}", moves));
+    optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
+    optlog!(search;trace;"moves: {}", moves);
 
     if to_depth == Depth::ZERO || moves.is_empty() {
-        let ev = eval(&pos, &moves);
-        db.stp(&format!("return eval: {:?}", ev));
+        let ev = evaluate(&pos, &moves);
+        optlog!(search;trace;"return eval: {:?}", ev);
         return SearchResult {
             pv: vec![],
             next_position_value: ev,
@@ -57,12 +61,12 @@ pub fn negamax(
     let mut total_nodes = 0;
 
     for mv in moves.0.iter() {
-        let mut deeper = -negamax(pos.make_move_new(*mv), to_depth - 1, -beta, -alpha, db);
+        let mut deeper = -negamax(pos.make_move_new(*mv), to_depth - 1, -beta, -alpha);
         total_nodes += deeper.nodes_searched + 1;
 
         if !searching() {
-            db.stp("searching() == false, breaking early");
-            deeper.new_eval(eval(&pos, &moves));
+            optlog!(search;trace;"searching() == false, breaking early");
+            deeper.new_eval(evaluate(&pos, &moves));
             deeper.set_nodes(total_nodes);
             return deeper;
         }
@@ -78,13 +82,13 @@ pub fn negamax(
         }
         alpha = alpha.max(deeper.next_position_value);
 
-        if db.ab && alpha >= beta {
-            db.stp(&format!("alpha {alpha:?} >= beta {beta:?}"));
+        if opts().unwrap().use_ab && alpha >= beta {
+            optlog!(search;trace;"alpha {alpha:?} >= beta {beta:?}");
             break;
         }
     }
 
-    db.stp(&format!("return max_val: {:?}", best));
+    optlog!(search;trace;"return max_val: {:?}", best);
 
     SearchResult {
         pv,

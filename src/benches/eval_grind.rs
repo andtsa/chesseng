@@ -1,7 +1,6 @@
 use chess::Board;
 use iai::black_box;
 use sandy_engine::search::moveordering::ordered_moves;
-use sandy_engine::Opts;
 
 fn board_setup() {
     let _ = Board::default();
@@ -13,7 +12,7 @@ fn move_gen() {
 
 fn evaluation_benches() {
     let pos = Board::default();
-    sandy_engine::evaluation::evaluate(black_box(&pos), &ordered_moves(&pos), Opts::new());
+    sandy_engine::evaluation::evaluate(black_box(&pos), &ordered_moves(&pos));
 }
 
 iai::main!(board_setup, move_gen, evaluation_benches);

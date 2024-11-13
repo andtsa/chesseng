@@ -67,14 +67,14 @@ pub fn depth_test(depth: usize) {
     let print_results = |nodes| {
         println!(
             "{}",
-            format!("duration: {}", start.elapsed().as_millis())
+            format!(" duration: {}ms ", start.elapsed().as_millis())
                 .black()
                 .bold()
                 .on_bright_green()
         );
         println!(
             "{}",
-            format!("total nodes searched: {}", nodes)
+            format!(" total nodes searched: {} ", nodes)
                 .black()
                 .bold()
                 .on_bright_green()
