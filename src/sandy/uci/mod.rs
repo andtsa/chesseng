@@ -9,8 +9,7 @@ use anyhow::Result;
 use chess::Board;
 use log::info;
 use log::warn;
-use sandy_engine::debug::DebugLevel::debug;
-use sandy_engine::debug::DebugLevel::info;
+use sandy_engine::debug::DebugLevel;
 use sandy_engine::optlog;
 use sandy_engine::opts::opts;
 use sandy_engine::opts::setopts;
@@ -47,7 +46,11 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             UciMessage::Uci => warn!("already in uci mode!"),
             UciMessage::Debug(value) => {
                 let curr = opts()?;
-                setopts(curr.debug(if value { debug } else { info }))?;
+                setopts(curr.debug(if value {
+                    DebugLevel::debug
+                } else {
+                    DebugLevel::info
+                }))?;
                 info!(
                     "debug mode: {}, log_level: {:?}, engine opts: {:?}",
                     value,
@@ -67,7 +70,7 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                         setopts(opt)?;
                         optlog!(uci;info;
                              "option {name} set to {}.",
-                             value.unwrap_or("None".to_string())
+                             value.clone().unwrap_or("None".to_string())
                         );
                     }
                 }

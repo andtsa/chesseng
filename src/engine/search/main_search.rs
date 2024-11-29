@@ -8,12 +8,14 @@ use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
 
 use crate::optlog;
+use crate::primary;
 use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
 use crate::search::negamax::negamax;
 use crate::search::negamax::search_to;
+use crate::search::search_until;
 use crate::search::send;
 use crate::search::Message;
 use crate::search::RootNode;
@@ -50,6 +52,9 @@ impl Engine {
             let start_time = Instant::now();
 
             while !exit_condition() && target_depth < search_to() {
+                // record the time it takes to reach this depth to see if it's worth it to go
+                // deeper
+                let cur_depth_start = Instant::now();
                 // go one level deeper
                 target_depth += ONE_PLY;
                 optlog!(search;debug;"iterative deepening searching to depth {:?}", target_depth);
@@ -139,7 +144,21 @@ impl Engine {
                     send(&mut publisher, Message::BestMove(MV(mv, best_value)));
                 }
                 if let Some(ponder) = root.pv.get(1) {
-                    send(&mut publisher, Message::Ponder(ponder.clone()));
+                    send(&mut publisher, Message::Ponder(*ponder));
+                }
+
+                // check if we should even try to go deeper
+                if search_until().is_some_and(|u| u < Instant::now() + cur_depth_start.elapsed()) {
+                    primary!(
+                        search;
+                        debug;
+                        "not enough time for depth {} ({}ms/{}ms), breaking early at move {}",
+                        target_depth.0 + 1,
+                        start_time.elapsed().as_millis(),
+                        (search_until().unwrap_or_else(Instant::now) - Instant::now()).as_millis(),
+                        MV(best_move.unwrap_or_default(), best_value)
+                    );
+                    break;
                 }
             }
 
