@@ -1,0 +1,23 @@
+Rank Name                          Elo     +/-   Games   Score    Draw
+   1 sv1.1.1                        44     216       8   56.3%   37.5%
+   2 sv1                            44     275       8   56.3%   12.5%
+   3 sv1.1                         -89     190       8   37.5%   50.0%
+
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+12 of 12 games finished.
+
+Player: sv1
+   "Draw by 3-fold repetition": 1
+   "Loss: Black mates": 3
+   "Win: Black mates": 3
+   "Win: White mates": 1
+Player: sv1.1
+   "Draw by 3-fold repetition": 4
+   "Loss: Black mates": 1
+   "Loss: White mates": 2
+   "Win: Black mates": 1
+Player: sv1.1.1
+   "Draw by 3-fold repetition": 3
+   "Loss: Black mates": 2
+   "Win: Black mates": 2
+   "Win: White mates": 1

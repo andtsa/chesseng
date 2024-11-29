@@ -27,7 +27,7 @@ pub static SEARCH_TO: AtomicU16 = AtomicU16::new(0);
 pub static SEARCHING: AtomicBool = AtomicBool::new(false);
 pub static EXIT: AtomicBool = AtomicBool::new(false);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct MV(pub ChessMove, pub Value);
 
 pub struct RootNode {
@@ -60,14 +60,15 @@ pub struct SearchInfo {
     pub pv: Vec<MV>,
 }
 
+pub fn search_until() -> Option<Instant> {
+    *SEARCH_UNTIL
+        .try_read()
+        .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))
+        .unwrap()
+}
+
 pub fn exit_condition() -> bool {
-    if EXIT.load(Ordering::Relaxed)
-        || SEARCH_UNTIL
-            .try_read()
-            .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))
-            .unwrap()
-            .is_some_and(|u| u < Instant::now())
-    {
+    if EXIT.load(Ordering::Relaxed) || search_until().is_some_and(|u| u < Instant::now()) {
         SEARCHING.store(false, Ordering::Relaxed);
         true
     } else {
