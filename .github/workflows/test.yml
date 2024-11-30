@@ -1,0 +1,60 @@
+name: test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare
+        uses: actions/checkout@v4
+      - name: Gather rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        run: cargo build --release --verbose
+
+  test_lint:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare
+        uses: actions/checkout@v4
+      - name: Gather rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy, rustfmt
+
+      - name: Prepare cargo2junit
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cargo2junit
+          locked: false
+
+      - name: Formatting
+        run: cargo fmt -- --check
+
+      - name: Clippy
+        run: cargo clippy --release --no-deps --all-targets -- -D warnings
+
+      - name: Report
+        run: cargo test --release -vv -- -Z unstable-options --format json --report-time | cargo2junit > results.xml
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            results.xml
+            cobertura.xml
+          retention-days: 4
+        continue-on-error: true
