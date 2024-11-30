@@ -55,6 +55,15 @@ incremental = false
 codegen-units = 16
 rpath = false
 
+[lints.rust]
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+
+[lints.clippy]
+redundant_static_lifetimes = "allow"
+missing_docs_in_private_items = "warn"
+missing_safety_doc = "warn"
+undocumented_unsafe_blocks = "warn"
 
 [[bench]]
 name = "ngm"

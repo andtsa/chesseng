@@ -33,12 +33,15 @@ use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
 
+/// this is why you're here, right?
 #[derive(Debug)]
 pub struct Engine {
+    /// the board the engine will think on
     pub board: Board,
 }
 
 impl Engine {
+    /// create a new engine!
     pub fn new() -> Result<Self> {
         info!("creating engine at version {}", env!("CARGO_PKG_VERSION"));
         Ok(Self {
@@ -46,14 +49,17 @@ impl Engine {
         })
     }
 
+    /// set the global [`SEARCHING`]
     pub fn set_search(&self, x: bool) {
         SEARCHING.store(x, Ordering::Relaxed);
     }
 
+    /// set the global [`SEARCH_TO`]
     pub fn set_search_to(&self, x: Depth) {
         SEARCH_TO.store(x.0, Ordering::Relaxed);
     }
 
+    /// set the global [`SEARCH_UNTIL`]
     pub fn set_search_until(&self, until: Instant) -> Result<()> {
         let until = until - Duration::from_millis(1);
         let _ = SEARCH_UNTIL
@@ -88,6 +94,7 @@ impl Engine {
         Ok(())
     }
 
+    /// get the best move from this position using the current thread
     pub fn best_move(&mut self, to_depth: Depth, move_time: Duration) -> Result<ChessMove> {
         self.set_search_to(to_depth);
         self.set_search_until(Instant::now() + move_time)?;

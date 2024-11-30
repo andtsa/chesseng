@@ -1,4 +1,6 @@
+/// UCI search-controls related functionality
 pub mod search_controls;
+/// UCI time-control related functionality
 pub mod time_control;
 
 use std::io::BufRead;

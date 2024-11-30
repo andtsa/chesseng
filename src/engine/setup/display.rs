@@ -1,3 +1,4 @@
+//! Display implementation for the [`Value`] struct.
 use std::fmt::Display;
 use std::fmt::Formatter;
 

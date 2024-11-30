@@ -1,4 +1,4 @@
-pub mod display;
+/// Module for playing against the engine in the terminal
 mod parse_move;
 
 use std::str::FromStr;
@@ -16,6 +16,7 @@ use sandy_engine::Engine;
 
 use crate::player::parse_move::parse_player_move;
 
+/// Main loop for playing against the engine in the terminal
 pub fn terminal_loop(mut engine: Engine) -> Result<()> {
     match inquire::Select::new(
         "Playing game in terminal",

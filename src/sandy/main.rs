@@ -22,7 +22,9 @@ use sandy_engine::Engine;
 use crate::player::terminal_loop;
 use crate::uci::uci_loop;
 
+/// Interacting with human players
 pub mod player;
+/// UCI protocol handling
 mod uci;
 
 fn main() -> Result<()> {

@@ -1,3 +1,7 @@
+//! Negamax search algorithm.
+//!
+//! https://en.wikipedia.org/wiki/Negamax
+
 use std::sync::atomic::Ordering;
 
 use anyhow::Result;
@@ -16,16 +20,20 @@ use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 
+/// wrapper around [`SEARCHING`]
 #[inline(always)]
 pub fn searching() -> bool {
     SEARCHING.load(Ordering::Relaxed)
 }
 
+/// wrapper around [`SEARCH_TO`]
 #[inline(always)]
 pub fn search_to() -> Depth {
     Depth(SEARCH_TO.load(Ordering::Relaxed))
 }
 
+/// same as [`negamax`] but it sets the global options before running.
+/// should be used for tests.
 #[inline(always)]
 pub fn ng_test(
     pos: Board,
@@ -40,6 +48,7 @@ pub fn ng_test(
     Ok(negamax(pos, to_depth, alpha, beta))
 }
 
+/// mmmmmmmmmmmmm
 pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> SearchResult {
     let moves = ordered_moves(&pos);
 
@@ -66,8 +75,8 @@ pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> Se
 
         if !searching() {
             optlog!(search;trace;"searching() == false, breaking early");
-            deeper.new_eval(evaluate(&pos, &moves));
-            deeper.set_nodes(total_nodes);
+            deeper.next_position_value = evaluate(&pos, &moves);
+            deeper.nodes_searched = total_nodes;
             return deeper;
         }
 

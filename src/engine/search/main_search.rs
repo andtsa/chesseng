@@ -1,3 +1,4 @@
+//! the main iterative deepening search, that calls several [`negamax`] searches
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -27,6 +28,8 @@ use crate::uci::UCI_LISTENING_FREQUENCY;
 use crate::Engine;
 
 impl Engine {
+    /// Begin the search for the best move, spawns a new thread to actually do
+    /// the search, and returns a listener for [`Message`]s.
     pub fn begin_search(&mut self) -> Result<Receiver<Message>> {
         optlog!(search;debug;"begin_search called with depth {:?}", search_to());
         self.set_search(true);

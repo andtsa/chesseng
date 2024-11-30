@@ -1,3 +1,4 @@
+//! test if the engine will correctly find checkmate
 use std::io::BufRead;
 use std::io::Write;
 use std::path::PathBuf;
@@ -8,9 +9,12 @@ use std::time::Instant;
 
 use colored::Colorize;
 
+/// how long to let the test run for before killing it, in ms
 pub const TEST_DURATION: u64 = 10_000;
+/// slack around the test duration
 pub const STRICTNESS_THRESHOLD: u64 = 1_000;
 
+/// make sure that the engine will find the checkmate from these positions.
 #[test]
 fn main() {
     let startpos = "1r2k3/8/K3p3/4p3/4q3/8/5bpr/6q1 b - - 0 44";
@@ -22,6 +26,7 @@ fn main() {
     test_mating(mate_in_2, &valid_best_moves);
 }
 
+/// Test whether the engine will find one of the valid mating moves
 fn test_mating(startpos: &str, valid_mates: &[&str]) {
     let exec = PathBuf::from(env!("CARGO_BIN_EXE_chesseng"));
 

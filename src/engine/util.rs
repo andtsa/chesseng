@@ -63,6 +63,7 @@ pub fn bench_positions() -> Vec<Board> {
         .collect()
 }
 
+/// A shorter collection of positions for benchmarking
 pub fn short_benches() -> Vec<Board> {
     let positions = [
         // starting position
@@ -80,8 +81,11 @@ pub fn short_benches() -> Vec<Board> {
         .collect()
 }
 
+/// Trait for printing the board
 pub trait Print {
+    /// Print the board
     fn print(&self) -> String;
+    /// Print the board with the last move highlighted
     fn print_move(&self, mv: ChessMove, capture: bool) -> String;
 }
 
@@ -104,6 +108,7 @@ impl Print for Board {
     }
 }
 
+/// Convert a FEN string to a visual representation of the board
 pub fn fen_to_str(fen: String) -> String {
     let mut r: String = String::new();
     let mut rows: Vec<&str> = fen.split("/").collect();
@@ -138,6 +143,7 @@ pub fn fen_to_str(fen: String) -> String {
     r.to_string()
 }
 
+/// Highlight the last played move in the visual representation of the board
 pub fn fen_to_string_highlighted(
     full_fen: String,
     mv: ChessMove,

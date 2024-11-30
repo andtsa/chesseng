@@ -1,3 +1,5 @@
+//! Benchmarks for the negamax search with different depths
+#![allow(missing_docs)]
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
@@ -8,6 +10,7 @@ use sandy_engine::setup::depth::Depth;
 use sandy_engine::setup::values::Value;
 use sandy_engine::util::bench_positions;
 
+/// Search benchmarks with different depths
 fn search_benches(c: &mut Criterion) {
     let depths = [3, 4];
     let mut group = c.benchmark_group("search_bench");

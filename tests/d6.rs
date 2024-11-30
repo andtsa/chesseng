@@ -1,3 +1,4 @@
+//! a timed depth test
 use std::io::BufRead;
 use std::io::Write;
 use std::path::PathBuf;
@@ -8,14 +9,18 @@ use std::time::Instant;
 
 use colored::Colorize;
 
+/// how long to let the test run for before killing it, in ms
 pub const TEST_DURATION: u64 = 90_000;
+/// slack around the test duration
 pub const STRICTNESS_THRESHOLD: u64 = 1_000;
 
+/// a depth test of 6
 #[test]
 fn main() {
     depth_test(6);
 }
 
+/// Test the engine at a certain depth
 pub fn depth_test(depth: usize) {
     let exec = PathBuf::from(env!("CARGO_BIN_EXE_chesseng"));
 

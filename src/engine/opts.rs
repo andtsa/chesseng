@@ -1,3 +1,4 @@
+//! global options for the engine
 use std::sync::RwLock;
 use std::sync::TryLockError;
 
@@ -8,6 +9,8 @@ use vampirc_uci::UciOptionConfig;
 use crate::debug::DebugLevel;
 use crate::optlog;
 
+/// Read the global options for the engine, attempting to go through the
+/// [`RwLock`] of [`OPTS`] to do so
 #[inline(always)]
 pub fn opts() -> Result<Opts> {
     match OPTS.try_read() {
@@ -33,6 +36,8 @@ pub fn opts() -> Result<Opts> {
     }
 }
 
+/// Set the global options for the engine, attempting to go through the
+/// [`RwLock`] of [`OPTS`] to do so
 pub fn setopts(opts: Opts) -> Result<()> {
     match OPTS.try_write() {
         Ok(mut o) => {
@@ -61,20 +66,32 @@ pub fn setopts(opts: Opts) -> Result<()> {
     }
 }
 
+/// The global options ([`Opts`]) for the [`crate::Engine`]
 pub static OPTS: RwLock<Opts> = RwLock::new(Opts::new());
 
 /// Debug options for the engine
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Opts {
+    /// the [`DebugLevel`] for the [`crate::search`] module
     pub search: DebugLevel,
+    /// the [`DebugLevel`] for the [`crate::evaluation`] module
     pub eval: DebugLevel,
+    /// the [`DebugLevel`] for the communication between the search and UCI
+    /// threads
     pub comm: DebugLevel,
+    /// the [`DebugLevel`] for the transposition table module
     pub tt: DebugLevel,
+    /// the [`DebugLevel`] for the UCI module
     pub uci: DebugLevel,
+    /// the [`DebugLevel`] for other options
     pub opts: DebugLevel,
+    /// should the search use alpha beta pruning?
     pub use_ab: bool,
+    /// should the search use principal variation search?
     pub use_pv: bool,
+    /// should the search use transposition tables?
     pub use_tt: bool,
+    /// how big should the transposition table be? value in
     pub hash_size: usize,
 }
 
@@ -91,6 +108,10 @@ impl Opts {
         Self::initial().ab(true).pv(true).tt(true)
     }
 
+    /// Baseline configuration for [`Opts`]:
+    /// * all debug levels are set to [`DebugLevel::info`]
+    /// * all performance improvements are disabled
+    /// * transposition table size is 16MB
     const fn initial() -> Self {
         Self {
             search: DebugLevel::info,
@@ -106,6 +127,10 @@ impl Opts {
         }
     }
 
+    /// configure the [`Opts`] for a benchmarking environment:
+    /// * no debug prints
+    /// * all optimisations enabled
+    /// * very small memory footprint
     pub const fn bench() -> Self {
         Self {
             search: DebugLevel::off,
@@ -121,6 +146,7 @@ impl Opts {
         }
     }
 
+    /// Register the UCI options for the engine
     pub fn register_options() -> Vec<UciOptionConfig> {
         vec![
             UciOptionConfig::Check {
@@ -178,6 +204,7 @@ impl Opts {
         ]
     }
 
+    /// Parse a UCI option and set the appropriate value in the [`Opts`] struct
     pub fn receive_option(&mut self, name: &str, value: Option<&str>) -> Result<Self> {
         let parse_check = |check: &str, value: Option<&str>| match value.unwrap_or_default() {
             "on" => Ok(true),

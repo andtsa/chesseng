@@ -2,7 +2,10 @@ use anyhow::Result;
 use sandy_engine::Engine;
 use vampirc_uci::UciSearchControl;
 
+/// Implement this trait for the [`Engine`] to handle search control.
 pub trait SearchControl {
+    /// Convert a [`UciSearchControl`] into actual search values for the
+    /// [`Engine`].
     fn search_control(&mut self, tc: UciSearchControl) -> Result<()>;
 }
 

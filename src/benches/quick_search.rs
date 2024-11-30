@@ -1,3 +1,5 @@
+//! Quick search benchmarks for the sandy engine
+#![allow(missing_docs)]
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
@@ -8,6 +10,7 @@ use sandy_engine::setup::depth::Depth;
 use sandy_engine::setup::values::Value;
 use sandy_engine::util::bench_positions;
 
+/// Search benchmarks with different starting positions
 fn search_benches(c: &mut Criterion) {
     let positions = bench_positions();
     let samples = [0, 5, 29];

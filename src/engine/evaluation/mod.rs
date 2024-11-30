@@ -1,3 +1,5 @@
+//! The Evaluation module of this chess engine
+
 pub mod bitboards;
 pub mod material;
 
@@ -16,10 +18,13 @@ use crate::opts::Opts;
 use crate::search::moveordering::MoveOrdering;
 use crate::setup::values::Value;
 
+/// a bonus given to the side-to-move for having a tempo advantage
 pub const TEMPO: Value = Value(25);
 
+/// an interpolation between beginning, middle, and endgame
 pub type Interp = (f64, f64, f64);
 
+/// same as [`evaluate`] but first sets the global [`Opts`]
 pub fn eval(pos: &Board, moves: &MoveOrdering, opts: Opts) -> Result<Value> {
     {
         setopts(opts)?;
@@ -27,6 +32,8 @@ pub fn eval(pos: &Board, moves: &MoveOrdering, opts: Opts) -> Result<Value> {
     Ok(evaluate(pos, moves))
 }
 
+/// the main evaluation function. returns a value representing the score of the
+/// position from the point of view of the player whos turn it is to move
 pub fn evaluate(pos: &Board, moves: &MoveOrdering) -> Value {
     // Initialize evaluation score
     let mut value = Value::ZERO;

@@ -1,3 +1,4 @@
+//! The search module contains the search logic for the engine.
 mod main_search;
 pub mod moveordering;
 pub mod negamax;
@@ -20,46 +21,75 @@ use log::debug;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 
+/// how many os threads should the search use?
 pub const SEARCH_THREADS: usize = 1;
 
+/// when should the search stop?
 pub static SEARCH_UNTIL: RwLock<Option<Instant>> = RwLock::new(None);
+/// what's the maximum depth the search should go to?
 pub static SEARCH_TO: AtomicU16 = AtomicU16::new(0);
+/// is the search running?
 pub static SEARCHING: AtomicBool = AtomicBool::new(false);
+/// should the search exit?
 pub static EXIT: AtomicBool = AtomicBool::new(false);
 
+/// A move and its value
 #[derive(Debug, Clone, Copy)]
 pub struct MV(pub ChessMove, pub Value);
 
+/// The root node of the search
+#[derive(Debug)]
 pub struct RootNode {
+    /// the current board state
     pub board: Board,
+    /// the principal variation
     pub pv: Vec<MV>,
+    /// the current evaluation of the root node
     pub eval: Value,
+    /// the previous evaluation of the root node
     pub previous_eval: Value,
 }
 
+/// The result of a single negamax search call
+#[derive(Debug)]
 pub struct SearchResult {
+    /// The principal variation
     pub pv: Vec<MV>,
+    /// The value of the best move found
     pub next_position_value: Value,
+    /// how many nodes were searched by this call and its recursive sub-calls
     pub nodes_searched: usize,
 }
 
+/// A message that can be sent from the search threads to the main/UCI thread
 #[derive(Debug)]
 pub enum Message {
+    /// best move from a full search to a certain depth
     BestMove(MV),
+    /// UCI ponder move
     Ponder(MV),
+    /// the next best guess from a non-fully-searched depth
     BestGuess(MV),
+    /// A UCI info message
     Info(SearchInfo),
 }
 
+/// a UCI info message during a search
 #[derive(Debug)]
 pub struct SearchInfo {
+    /// The depth that was reached
     pub depth: Depth,
+    /// The score of the best move found from the root position
     pub score: Value,
+    /// The number of nodes that was searched for this depth
     pub nodes: usize,
+    /// The time it took to search this depth
     pub time: Duration,
+    /// The principal variation
     pub pv: Vec<MV>,
 }
 
+/// wrapper around [`SEARCH_UNTIL`]
 pub fn search_until() -> Option<Instant> {
     *SEARCH_UNTIL
         .try_read()
@@ -67,6 +97,7 @@ pub fn search_until() -> Option<Instant> {
         .unwrap()
 }
 
+/// has the exit condition been reached?
 pub fn exit_condition() -> bool {
     if EXIT.load(Ordering::Relaxed) || search_until().is_some_and(|u| u < Instant::now()) {
         SEARCHING.store(false, Ordering::Relaxed);
@@ -76,6 +107,7 @@ pub fn exit_condition() -> bool {
     }
 }
 
+/// shortcut for sending UCI info to the main thread
 fn info(
     publisher: &mut Sender<Message>,
     target_depth: Depth,
@@ -95,21 +127,10 @@ fn info(
     }
 }
 
+/// shortcut for sending a message to the main thread
 fn send(publisher: &mut Sender<Message>, msg: Message) {
     if let Err(e) = publisher.send(msg) {
         debug!("error sending message: {:?}", e);
-    }
-}
-
-impl SearchResult {
-    pub fn new_eval(&mut self, ev: Value) {
-        self.next_position_value = ev;
-    }
-    pub fn add_nodes(&mut self, nodes: usize) {
-        self.nodes_searched += nodes;
-    }
-    pub fn set_nodes(&mut self, nodes: usize) {
-        self.nodes_searched = nodes;
     }
 }
 
