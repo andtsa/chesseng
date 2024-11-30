@@ -12,7 +12,7 @@ use sandy_engine::util::bench_positions;
 
 /// Search benchmarks with different depths
 fn search_benches(c: &mut Criterion) {
-    let depths = [3, 4];
+    let depths = [3, 4, 5];
     let mut group = c.benchmark_group("search_bench");
 
     for d_idx in depths {
