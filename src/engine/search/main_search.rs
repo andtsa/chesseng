@@ -17,6 +17,7 @@ use crate::search::negamax::negamax;
 use crate::search::negamax::search_to;
 use crate::search::search_until;
 use crate::search::send;
+use crate::search::tail;
 use crate::search::Message;
 use crate::search::RootNode;
 use crate::search::MV;
@@ -76,11 +77,12 @@ impl Engine {
                 optlog!(search;trace;"ordered moves: {}", moves);
 
                 // iterate through all the possible moves from [`RootNode`]
-                for mv in moves {
+                for mv in &moves {
                     // recursively search the next position
                     let search_result = -negamax(
-                        root.board.make_move_new(mv),
+                        root.board.make_move_new(mv.0),
                         target_depth - 1,
+                        tail(&root.pv),
                         -beta,
                         -alpha,
                     );
@@ -105,14 +107,16 @@ impl Engine {
                     // + send info to the UCI thread
                     if search_result.next_position_value > best_value {
                         best_value = search_result.next_position_value;
-                        best_move = Some(mv);
+                        best_move = Some(mv.0);
 
-                        root.pv = vec![MV(mv, search_result.next_position_value)];
+                        root.pv = vec![mv.val(search_result.next_position_value)];
                         root.pv.extend(search_result.pv);
 
                         // UCI guess, not final move but have one ready in case stop is received
                         if let Some(mv) = best_move {
-                            if let Err(e) = publisher.send(Message::BestGuess(MV(mv, best_value))) {
+                            if let Err(e) =
+                                publisher.send(Message::BestGuess(MV(mv, best_value, false)))
+                            {
                                 optlog!(comm;debug;"error sending best guess: {:?}", e);
                                 break;
                             }
@@ -143,7 +147,7 @@ impl Engine {
                 );
 
                 if let Some(mv) = best_move {
-                    send(&mut publisher, Message::BestMove(MV(mv, best_value)));
+                    send(&mut publisher, Message::BestMove(MV(mv, best_value, true)));
                 }
                 if let Some(ponder) = root.pv.get(1) {
                     send(&mut publisher, Message::Ponder(*ponder));
@@ -158,7 +162,7 @@ impl Engine {
                         target_depth.0 + 1,
                         start_time.elapsed().as_millis(),
                         (search_until().unwrap_or_else(Instant::now) - Instant::now()).as_millis(),
-                        MV(best_move.unwrap_or_default(), best_value)
+                        MV(best_move.unwrap_or_default(), best_value, true)
                     );
                     break;
                 }
@@ -168,7 +172,7 @@ impl Engine {
             optlog!(comm;debug;"sending best move {:?}", best_move);
 
             if let Some(mv) = best_move {
-                send(&mut publisher, Message::BestMove(MV(mv, best_value)))
+                send(&mut publisher, Message::BestMove(MV(mv, best_value, true)))
             }
 
             thread::sleep(Duration::from_millis(
