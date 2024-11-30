@@ -1,3 +1,4 @@
+//! evaluating the positions of the pieces on the board
 use std::ops::BitAnd;
 
 use chess::Board;
@@ -10,6 +11,7 @@ use crate::evaluation::bitboards::POS_PIECE_TYPES;
 use crate::evaluation::Interp;
 use crate::setup::values::Value;
 
+/// returns the benefit this side has from its pieces' positions
 pub fn piece_position_benefit_for_side(pos: &Board, color: Color, interp: Interp) -> Value {
     let mut value = Value::ZERO;
     let side = pos.color_combined(color);

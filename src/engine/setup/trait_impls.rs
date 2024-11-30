@@ -1,3 +1,4 @@
+//! Contains implementations of traits for the `Value` and `Depth` types.
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Mul;
@@ -113,10 +114,14 @@ impl std::ops::Div<Value> for Value {
     }
 }
 
+/// Returns the score for when the engine believes it can checkmate within the
+/// given depth
 pub fn mate_in(ply: i16) -> Value {
     Value::MATE - ply
 }
 
+/// Returns the score for when the engine expects to be checkmated within the
+/// given depth
 pub fn mated_in(ply: i16) -> Value {
     -Value::MATE + ply
 }

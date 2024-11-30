@@ -1,3 +1,4 @@
+//! chess is a timed game, here we deal with that
 use std::time::Duration;
 use std::time::Instant;
 
@@ -5,15 +6,19 @@ use anyhow::Result;
 
 use crate::Engine;
 
-pub const MAX_TIME: Duration = Duration::from_secs(60 * 60 * 24 * 365 * 100);
+/// one hundred years :)
+const MAX_TIME: Duration = Duration::from_secs(60 * 60 * 24 * 365 * 100);
 
+/// The duration before the search should end to allow for submitting the move.
 pub const SUBMIT_DURATION: Duration = Duration::from_millis(5);
 
+/// Returns the maximum instant that can be represented.
 pub fn max_instant() -> Instant {
     Instant::now() + MAX_TIME
 }
 
 impl Engine {
+    /// Set the time until which the engine should search.
     pub fn game_time_constraints(
         &mut self,
         white_time: Option<Duration>,

@@ -1,3 +1,5 @@
+//! Benchmarks for depth 6 search
+#![allow(missing_docs)]
 use chess::Board;
 use criterion::black_box;
 use criterion::criterion_group;
@@ -8,6 +10,7 @@ use sandy_engine::search::negamax::ng_test;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::setup::values::Value;
 
+/// Search benchmarks with different engine options
 fn search_benches(c: &mut Criterion) {
     let startpos = Board::default();
 

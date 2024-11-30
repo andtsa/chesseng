@@ -1,10 +1,13 @@
+//! hardcoded bitboard values used for the evaluation function
 #![allow(dead_code)]
 
 use chess::BitBoard;
 use chess::Piece;
 
+/// a type for one pesto table, basically an 8 by 8 grid of [`Value`]s
 pub type PestoTable = [[i16; 8]; 8];
 
+/// a list of pieces who's position is considered in evaluation (all of them)
 pub const POS_PIECE_TYPES: [Piece; 6] = [
     Piece::Pawn,
     Piece::Knight,
@@ -14,6 +17,7 @@ pub const POS_PIECE_TYPES: [Piece; 6] = [
     Piece::King,
 ];
 
+/// Midgame pesto table for the pawn piece type
 pub const MG_PAWN_TABLE: PestoTable = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [98, 134, 61, 95, 68, 126, 34, -11],
@@ -25,6 +29,7 @@ pub const MG_PAWN_TABLE: PestoTable = [
     [0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
+/// Endgame pesto table for the pawn piece type
 pub const EG_PAWN_TABLE: PestoTable = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [178, 173, 158, 134, 147, 132, 165, 187],
@@ -36,6 +41,7 @@ pub const EG_PAWN_TABLE: PestoTable = [
     [0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
+/// Midgame pesto table for the knight piece type
 pub const MG_KNIGHT_TABLE: PestoTable = [
     [-167, -89, -34, -49, 61, -97, -15, -107],
     [-73, -41, 72, 36, 23, 62, 7, -17],
@@ -47,6 +53,7 @@ pub const MG_KNIGHT_TABLE: PestoTable = [
     [-105, -21, -58, -33, -17, -28, -19, -23],
 ];
 
+/// Endgame pesto table for the knight piece type
 pub const EG_KNIGHT_TABLE: PestoTable = [
     [-58, -38, -13, -28, 8, -33, -23, -45],
     [-28, -10, 13, 9, 10, 4, -9, -20],
@@ -58,6 +65,7 @@ pub const EG_KNIGHT_TABLE: PestoTable = [
     [-59, -36, -18, -16, -37, -10, -42, -67],
 ];
 
+/// Midgame pesto table for the bishop piece type
 pub const MG_BISHOP_TABLE: PestoTable = [
     [-29, 4, -82, -37, -25, -42, 7, -8],
     [-26, 16, -18, -13, 30, 59, 18, -47],
@@ -69,6 +77,7 @@ pub const MG_BISHOP_TABLE: PestoTable = [
     [-23, -15, 2, 5, 13, 4, -16, -27],
 ];
 
+/// Endgame pesto table for the bishop piece type
 pub const EG_BISHOP_TABLE: PestoTable = [
     [-14, -21, -11, -8, -7, -9, -17, -24],
     [-8, -4, 7, -12, -3, -13, -2, -9],
@@ -80,6 +89,7 @@ pub const EG_BISHOP_TABLE: PestoTable = [
     [-19, -13, 1, 17, 9, 16, 7, -15],
 ];
 
+/// Midgame pesto table for the rook piece type
 pub const MG_ROOK_TABLE: PestoTable = [
     [32, 42, 32, 51, 63, 9, 31, 43],
     [27, 32, 58, 62, 80, 67, 26, 44],
@@ -91,6 +101,7 @@ pub const MG_ROOK_TABLE: PestoTable = [
     [-7, 2, 13, 10, 13, 16, -2, -9],
 ];
 
+/// Endgame pesto table for the rook piece type
 pub const EG_ROOK_TABLE: PestoTable = [
     [13, 10, 18, 15, 12, 12, 8, 5],
     [11, 13, 13, 11, -3, 3, 8, 3],
@@ -102,6 +113,7 @@ pub const EG_ROOK_TABLE: PestoTable = [
     [0, 0, 0, 3, 3, 0, 0, 0],
 ];
 
+/// Midgame pesto table for the queen piece type
 pub const MG_QUEEN_TABLE: PestoTable = [
     [-28, 0, 29, 12, 59, 44, 43, 45],
     [-24, -39, 4, 26, 19, 35, 22, 15],
@@ -113,6 +125,7 @@ pub const MG_QUEEN_TABLE: PestoTable = [
     [-1, -18, -9, 10, -15, -25, -31, -50],
 ];
 
+/// Endgame pesto table for the queen piece type
 pub const EG_QUEEN_TABLE: PestoTable = [
     [-9, 22, 22, 27, 27, 19, 10, 20],
     [-17, 20, 32, 41, 58, 25, 30, 0],
@@ -124,6 +137,7 @@ pub const EG_QUEEN_TABLE: PestoTable = [
     [-20, -13, 6, 15, 14, 23, 15, 3],
 ];
 
+/// Midgame pesto table for the king piece type
 pub const MG_KING_TABLE: PestoTable = [
     [-65, 23, 16, -15, -56, -34, 2, 13],
     [29, -1, -20, -7, -8, -4, -38, -29],
@@ -135,6 +149,7 @@ pub const MG_KING_TABLE: PestoTable = [
     [-30, -24, -18, 5, -2, -18, -31, -32],
 ];
 
+/// Endgame pesto table for the king piece type
 pub const EG_KING_TABLE: PestoTable = [
     [-72, -48, -43, -15, -15, -43, -48, -72],
     [-72, -36, -18, 0, 0, -18, -36, -72],
@@ -146,6 +161,7 @@ pub const EG_KING_TABLE: PestoTable = [
     [-54, -54, -54, -54, -54, -54, -54, -54],
 ];
 
+/// Midgame Pesto Table
 pub const MG_PESTO_TABLE: [PestoTable; 6] = [
     MG_PAWN_TABLE,
     MG_KNIGHT_TABLE,
@@ -155,6 +171,7 @@ pub const MG_PESTO_TABLE: [PestoTable; 6] = [
     MG_KING_TABLE,
 ];
 
+/// Endgame Pesto Table
 pub const EG_PESTO_TABLE: [PestoTable; 6] = [
     EG_PAWN_TABLE,
     EG_KNIGHT_TABLE,
@@ -164,11 +181,16 @@ pub const EG_PESTO_TABLE: [PestoTable; 6] = [
     EG_KING_TABLE,
 ];
 
+/// the board's center
 const CENTER: BitBoard = BitBoard(0x0000001818000000);
+/// a bitboard of the queen-side half of the board
 const QUEEN_SIDE: BitBoard = BitBoard(0x0f0f0f0f0f0f0f0f);
+/// not sure yet
 const CENTER_FILES: BitBoard = BitBoard(0x3c3c3c3c3c3c3c3c);
+/// a bitboard of the king-side half of the board
 const KING_SIDE: BitBoard = BitBoard(0xf0f0f0f0f0f0f0f0);
 
+/// not sure yet
 const KING_FLANK: [BitBoard; 8] = [
     QUEEN_SIDE,
     QUEEN_SIDE,

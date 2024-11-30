@@ -26,6 +26,7 @@ impl Value {
     /// positions without advantage for either side.
     pub const ZERO: Value = Value(0);
 
+    /// A value of 1
     pub const ONE: Value = Value(1);
 
     /// represents a draw score, similar to [`ZERO`].

@@ -1,3 +1,5 @@
+//! this is a not-only-UCI engine, this module contains the backend for adapting
+//! the engine to the protocol
 use std::fmt::Write;
 use std::thread;
 use std::time::Duration;

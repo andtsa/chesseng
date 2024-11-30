@@ -1,3 +1,5 @@
+//! Benchmarking the evaluation function
+#![allow(missing_docs)]
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
@@ -22,6 +24,7 @@ use sandy_engine::util::bench_positions;
 //     }
 // }
 
+/// Benchmark the evaluation function
 fn evaluation_benches(c: &mut Criterion) {
     let mut group = c.benchmark_group("eval_bench");
 

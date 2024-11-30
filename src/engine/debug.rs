@@ -1,14 +1,30 @@
+//! Tools used to ensure this engine remains debug-able further into its
+//! development journey
+
+/// # `DebugLevel`
+/// A simple enum to represent the different levels of debug output
+/// * `off` - no debug output
+/// * `error` - only errors
+/// * `warn` - errors and warnings
+/// * `info` - errors, warnings, and info
+/// * `debug` - errors, warnings, info, and debug prints
+/// * `trace` - all debug output
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(non_camel_case_types)] // to call in macros with lowercase
 pub enum DebugLevel {
+    /// no printing whatsoever
     off,
     /// !!!! warning: importing this directly
     /// (`use crate::debug::DebugLevel::error`) messes up `anyhow` macros
     error,
+    /// warnings that users should also see
     warn,
+    /// informational prints that are also useful to the user
     #[default]
     info,
+    /// debug prints, used to checkpoint positions or to ensure smooth operation
     debug,
+    /// detailed output used for examining the exact runtime values of the code
     trace,
 }
 
@@ -53,6 +69,15 @@ macro_rules! optlog {
     };
 }
 
+/// # `primary!`
+/// ###### a macro to print a message to the console, but only in debug mode
+/// examples:
+/// ```rust
+/// # use sandy_engine::primary;
+/// # let depth = 5;
+/// primary!(search;info;"searching to depth {}", depth);
+/// // this will print the message in debug mode, but will cause a compile error in release mode
+/// ```
 #[macro_export]
 macro_rules! primary {
     ($module:ident;$level:ident;$($arg:tt)*) => {

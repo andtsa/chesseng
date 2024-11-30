@@ -10,9 +10,12 @@ use std::time::Instant;
 
 use colored::Colorize;
 
+/// how long to let the test run for before killing it, in ms
 pub const TEST_DURATION: u64 = 10_000;
+/// slack around the test duration
 pub const STRICTNESS_THRESHOLD: u64 = 1_000;
 
+/// uci test searching for 10 seconds
 #[test]
 fn main() {
     let exec = PathBuf::from(env!("CARGO_BIN_EXE_chesseng"));

@@ -1,3 +1,4 @@
+//! Material evaluation values and functions.
 use std::ops::BitAnd;
 
 use chess::Board;
@@ -7,10 +8,14 @@ use chess::Piece;
 use crate::evaluation::Interp;
 use crate::setup::values::Value;
 
+/// The score threshold at which the game is considered to be in the middlegame.
 pub const MIDDLEGAME_SCORE: Value = Value(6666);
+/// The score threshold at which the game is considered to be in the endgame.
 pub const ENDGAME_SCORE: Value = Value(3333);
+/// The total value of all pieces at the start of the game.
 pub const START_COUNT: Value = Value(8810);
 
+/// A list of piece types that affect material evaluation (all but the king)
 pub const MAT_PIECE_TYPES: [Piece; 5] = [
     Piece::Pawn,
     Piece::Knight,
@@ -19,6 +24,7 @@ pub const MAT_PIECE_TYPES: [Piece; 5] = [
     Piece::Queen,
 ];
 
+/// Initial values for each piece type.
 pub const INITIAL_VALUES: [Value; 5] = [
     Value(100), // Pawn
     Value(280), // Knight
@@ -27,6 +33,7 @@ pub const INITIAL_VALUES: [Value; 5] = [
     Value(900), // Queen
 ];
 
+/// Midgame values for each piece type.
 pub const MIDGAME_VALUES: [Value; 5] = [
     Value(95),  // Pawn
     Value(310), // Knight
@@ -35,6 +42,7 @@ pub const MIDGAME_VALUES: [Value; 5] = [
     Value(900), // Queen
 ];
 
+/// Endgame values for each piece type.
 pub const ENDGAME_VALUES: [Value; 5] = [
     Value(240),  // Pawn
     Value(200),  // Knight
@@ -43,6 +51,8 @@ pub const ENDGAME_VALUES: [Value; 5] = [
     Value(1050), // Queen
 ];
 
+/// Calculate the material value for a given side, interpolated for the
+/// different phases of the game
 pub fn material(board: &Board, side: Color, interp: Interp) -> Value {
     let mut value = Value::ZERO;
 
@@ -59,6 +69,7 @@ pub fn material(board: &Board, side: Color, interp: Interp) -> Value {
     value
 }
 
+/// Calculate the material value for a given side.
 #[allow(dead_code)]
 pub fn material_count_for_side(pos: &Board, color: Color) -> Value {
     let side = pos.color_combined(color);
@@ -72,6 +83,7 @@ pub fn material_count_for_side(pos: &Board, color: Color) -> Value {
     value
 }
 
+/// Calculate the total material value on the board.
 pub fn total_material(pos: &Board) -> Value {
     let mut value = Value::ZERO;
 

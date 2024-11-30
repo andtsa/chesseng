@@ -1,3 +1,7 @@
+//! Move ordering functions
+//!
+//! https://www.chessprogramming.org/Move_Ordering
+
 use std::fmt::Display;
 
 use chess::BitBoard;
@@ -7,8 +11,12 @@ use chess::MoveGen;
 use chess::Piece;
 use chess::EMPTY;
 
+/// A struct that holds a vector of moves, ordered by importance
+#[derive(Debug)]
 pub struct MoveOrdering(pub Vec<ChessMove>);
 
+/// return all moves possible from this position, ordered by importance,
+/// prioritising the principal variation
 pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
     let mut moves = vec![];
     let mut mg = MoveGen::new_legal(b);
@@ -37,6 +45,7 @@ pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
     MoveOrdering(moves)
 }
 
+/// return all moves possible from this position, ordered by importance
 pub fn ordered_moves(b: &Board) -> MoveOrdering {
     let mut moves = vec![];
     let mut mg = MoveGen::new_legal(b);
@@ -76,14 +85,17 @@ impl Display for MoveOrdering {
 }
 
 impl MoveOrdering {
+    /// returns the number of moves in the vector.
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// are there any moves left?
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    /// returns the last move in the vector, or None if it is empty.
     pub fn pop(&mut self) -> Option<ChessMove> {
         self.0.pop()
     }

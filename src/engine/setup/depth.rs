@@ -1,4 +1,8 @@
+//! A module for representing depths
+
+/// A depth of 1 ply
 pub const ONE_PLY: Depth = Depth(1);
+/// A depth of 2 plies, or one move
 pub const ONE_MOVE: Depth = Depth(2);
 
 /// upper limit for how deeply the engine will search in plies.
@@ -15,7 +19,9 @@ pub const MAX_MATE_PLY: u16 = 128;
 pub struct Depth(pub u16);
 
 impl Depth {
+    /// maximum depth
     pub const MAX: Depth = Depth(MAX_PLY / 2);
+    /// zero depth
     pub const ZERO: Depth = Depth(0);
 }
 

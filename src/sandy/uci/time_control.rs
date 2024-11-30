@@ -5,7 +5,10 @@ use sandy_engine::timing::max_instant;
 use sandy_engine::Engine;
 use vampirc_uci::UciTimeControl;
 
+/// Implement this trait for the [`Engine`] to handle time control.
 pub trait TimeControl {
+    /// Convert a [`UciTimeControl`] into actual timing values for the
+    /// [`Engine`].
     fn time_control(&mut self, tc: UciTimeControl) -> Result<()>;
 }
 
