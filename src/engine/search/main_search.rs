@@ -8,7 +8,6 @@ use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
 
 use crate::optlog;
-use crate::primary;
 use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
@@ -149,7 +148,7 @@ impl Engine {
 
                 // check if we should even try to go deeper
                 if search_until().is_some_and(|u| u < Instant::now() + cur_depth_start.elapsed()) {
-                    primary!(
+                    optlog!(
                         search;
                         debug;
                         "not enough time for depth {} ({}ms/{}ms), breaking early at move {}",

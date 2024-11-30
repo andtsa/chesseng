@@ -35,6 +35,7 @@ pub fn depth_test(depth: usize) {
     cmd.stdin(Stdio::piped());
     cmd.stdout(Stdio::piped());
 
+    #[allow(clippy::zombie_processes)]
     let mut child = cmd.spawn().unwrap();
 
     let stdin = child.stdin.take().unwrap();

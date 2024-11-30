@@ -57,8 +57,18 @@ macro_rules! optlog {
 macro_rules! primary {
     ($module:ident;$level:ident;$($arg:tt)*) => {
         #[cfg(not(debug_assertions))]
-        compile_error!("forgotten primary!() macro call: {}, {}", stringify!($module), format!($($arg)*));
-        println!("[PRIMARY] {}: {}", stringify!($module), format!($($arg)*));
+        compile_error!(concat!(
+            "error: forgotten primary!() macro call\n",
+            "  --> ", file!(), ":", line!(), ":1\n",
+            "   |\n",
+            "   = note: in module `", stringify!($module), "`"
+        ));
+        #[cfg(debug_assertions)]
+        println!(
+            "[PRIMARY] {}: {}",
+            stringify!($module),
+            format!($($arg)*)
+        );
     };
 }
 

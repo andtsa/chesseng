@@ -40,6 +40,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
     cmd.stdin(Stdio::piped());
     cmd.stdout(Stdio::piped());
 
+    #[allow(clippy::zombie_processes)]
     let mut child = cmd.spawn().unwrap();
 
     let stdin = child.stdin.take().unwrap();
