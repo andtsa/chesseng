@@ -13,6 +13,8 @@ use crate::opts::opts;
 use crate::opts::setopts;
 use crate::opts::Opts;
 use crate::search::moveordering::ordered_moves;
+use crate::search::moveordering::pv_ordered_moves;
+use crate::search::tail;
 use crate::search::SearchResult;
 use crate::search::MV;
 use crate::search::SEARCHING;
@@ -45,12 +47,23 @@ pub fn ng_test(
     {
         setopts(opts)?;
     }
-    Ok(negamax(pos, to_depth, alpha, beta))
+    Ok(negamax(pos, to_depth, &[], alpha, beta))
 }
 
 /// mmmmmmmmmmmmm
-pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> SearchResult {
-    let moves = ordered_moves(&pos);
+pub fn negamax(
+    pos: Board,
+    to_depth: Depth,
+    known_pv: &[MV],
+    mut alpha: Value,
+    beta: Value,
+) -> SearchResult {
+    // get an ordered sequence of moves from this position
+    let moves = if let Some(first_move) = known_pv.first() {
+        pv_ordered_moves(&pos, &first_move.0)
+    } else {
+        ordered_moves(&pos)
+    };
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
     optlog!(search;trace;"moves: {}", moves);
@@ -69,8 +82,14 @@ pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> Se
     let mut pv = vec![];
     let mut total_nodes = 0;
 
-    for mv in moves.0.iter() {
-        let mut deeper = -negamax(pos.make_move_new(*mv), to_depth - 1, -beta, -alpha);
+    for mv in &moves {
+        let mut deeper = -negamax(
+            pos.make_move_new(mv.0),
+            to_depth - 1,
+            tail(known_pv),
+            -beta,
+            -alpha,
+        );
         total_nodes += deeper.nodes_searched + 1;
 
         if !searching() {
@@ -84,9 +103,9 @@ pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> Se
             .as_ref()
             .is_none_or(|b: &MV| b.1 < deeper.next_position_value)
         {
-            best = Some(MV(*mv, deeper.next_position_value));
+            best = Some(mv.val(deeper.next_position_value));
             // Build the principal variation by prepending the current move
-            pv = vec![MV(*mv, deeper.next_position_value)];
+            pv = vec![mv.val(deeper.next_position_value)];
             pv.extend(deeper.pv);
         }
         alpha = alpha.max(deeper.next_position_value);
