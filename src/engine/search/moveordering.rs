@@ -52,27 +52,21 @@ pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
         }
     }
 
-    mg.set_iterator_mask(*b.pieces(Piece::Queen));
-    rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+    let piece_masks = [
+        Piece::Queen,
+        Piece::Rook,
+        Piece::Bishop,
+        Piece::Knight,
+        Piece::Pawn,
+    ];
 
-    mg.set_iterator_mask(*b.pieces(Piece::Rook));
-    rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    mg.set_iterator_mask(*b.pieces(Piece::Bishop));
-    rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    mg.set_iterator_mask(*b.pieces(Piece::Knight));
-    rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    mg.set_iterator_mask(*b.pieces(Piece::Pawn));
-    rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+    for &piece in &piece_masks {
+        mg.set_iterator_mask(*b.pieces(piece));
+        rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+    }
 
     mg.set_iterator_mask(!EMPTY);
-    rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    if let Some(pv) = &ordering.pv {
-        rest.retain(|x| x != &pv.0);
-    }
+    rest.extend(mg);
 
     ordering.rest = rest.iter().map(as_mv).collect();
 
