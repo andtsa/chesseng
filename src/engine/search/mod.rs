@@ -44,6 +44,9 @@ pub struct RootNode {
     pub board: Board,
     /// the principal variation
     pub pv: Vec<MV>,
+    /// the best move found at each depth, 
+    /// used for move ordering heuristics
+    pub killers: Vec<(MV, Depth)>,
     /// the current evaluation of the root node
     pub eval: Value,
     /// the previous evaluation of the root node

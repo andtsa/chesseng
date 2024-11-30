@@ -44,6 +44,7 @@ impl Engine {
             pv: Vec::new(),
             eval: Value::MIN,
             previous_eval: Value::MIN,
+            killers: Vec::new(),
         };
 
         thread::spawn(move || {
