@@ -20,7 +20,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build
-        run: cargo build --release --verbose
+        run: cargo build --verbose
 
   test_lint:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
@@ -34,12 +34,6 @@ jobs:
         with:
           components: clippy, rustfmt
 
-      - name: Prepare cargo2junit
-        uses: baptiste0928/cargo-install@v3
-        with:
-          crate: cargo2junit
-          locked: false
-
       - name: Formatting
         run: cargo fmt -- --check
 
@@ -47,14 +41,19 @@ jobs:
         run: cargo clippy --release --no-deps --all-targets -- -D warnings
 
       - name: Report
-        run: cargo test --release -vv -- -Z unstable-options --format json --report-time | cargo2junit > results.xml
+        run: cargo test --release -vv
 
-      - name: Upload reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: |
-            results.xml
-            cobertura.xml
-          retention-days: 4
-        continue-on-error: true
+  bench:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare
+        uses: actions/checkout@v4
+      - name: Gather rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Run benchmarks
+        run: |
+          cargo bench -- --nocapture
+

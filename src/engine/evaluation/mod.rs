@@ -64,7 +64,7 @@ pub fn evaluate(pos: &Board, moves: &MoveOrdering) -> Value {
 
     // optlog!(eval;trace;"eval after both piece_positions: {:?}", value);
 
-    // Add tempo bonus (if desired)
+    // Add tempo bonus
     value += TEMPO; // Always positive for the side to move
 
     // optlog!(eval;trace;"eval after tempo: {:?}", value);
