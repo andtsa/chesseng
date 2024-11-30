@@ -10,10 +10,9 @@ use chess::BitBoard;
 use chess::Board;
 use chess::ChessMove;
 use chess::MoveGen;
-use chess::Piece;
-use chess::EMPTY;
 
 use crate::opts::opts;
+use crate::search::mv_heuristics::move_gen_ordering;
 use crate::search::MV;
 use crate::setup::values::Value;
 
@@ -42,9 +41,10 @@ pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
     let mut rest = vec![];
     let mut mg = MoveGen::new_legal(b);
 
+    // get the principal variation move to the front of the list,
+    // without losing any items from the MoveGen iterator
     mg.set_iterator_mask(BitBoard::from_square(pv.get_dest()));
-    let moves_that_land_on_pv_square = mg.by_ref().collect::<Vec<ChessMove>>();
-    for m in moves_that_land_on_pv_square {
+    for m in mg.by_ref().collect::<Vec<ChessMove>>() {
         if m == *pv {
             ordering.pv = Some(MV(*pv, Value::ZERO, true));
         } else {
@@ -52,21 +52,7 @@ pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
         }
     }
 
-    let piece_masks = [
-        Piece::Queen,
-        Piece::Rook,
-        Piece::Bishop,
-        Piece::Knight,
-        Piece::Pawn,
-    ];
-
-    for &piece in &piece_masks {
-        mg.set_iterator_mask(*b.pieces(piece));
-        rest.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-    }
-
-    mg.set_iterator_mask(!EMPTY);
-    rest.extend(mg);
+    move_gen_ordering(b, mg, &mut rest);
 
     ordering.rest = rest.iter().map(as_mv).collect();
 
@@ -76,28 +62,9 @@ pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
 /// return all moves possible from this position, ordered by importance
 pub fn ordered_moves(b: &Board) -> MoveOrdering {
     let mut moves = vec![];
-    let mut mg = MoveGen::new_legal(b);
+    let mg = MoveGen::new_legal(b);
 
-    mg.set_iterator_mask(*b.pieces(Piece::Queen));
-    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    mg.set_iterator_mask(*b.pieces(Piece::Rook));
-    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    mg.set_iterator_mask(*b.pieces(Piece::Bishop));
-    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    mg.set_iterator_mask(*b.pieces(Piece::Knight));
-    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    mg.set_iterator_mask(*b.pieces(Piece::Pawn));
-    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-
-    // mg.set_iterator_mask(*b.pieces(Piece::Queen));
-    // moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
-    //
-    mg.set_iterator_mask(!EMPTY);
-    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+    move_gen_ordering(b, mg, &mut moves);
 
     MoveOrdering {
         pv: None,

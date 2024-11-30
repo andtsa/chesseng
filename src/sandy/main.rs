@@ -8,14 +8,16 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 
 use std::io::stdin;
+use std::ops::BitOr;
 use std::str::FromStr;
 
 use anyhow::anyhow;
 use anyhow::Result;
 use chess::Board;
+use chess::Color;
 use log::info;
 use log::warn;
-use sandy_engine::util::fen_to_str;
+use sandy_engine::util::{bitboard_to_fen, fen_to_str};
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
 
@@ -74,6 +76,29 @@ fn main() -> Result<()> {
                         .to_string(),
                 );
                 info!("{}", b);
+            }
+            ("bitboard" | "bb", mut bb) => {
+                info!("Displaying bitboard");
+                let b = u64::from_str(bb.next().unwrap())
+                    .map_err(|e| anyhow!("bitboard error: {e}"))?;
+                info!("{}", bitboard_to_fen(b));
+            }
+            ("bbx", mut bb) => {
+                info!("Displaying bitboard");
+                let b = u64::from_str_radix(bb.next().unwrap().trim_start_matches("0x"), 16)
+                    .map_err(|e| anyhow!("bitboard error: {e}"))?;
+                info!("{}", bitboard_to_fen(b));
+            }
+            ("f2b", _) => {
+                info!("Bitboard from FEN");
+                let board = Board::from_str(read_line.trim_start_matches("f2b").trim()).unwrap();
+                let bitboard = board
+                    .color_combined(Color::White)
+                    .bitor(board.color_combined(Color::Black))
+                    .0;
+                info!("{}", bitboard_to_fen(bitboard));
+                info!("{:#016x}", bitboard);
+                info!("{}", bitboard);
             }
             ("other", _) => {
                 // used for testing/prototyping snippets

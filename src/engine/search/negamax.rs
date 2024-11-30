@@ -83,40 +83,13 @@ pub fn negamax(
     let mut total_nodes = 0;
 
     for mv in &moves {
-        // if this is the principal variation, run a full search
-        let mut deeper = if mv.2 {
-            -negamax(
-                pos.make_move_new(mv.0),
-                to_depth - 1,
-                tail(known_pv),
-                -beta,
-                -alpha,
-            )
-        } else {
-            // score := −pvs(child, depth − 1, −α − 1, −α, −color) (* search with a null
-            // window *)
-            let temp = -negamax(
-                pos.make_move_new(mv.0),
-                to_depth - 1,
-                tail(known_pv),
-                -alpha - Value::ONE,
-                -alpha,
-            );
-            // if α < score < β then
-            if alpha < temp.next_position_value && temp.next_position_value < beta {
-                // score := −pvs(child, depth − 1, −β, −α, −color) (* if it failed high, do a
-                // full re-search *)
-                -negamax(
-                    pos.make_move_new(mv.0),
-                    to_depth - 1,
-                    tail(known_pv),
-                    -beta,
-                    -alpha,
-                )
-            } else {
-                temp
-            }
-        };
+        let mut deeper = -negamax(
+            pos.make_move_new(mv.0),
+            to_depth - 1,
+            tail(known_pv),
+            -beta,
+            -alpha,
+        );
         total_nodes += deeper.nodes_searched + 1;
 
         if !searching() {

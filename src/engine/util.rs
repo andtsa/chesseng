@@ -243,3 +243,20 @@ pub fn fen_to_string_highlighted(
 
     r
 }
+
+/// convert a bitboard (u64) to a FEN string, displaying 1s as # and
+/// 0s as empty squares.
+pub fn bitboard_to_fen(bb: u64) -> String {
+    let mut r: String = String::new();
+    for i in 0..64 {
+        if i % 8 == 0 {
+            r += &*(8 - i / 8).to_string();
+        }
+        r += if (bb >> i) & 1 == 1 { " #" } else { " ." };
+        if i % 8 == 7 {
+            r += "\n";
+        }
+    }
+    r += "+ a b c d e f g h";
+    r
+}
