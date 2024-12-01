@@ -40,7 +40,7 @@ fn pv_ordered_same_as_mg() {
     for b in boards {
         let mg = chess::MoveGen::new_legal(&b).collect::<Vec<_>>();
 
-        setopts(Opts::default().pv(true)).unwrap();
+        setopts(Opts::new().pv(true)).unwrap();
 
         for m in &mg {
             let pv_ordered = pv_ordered_moves(&b, m);

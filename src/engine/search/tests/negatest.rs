@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use chess::Board;
 use chess::BoardStatus;
+use chess::ChessMove;
 use chess::Color;
 
 use crate::debug::DebugLevel::debug;
@@ -213,6 +214,7 @@ fn score_same_with_or_without_ab_pv() {
 fn checkmate_the_author() {
     let pos = Board::from_str("1n1k4/r1pp1p2/7p/8/1p1q4/6r1/4q3/1K6 b - - 0 1").unwrap();
     let mut engine = Engine::new().unwrap();
+    setopts(Opts::new().pv(true)).unwrap();
     engine.board = pos;
 
     let mv = engine
@@ -224,6 +226,69 @@ fn checkmate_the_author() {
         engine.board.status(),
         BoardStatus::Checkmate,
         "depth=2 move={mv} pos={}",
+        pos.print()
+    );
+}
+
+#[test]
+fn forced_mating_sequence() {
+    // https://lichess.org/study/Vvcgj8pb/AH8Y4XYv
+    let pos =
+        Board::from_str("4rb1k/2pqn2p/6pn/ppp3N1/P1QP2b1/1P2p3/2B3PP/B3RRK1 w - - 0 24").unwrap();
+    setopts(Opts::new()).unwrap();
+    let mut engine = Engine::new().unwrap();
+    engine.board = pos;
+
+    let mv = engine
+        .best_move(Depth(6), Duration::from_millis(10000))
+        .unwrap();
+    assert_eq!(mv.to_string(), "f1f8");
+    engine.board = engine.board.make_move_new(mv);
+
+    // "human" moves
+    let mv = ChessMove::from_str("e7g8").unwrap();
+    engine.board = engine.board.make_move_new(mv);
+
+    let mv = engine
+        .best_move(Depth(5), Duration::from_millis(10000))
+        .unwrap();
+    assert_eq!(mv.to_string(), "d4c5");
+    engine.board = engine.board.make_move_new(mv);
+
+    // "human" moves
+    let mv = ChessMove::from_str("e8e5").unwrap();
+    engine.board = engine.board.make_move_new(mv);
+
+    let mv = engine
+        .best_move(Depth(4), Duration::from_millis(10000))
+        .unwrap();
+    assert_eq!(mv.to_string(), "a1e5");
+    engine.board = engine.board.make_move_new(mv);
+
+    // "human" moves
+    let mv = ChessMove::from_str("d7g7").unwrap();
+    engine.board = engine.board.make_move_new(mv);
+
+    let mv = engine
+        .best_move(Depth(3), Duration::from_millis(10000))
+        .unwrap();
+    assert_eq!(mv.to_string(), "c4g8");
+    engine.board = engine.board.make_move_new(mv);
+
+    // "human" moves
+    let mv = ChessMove::from_str("h6g8").unwrap();
+    engine.board = engine.board.make_move_new(mv);
+
+    let mv = engine
+        .best_move(Depth(2), Duration::from_millis(10000))
+        .unwrap();
+    assert_eq!(mv.to_string(), "g5f7");
+    engine.board = engine.board.make_move_new(mv);
+
+    assert_eq!(
+        engine.board.status(),
+        BoardStatus::Checkmate,
+        "pos={}",
         pos.print()
     );
 }

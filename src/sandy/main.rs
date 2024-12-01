@@ -17,7 +17,8 @@ use chess::Board;
 use chess::Color;
 use log::info;
 use log::warn;
-use sandy_engine::util::{bitboard_to_fen, fen_to_str};
+use sandy_engine::util::bitboard_to_fen;
+use sandy_engine::util::fen_to_str;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
 
