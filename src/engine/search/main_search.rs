@@ -171,6 +171,8 @@ impl Engine {
                 send(&mut publisher, Message::BestMove(MV(mv, best_value)))
             }
 
+            // looks sketchy, but it's to prevent dropping the sender before the receiver
+            // has gotten the best move.
             thread::sleep(Duration::from_millis(
                 (SEARCH_THREADS * 2 * UCI_LISTENING_FREQUENCY) as u64,
             ));

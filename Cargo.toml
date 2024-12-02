@@ -76,11 +76,6 @@ path = "src/benches/d6.rs"
 harness = false
 
 [[bench]]
-name = "qs"
-path = "src/benches/quick_search.rs"
-harness = false
-
-[[bench]]
 name = "eval"
 path = "src/benches/eval.rs"
 harness = false
@@ -88,6 +83,16 @@ harness = false
 [[bench]]
 name = "eval_grind"
 path = "src/benches/eval_grind.rs"
+harness = false
+
+[[bench]]
+name = "mg_grind"
+path = "src/benches/move_gen_grind.rs"
+harness = false
+
+[[bench]]
+name = "mg"
+path = "src/benches/move_gen.rs"
 harness = false
 
 [[test]]

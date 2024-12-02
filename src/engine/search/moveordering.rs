@@ -74,6 +74,17 @@ pub fn ordered_moves(b: &Board) -> MoveOrdering {
     MoveOrdering(moves)
 }
 
+/// return all moves possible from this position, unordered
+pub fn unordered_moves(b: &Board) -> MoveOrdering {
+    let mut moves = vec![];
+    let mut mg = MoveGen::new_legal(b);
+
+    mg.set_iterator_mask(!EMPTY);
+    moves.append(&mut mg.by_ref().collect::<Vec<ChessMove>>());
+
+    MoveOrdering(moves)
+}
+
 impl Display for MoveOrdering {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "MoveOrdering: ")?;

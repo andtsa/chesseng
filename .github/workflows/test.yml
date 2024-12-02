@@ -43,20 +43,6 @@ jobs:
       - name: Report
         run: cargo test --release -vv
 
-  bench_all:
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Prepare
-        uses: actions/checkout@v4
-      - name: Gather rust nightly
-        uses: dtolnay/rust-toolchain@nightly
-
-      - name: Run benchmarks
-        run: |
-          cargo bench -- --nocapture
-
   benches:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
     runs-on: ubuntu-latest
@@ -68,13 +54,21 @@ jobs:
       - name: Gather rust nightly
         uses: dtolnay/rust-toolchain@nightly
 
+      - name: apt install valgrind
+        run: |
+          sudo apt-get -y install valgrind
+
+      - name: Run benchmarks # if this fails, don't run the rest and post incomplete results!
+        run: |
+          cargo bench -- --nocapture
+
       - name: Negamax Search
         run: |
           mkdir -p ./target/tmp
           cargo bench --bench ngm > ./target/tmp/ngm_bench.out
 
       - name: Read Output File
-        id: read-output
+        id: read-ngm-output
         run: |
           content=$(base64 -w 0 ./target/tmp/ngm_bench.out) # Single-line base64 output
           echo "content=$content" >> $GITHUB_ENV
@@ -89,5 +83,60 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Benchmark Results:\n\`\`\`\n${decodedContent}\n\`\`\``
+              body: `Search benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
+            });
+
+      - name: Evaluation Function
+        run: |
+          cargo bench --bench eval > ./target/tmp/eval_bench.out
+
+      - name: Evaluation Cachegrind
+        run: |
+          cargo bench --bench eval_grind >> ./target/tmp/eval_bench.out
+
+      - name: Read Output File
+        id: read-eval-output
+        run: |
+          content=$(base64 -w 0 ./target/tmp/eval_bench.out) # Single-line base64 output
+          echo "content=$content" >> $GITHUB_ENV
+
+      - name: Post Comment with Benchmark Results
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const decodedContent = Buffer.from(process.env.content, 'base64').toString('utf-8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Evaluation benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
+            });
+
+      - name: Move Generation
+        run: |
+          mkdir -p ./target/tmp
+          cargo bench --bench mg > ./target/tmp/mg_bench.out
+
+      - name: MoveGen Cachegrind
+        run: |
+          cargo bench --bench mg_grind >> ./target/tmp/mg_bench.out
+
+      - name: Read Output File
+        id: read-mg-output
+        run: |
+          content=$(base64 -w 0 ./target/tmp/mg_bench.out) # Single-line base64 output
+          echo "content=$content" >> $GITHUB_ENV
+
+      - name: Post Comment with Benchmark Results
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const decodedContent = Buffer.from(process.env.content, 'base64').toString('utf-8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `MoveGen benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
             });
