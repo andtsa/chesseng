@@ -58,9 +58,19 @@ jobs:
         run: |
           sudo apt-get -y install valgrind
 
-      - name: Run benchmarks # if this fails, don't run the rest and post incomplete results!
+      - name: Checkout PR's Target Branch
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git checkout ${{ github.base_ref }}
+
+      - name: Run baseline benchmarks
         run: |
           cargo bench -- --nocapture
+
+      - name: Checkout source branch
+        run: |
+          git fetch origin ${{ github.head_ref }} 
+          git checkout ${{ github.head_ref }}   
 
       - name: Negamax Search
         run: |
