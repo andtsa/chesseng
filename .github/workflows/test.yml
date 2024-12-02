@@ -43,7 +43,7 @@ jobs:
       - name: Report
         run: cargo test --release -vv
 
-  bench:
+  bench_all:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
     runs-on: ubuntu-latest
 
@@ -57,3 +57,37 @@ jobs:
         run: |
           cargo bench -- --nocapture
 
+  benches:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare
+        uses: actions/checkout@v4
+
+      - name: Gather rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Negamax Search
+        run: |
+          mkdir -p ./target/tmp
+          cargo bench --bench ngm > ./target/tmp/ngm_bench.out
+
+      - name: Read Output File
+        id: read-output
+        run: |
+          content=$(base64 -w 0 ./target/tmp/ngm_bench.out) # Single-line base64 output
+          echo "content=$content" >> $GITHUB_ENV
+
+      - name: Post Comment with Benchmark Results
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const decodedContent = Buffer.from(process.env.content, 'base64').toString('utf-8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Benchmark Results:\n\`\`\`\n${decodedContent}\n\`\`\``
+            });

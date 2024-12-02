@@ -8,22 +8,6 @@ use sandy_engine::opts::Opts;
 use sandy_engine::search::moveordering::ordered_moves;
 use sandy_engine::util::bench_positions;
 
-// fn evaluation_benches(c: &mut Criterion) {
-//     let mut group = c.benchmark_group("eval_bench");
-//
-//     for (p_idx, pos) in bench_positions().iter().enumerate() {
-//         group.bench_function(format!("eval_pos_{p_idx}"), |b| {
-//             b.iter(|| {
-//                 let _ = sandy_engine::evaluation::eval(
-//                     black_box(pos),
-//                     &ordered_moves(pos),
-//                     Opts::bench(),
-//                 );
-//             })
-//         });
-//     }
-// }
-
 /// Benchmark the evaluation function
 fn evaluation_benches(c: &mut Criterion) {
     let mut group = c.benchmark_group("eval_bench");
@@ -31,11 +15,14 @@ fn evaluation_benches(c: &mut Criterion) {
     group.bench_function("eval_full", |b| {
         b.iter(|| {
             for pos in bench_positions() {
-                let _ = sandy_engine::evaluation::eval(
-                    black_box(&pos),
-                    &ordered_moves(&pos),
-                    Opts::bench(),
-                );
+                for _ in 0..20 {
+                    // 20 iterations on 50 positions = 1_000 executions.
+                    let _ = sandy_engine::evaluation::eval(
+                        black_box(&pos),
+                        &ordered_moves(&pos),
+                        Opts::bench(),
+                    );
+                }
             }
         })
     });
