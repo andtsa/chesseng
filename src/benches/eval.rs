@@ -12,6 +12,8 @@ use sandy_engine::util::bench_positions;
 fn evaluation_benches(c: &mut Criterion) {
     let mut group = c.benchmark_group("eval_bench");
 
+    group.noise_threshold(0.05);
+
     group.bench_function("eval_full", |b| {
         b.iter(|| {
             for pos in bench_positions() {

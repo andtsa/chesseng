@@ -57,24 +57,17 @@ pub fn evaluate(pos: &Board, moves: &MoveOrdering) -> Value {
     }
 
     let interp = interpolate(pos);
-    // optlog!(eval;trace;"eval interp: {:?}", interp);
 
     // Calculate material and positional benefits from the side to move's
     // perspective
     value += material(pos, stm, interp);
     value -= material(pos, stm.not(), interp);
 
-    // optlog!(eval;trace;"eval after material: {:?}", value);
-
     value += piece_position_benefit_for_side(pos, stm, interp);
     value -= piece_position_benefit_for_side(pos, stm.not(), interp);
 
-    // optlog!(eval;trace;"eval after both piece_positions: {:?}", value);
-
     // Add tempo bonus
     value += TEMPO; // Always positive for the side to move
-
-    // optlog!(eval;trace;"eval after tempo: {:?}", value);
 
     // Return the evaluation score
     value

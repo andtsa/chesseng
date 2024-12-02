@@ -15,6 +15,8 @@ fn search_benches(c: &mut Criterion) {
     let depths = [3, 4, 5, 6];
     let mut group = c.benchmark_group("search_bench");
 
+    group.noise_threshold(0.08);
+
     for d_idx in depths {
         group.bench_function(format!("ngm_full_depth_{}", d_idx), |b| {
             b.iter(|| {

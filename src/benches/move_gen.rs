@@ -12,6 +12,8 @@ use sandy_engine::util::bench_positions;
 fn move_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("move_gen_bench");
 
+    group.noise_threshold(0.08);
+
     group.bench_function("unordered", |b| {
         b.iter(|| {
             for _ in 0..20 {
