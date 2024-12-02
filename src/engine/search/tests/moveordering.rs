@@ -7,6 +7,7 @@ use crate::opts::setopts;
 use crate::opts::Opts;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
+use crate::search::moveordering::unordered_moves;
 
 #[test]
 fn ordered_same_as_mg() {
@@ -63,7 +64,7 @@ fn pv_ordered_same_as_mg() {
 
 #[test]
 fn profile_move_ordering() {
-    let duration = 5_000;
+    let duration = 50_000;
     let b = Board::default();
     let mg = chess::MoveGen::new_legal(&b).collect::<Vec<_>>();
 
@@ -91,9 +92,17 @@ fn profile_move_ordering() {
     }
     let elapsed_c = start_c.elapsed();
 
+    let start_d = Instant::now();
+    for _ in 0..duration {
+        for _m in &mg {
+            let _m = unordered_moves(&b);
+        }
+    }
+    let elapsed_d = start_d.elapsed();
+
     eprintln!(
-        "pv: {:?}, normal: {:?}, mg: {:?}",
-        elapsed_a, elapsed_b, elapsed_c
+        "pv: {:?}, normal: {:?}, mg: {:?}, uo: {:?}",
+        elapsed_a, elapsed_b, elapsed_c, elapsed_d
     );
     assert!(
         elapsed_a < 2 * elapsed_b,

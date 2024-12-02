@@ -14,6 +14,7 @@ use crate::opts::setopts;
 use crate::opts::Opts;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
+use crate::search::moveordering::unordered_moves;
 use crate::search::tail;
 use crate::search::SearchResult;
 use crate::search::MV;
@@ -58,11 +59,15 @@ pub fn negamax(
     mut alpha: Value,
     beta: Value,
 ) -> SearchResult {
-    // get an ordered sequence of moves from this position
-    let moves = if let Some(first_move) = known_pv.first() {
-        pv_ordered_moves(&pos, &first_move.0)
+    let moves = if opts().unwrap().use_mo {
+        // get an ordered sequence of moves from this position
+        if let Some(first_move) = known_pv.first() {
+            pv_ordered_moves(&pos, &first_move.0)
+        } else {
+            ordered_moves(&pos)
+        }
     } else {
-        ordered_moves(&pos)
+        unordered_moves(&pos)
     };
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
