@@ -91,6 +91,8 @@ pub struct Opts {
     pub use_pv: bool,
     /// should the search use transposition tables?
     pub use_tt: bool,
+    /// should the search use move ordering?
+    pub use_mo: bool,
     /// how big should the transposition table be? value in
     pub hash_size: usize,
 }
@@ -123,6 +125,7 @@ impl Opts {
             use_ab: false,
             use_pv: false,
             use_tt: false,
+            use_mo: false,
             hash_size: 16 * 1024,
         }
     }
@@ -142,6 +145,7 @@ impl Opts {
             use_ab: true,
             use_pv: true,
             use_tt: true,
+            use_mo: true,
             hash_size: 32,
         }
     }
@@ -159,6 +163,10 @@ impl Opts {
             },
             UciOptionConfig::Check {
                 name: "use_tt".to_string(),
+                default: Some(true),
+            },
+            UciOptionConfig::Check {
+                name: "use_mo".to_string(),
                 default: Some(true),
             },
             UciOptionConfig::Check {
@@ -226,6 +234,7 @@ impl Opts {
             "use_ab" => self.use_ab = parse_check("use_ab", value)?,
             "use_pv" => self.use_pv = parse_check("use_pv", value)?,
             "use_tt" => self.use_tt = parse_check("use_tt", value)?,
+            "use_mo" => self.use_mo = parse_check("use_mo", value)?,
             "bench_log" => {
                 if parse_check("bench_log", value)? {
                     return Ok(Self::bench()
