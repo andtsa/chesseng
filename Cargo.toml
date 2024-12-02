@@ -71,11 +71,6 @@ path = "src/benches/ngm_full.rs"
 harness = false
 
 [[bench]]
-name = "d6"
-path = "src/benches/d6.rs"
-harness = false
-
-[[bench]]
 name = "eval"
 path = "src/benches/eval.rs"
 harness = false

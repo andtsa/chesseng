@@ -80,6 +80,7 @@ jobs:
       - name: Read Output File
         id: read-ngm-output
         run: |
+          cat ./target/tmp/ngm_bench.out
           content=$(base64 -w 0 ./target/tmp/ngm_bench.out) # Single-line base64 output
           echo "content=$content" >> $GITHUB_ENV
 
@@ -107,6 +108,7 @@ jobs:
       - name: Read Output File
         id: read-eval-output
         run: |
+          cat ./target/tmp/eval_bench.out
           content=$(base64 -w 0 ./target/tmp/eval_bench.out) # Single-line base64 output
           echo "content=$content" >> $GITHUB_ENV
 
@@ -135,6 +137,7 @@ jobs:
       - name: Read Output File
         id: read-mg-output
         run: |
+          cat ./target/tmp/mg_bench.out
           content=$(base64 -w 0 ./target/tmp/mg_bench.out) # Single-line base64 output
           echo "content=$content" >> $GITHUB_ENV
 
