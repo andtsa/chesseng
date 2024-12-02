@@ -1,7 +1,7 @@
 //! This file contains valgrind benchmarks for the evaluation function.
 use chess::Board;
 use iai::black_box;
-use sandy_engine::search::moveordering::ordered_moves;
+use sandy_engine::search::moveordering::unordered_moves;
 
 /// how many instructions does it take to set up a board
 fn board_setup() {
@@ -10,14 +10,25 @@ fn board_setup() {
 
 /// how many instructions does it take to generate moves
 fn move_gen() {
-    let _ = ordered_moves(&Board::default());
+    let _ = unordered_moves(&Board::default());
 }
 
 /// how many instructions does the evaluation function use?
 /// to get the correct value, subtract [`move_gen`] and [`board_setup`]
 fn evaluation_benches() {
     let pos = Board::default();
-    sandy_engine::evaluation::evaluate(black_box(&pos), &ordered_moves(&pos));
+    sandy_engine::evaluation::evaluate(&pos, &unordered_moves(&pos));
 }
 
-iai::main!(board_setup, move_gen, evaluation_benches);
+/// black boxed version of the same fn
+fn blackbox_evaluation_benches() {
+    let pos = Board::default();
+    sandy_engine::evaluation::evaluate(black_box(&pos), black_box(&unordered_moves(&pos)));
+}
+
+iai::main!(
+    board_setup,
+    move_gen,
+    evaluation_benches,
+    blackbox_evaluation_benches
+);
