@@ -1,6 +1,7 @@
 //! The search module contains the search logic for the engine.
 mod main_search;
 pub mod moveordering;
+pub mod mv_heuristics;
 pub mod negamax;
 
 use std::fmt::Display;
@@ -35,7 +36,7 @@ pub static EXIT: AtomicBool = AtomicBool::new(false);
 
 /// A move and its value
 #[derive(Debug, Clone, Copy)]
-pub struct MV(pub ChessMove, pub Value);
+pub struct MV(pub ChessMove, pub Value, pub bool);
 
 /// The root node of the search
 #[derive(Debug)]
@@ -134,6 +135,23 @@ fn send(publisher: &mut Sender<Message>, msg: Message) {
     }
 }
 
+/// get all but the first element of a slice
+pub fn tail<T>(v: &[T]) -> &[T] {
+    if v.is_empty() {
+        v
+    } else {
+        &v[1..]
+    }
+}
+
+impl MV {
+    /// set the value of the move
+    pub fn val(mut self, v: Value) -> Self {
+        self.1 = v;
+        self
+    }
+}
+
 impl Neg for SearchResult {
     type Output = Self;
 
@@ -151,6 +169,6 @@ impl Display for MV {
 
 impl Default for MV {
     fn default() -> Self {
-        MV(ChessMove::default(), Value::ZERO)
+        MV(ChessMove::default(), Value::ZERO, false)
     }
 }

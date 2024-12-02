@@ -25,12 +25,13 @@ pub const MAT_PIECE_TYPES: [Piece; 5] = [
 ];
 
 /// Initial values for each piece type.
-pub const INITIAL_VALUES: [Value; 5] = [
+pub const INITIAL_VALUES: [Value; 6] = [
     Value(100), // Pawn
     Value(280), // Knight
     Value(310), // Bishop
     Value(500), // Rook
     Value(900), // Queen
+    Value(0),   // King
 ];
 
 /// Midgame values for each piece type.

@@ -69,6 +69,9 @@ pub fn evaluate(pos: &Board, moves: &MoveOrdering) -> Value {
     // Add tempo bonus
     value += TEMPO; // Always positive for the side to move
 
+    // more moves is a bit better
+    // value += Value(moves.len() as i16);
+
     // Return the evaluation score
     value
 }

@@ -1,6 +1,6 @@
 [package]
 name = "chesseng"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 authors = ["Andreas Tsatsanis"]
 
@@ -46,13 +46,13 @@ rpath = false
 [profile.release]
 opt-level = 3
 debug = false
-strip = "none"
+strip = true
 debug-assertions = false
 overflow-checks = false
-lto = false
-panic = 'unwind'
+lto = true
+panic = 'abort'
 incremental = false
-codegen-units = 16
+codegen-units = 1 # slow build but max optimisations
 rpath = false
 
 [lints.rust]

@@ -1,0 +1,16 @@
+Score of 0.3.3 PVS r.2 vs sv1.1: 2 - 2 - 2 [0.500]
+...      0.3.3 PVS r.2 playing White: 2 - 0 - 1  [0.833] 3
+...      0.3.3 PVS r.2 playing Black: 0 - 2 - 1  [0.167] 3
+...      White vs Black: 4 - 0 - 2  [0.833] 6
+Elo difference: 0.0 +/- 270.8, LOS: 50.0 %, DrawRatio: 33.3 %
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+6 of 6 games finished.
+
+Player: 0.3.3 PVS r.2
+   "Draw by 3-fold repetition": 2
+   "Loss: White mates": 2
+   "Win: White mates": 2
+Player: sv1.1
+   "Draw by 3-fold repetition": 2
+   "Loss: White mates": 2
+   "Win: White mates": 2

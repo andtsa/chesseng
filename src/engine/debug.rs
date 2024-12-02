@@ -75,7 +75,7 @@ macro_rules! optlog {
 /// ```rust
 /// # use sandy_engine::primary;
 /// # let depth = 5;
-/// primary!(search;info;"searching to depth {}", depth);
+/// primary!(search;println;"searching to depth {}", depth);
 /// // this will print the message in debug mode, but will cause a compile error in release mode
 /// ```
 #[macro_export]
@@ -89,7 +89,7 @@ macro_rules! primary {
             "   = note: in module `", stringify!($module), "`"
         ));
         #[cfg(debug_assertions)]
-        println!(
+        $level!(
             "[PRIMARY] {}: {}",
             stringify!($module),
             format!($($arg)*)
