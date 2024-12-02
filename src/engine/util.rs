@@ -9,7 +9,7 @@ use chess::Piece;
 
 /// positions from rustfish github
 pub fn bench_positions() -> Vec<Board> {
-    let positions = vec![
+    let positions = [
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 10",
         "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 11",
@@ -55,6 +55,18 @@ pub fn bench_positions() -> Vec<Board> {
         "r2r1n2/pp2bk2/2p1p2p/3q4/3PN1QP/2P3R1/P4PP1/5RK1 w - - 0 1",
         "8/8/8/8/8/6k1/6p1/6K1 w - -",
         "7k/7P/6K1/8/3B4/8/8/8 b - -",
+        // positions from sandy_bot games
+        "3rr1k1/2pq1p1p/p2b1np1/Pp3b2/8/N2n1Q1P/1P1PNPP1/R1BK1B1R b - - 0 23",
+        "r1bk3r/1ppq1pp1/p2p1n1p/4p3/2PnP3/Q2PB1P1/P3BPKP/1R4NR b - - 2 17",
+        // mate in 5
+        "R1bq1r1k/6pp/2pP1b2/5P2/4pPB1/1r1nP2K/NP2Q2P/2B3NR b - - 10 24",
+        "r1b3k1/p7/Pp1nqP2/3p1r1p/7Q/1PR1RN1P/5PB1/7K w - - 1 33",
+        "1rbr3k/8/2pq1bpp/2n2P2/2Q1pPB1/R3P3/1PN1K2P/2B3NR b - - 7 28",
+        "5r1k/8/b1pq1b1p/R1n2p2/2Q1pP2/1r2P2B/1PN4P/2B2KNR b - - 3 28",
+        "rn1qkb2/pbpp1ppr/1p6/P3p3/4n1pP/2N2P1B/1PPP4/R1BQK1NR b KQq - 1 9",
+        // mate in 10
+        "8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 34",
+        "rn3rk1/p7/bp2p2p/1q1pPp1Q/P2Nn3/1Pb2NPP/5PB1/3RR1K1 w - - 2 23",
     ];
 
     positions

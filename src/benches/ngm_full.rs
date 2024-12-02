@@ -12,13 +12,17 @@ use sandy_engine::util::bench_positions;
 
 /// Search benchmarks with different depths
 fn search_benches(c: &mut Criterion) {
-    let depths = [3, 4];
+    let depths = [3, 4, 5, 6];
     let mut group = c.benchmark_group("search_bench");
 
     for d_idx in depths {
         group.bench_function(format!("ngm_full_depth_{}", d_idx), |b| {
             b.iter(|| {
-                for startpos in bench_positions() {
+                for startpos in bench_positions()
+                    .into_iter()
+                    .chain(bench_positions().into_iter())
+                {
+                    // run 100 positions
                     let _ = ng_test(
                         black_box(startpos),
                         black_box(Depth(d_idx)),
