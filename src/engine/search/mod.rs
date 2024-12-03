@@ -1,6 +1,7 @@
 //! The search module contains the search logic for the engine.
 mod main_search;
 pub mod moveordering;
+pub mod mv_heuristics;
 pub mod negamax;
 
 use std::fmt::Display;
