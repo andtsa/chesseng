@@ -1,4 +1,7 @@
 use anyhow::Result;
+use sandy_engine::transposition_table::TEntry;
+use sandy_engine::transposition_table::TKey;
+use sandy_engine::transposition_table::TranspositionTable;
 use sandy_engine::Engine;
 use vampirc_uci::UciSearchControl;
 
@@ -9,7 +12,7 @@ pub trait SearchControl {
     fn search_control(&mut self, tc: UciSearchControl) -> Result<()>;
 }
 
-impl SearchControl for Engine {
+impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> SearchControl for Engine<K, E, TT> {
     fn search_control(&mut self, tc: UciSearchControl) -> Result<()> {
         if !tc.search_moves.is_empty() {
             unimplemented!("search moves not yet implemented");

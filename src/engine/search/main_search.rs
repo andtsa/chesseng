@@ -24,10 +24,13 @@ use crate::search::SEARCH_THREADS;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
+use crate::transposition_table::TEntry;
+use crate::transposition_table::TKey;
+use crate::transposition_table::TranspositionTable;
 use crate::uci::UCI_LISTENING_FREQUENCY;
 use crate::Engine;
 
-impl Engine {
+impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
     /// Begin the search for the best move, spawns a new thread to actually do
     /// the search, and returns a listener for [`Message`]s.
     pub fn begin_search(&mut self) -> Result<Receiver<Message>> {

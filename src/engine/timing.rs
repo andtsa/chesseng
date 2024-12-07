@@ -4,6 +4,9 @@ use std::time::Instant;
 
 use anyhow::Result;
 
+use crate::transposition_table::TEntry;
+use crate::transposition_table::TKey;
+use crate::transposition_table::TranspositionTable;
 use crate::Engine;
 
 /// one hundred years :)
@@ -17,7 +20,7 @@ pub fn max_instant() -> Instant {
     Instant::now() + MAX_TIME
 }
 
-impl Engine {
+impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
     /// Set the time until which the engine should search.
     pub fn game_time_constraints(
         &mut self,
