@@ -3,6 +3,7 @@
 
 use chess::BitBoard;
 use chess::Piece;
+use chess::Square;
 
 /// a type for one pesto table, basically an 8 by 8 grid of [`Value`]s
 pub type PestoTable = [[i16; 8]; 8];
@@ -181,23 +182,35 @@ pub const EG_PESTO_TABLE: [PestoTable; 6] = [
     EG_KING_TABLE,
 ];
 
-/// the board's center
-const CENTER: BitBoard = BitBoard(0x0000001818000000);
+/// the board's 4 center squares
+pub const CENTER_4: BitBoard = BitBoard(0x0000001818000000);
+/// the board's 16 center squares
+pub const CENTER_16: BitBoard = BitBoard(0x003c3c3c3c0000);
 /// a bitboard of the queen-side half of the board
-const QUEEN_SIDE: BitBoard = BitBoard(0x0f0f0f0f0f0f0f0f);
+pub const QUEEN_SIDE: BitBoard = BitBoard(0x0f0f0f0f0f0f0f0f);
 /// not sure yet
-const CENTER_FILES: BitBoard = BitBoard(0x3c3c3c3c3c3c3c3c);
+pub const CENTER_FILES: BitBoard = BitBoard(0x3c3c3c3c3c3c3c3c);
 /// a bitboard of the king-side half of the board
-const KING_SIDE: BitBoard = BitBoard(0xf0f0f0f0f0f0f0f0);
+pub const KING_SIDE: BitBoard = BitBoard(0xf0f0f0f0f0f0f0f0);
 
-/// not sure yet
-const KING_FLANK: [BitBoard; 8] = [
-    QUEEN_SIDE,
-    QUEEN_SIDE,
-    QUEEN_SIDE,
-    CENTER_FILES,
-    CENTER_FILES,
-    KING_SIDE,
-    KING_SIDE,
-    KING_SIDE,
-];
+/// two bitboards of the 1st and 8th ranks
+pub const PROMOTION_RANKS: [BitBoard; 2] =
+    [BitBoard(0x00000000000000ff), BitBoard(0xff00000000000000)];
+
+/// one bitboard of the 1st and 8th ranks
+pub const PROMOTION_COMBINED: BitBoard = BitBoard(0xff000000000000ff);
+
+/// all squares adjacent to a given square (a king’s attack range)
+pub fn king_attacks(square: Square) -> BitBoard {
+    let bitboard = BitBoard::from_square(square).0;
+    let north = bitboard << 8;
+    let south = bitboard >> 8;
+    let east = (bitboard & 0xFEFEFEFEFEFEFEFE) >> 1; // Mask to avoid wrapping around the board
+    let west = (bitboard & 0x7F7F7F7F7F7F7F7F) << 1; // Mask to avoid wrapping around the board
+    let north_east = (bitboard & 0xFEFEFEFEFEFEFEFE) << 7; // Mask and shift for north-east
+    let north_west = (bitboard & 0x7F7F7F7F7F7F7F7F) << 9; // Mask and shift for north-west
+    let south_east = (bitboard & 0xFEFEFEFEFEFEFEFE) >> 9; // Mask and shift for south-east
+    let south_west = (bitboard & 0x7F7F7F7F7F7F7F7F) >> 7; // Mask and shift for south-west
+
+    BitBoard(north | south | east | west | north_east | north_west | south_east | south_west)
+}
