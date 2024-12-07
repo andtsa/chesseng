@@ -53,16 +53,19 @@ impl Engine {
                         }
                         Message::Info(SearchInfo {
                             depth,
+                            sel_depth,
+                            multi_pv,
                             nodes,
                             score,
                             time,
+                            hashfull,
+                            tb_hits,
                             pv,
                         }) => {
                             println!(
-                                "info depth {} score {} nodes {} nps {} time {} pv {}",
+                                "info depth {} seldepth {} multipv {multi_pv} score {score} nodes {nodes} nps {} hashfull {hashfull} tbhits {tb_hits} time {} pv {}",
                                 depth.0,
-                                score,
-                                nodes,
+                                sel_depth.0,
                                 (nodes as f64 / time.as_secs_f64()) as usize,
                                 time.as_millis(),
                                 pv.iter().fold(String::new(), |mut acc, m| {

@@ -139,6 +139,10 @@ impl Engine {
                     best_value,
                     total_nodes,
                     start_time.elapsed(),
+                    0,
+                    0,
+                    target_depth,
+                    1,
                     &root.pv,
                 );
 
