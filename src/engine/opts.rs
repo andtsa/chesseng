@@ -93,6 +93,8 @@ pub struct Opts {
     pub use_tt: bool,
     /// should the search use move ordering?
     pub use_mo: bool,
+    /// should the engine ponder?
+    pub ponder: bool,
     /// how big should the transposition table be? value in
     pub hash_size: usize,
 }
@@ -126,6 +128,7 @@ impl Opts {
             use_pv: false,
             use_tt: false,
             use_mo: false,
+            ponder: false,
             hash_size: 16 * 1024,
         }
     }
@@ -146,6 +149,7 @@ impl Opts {
             use_pv: true,
             use_tt: true,
             use_mo: true,
+            ponder: false,
             hash_size: 32,
         }
     }
@@ -171,6 +175,10 @@ impl Opts {
             },
             UciOptionConfig::Check {
                 name: "bench_log".to_string(),
+                default: Some(false),
+            },
+            UciOptionConfig::Check {
+                name: "Ponder".to_string(),
                 default: Some(false),
             },
             UciOptionConfig::Spin {
@@ -235,6 +243,7 @@ impl Opts {
             "use_pv" => self.use_pv = parse_check("use_pv", value)?,
             "use_tt" => self.use_tt = parse_check("use_tt", value)?,
             "use_mo" => self.use_mo = parse_check("use_mo", value)?,
+            "Ponder" => self.ponder = parse_check("Ponder", value)?,
             "bench_log" => {
                 if parse_check("bench_log", value)? {
                     return Ok(Self::bench()
