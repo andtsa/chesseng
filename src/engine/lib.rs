@@ -13,6 +13,7 @@ pub mod transposition_table;
 pub mod uci;
 pub mod util;
 
+use std::marker::PhantomData;
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
@@ -32,20 +33,31 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
+use crate::transposition_table::TEntry;
+use crate::transposition_table::TKey;
+use crate::transposition_table::TranspositionTable;
+use crate::transposition_table::DEFAULT_TABLE_SIZE;
 
 /// this is why you're here, right?
 #[derive(Debug)]
-pub struct Engine {
+pub struct Engine<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> {
     /// the board the engine will think on
     pub board: Board,
+    /// the transposition table
+    pub table: TT,
+    /// marker for the key and entry types
+    _phantom: PhantomData<(K, E)>,
 }
 
-impl Engine {
+impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
     /// create a new engine!
     pub fn new() -> Result<Self> {
         info!("creating engine at version {}", env!("CARGO_PKG_VERSION"));
+
         Ok(Self {
             board: Board::default(),
+            table: TT::new(DEFAULT_TABLE_SIZE),
+            _phantom: Default::default(),
         })
     }
 

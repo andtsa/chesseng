@@ -15,6 +15,9 @@ use anyhow::Result;
 use chess::Board;
 use log::info;
 use log::warn;
+use sandy_engine::transposition_table::empty_table::EmptyEntry;
+use sandy_engine::transposition_table::empty_table::EmptyHash;
+use sandy_engine::transposition_table::empty_table::EmptyTable;
 use sandy_engine::util::fen_to_str;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
@@ -34,7 +37,7 @@ fn main() -> Result<()> {
         .filter(None, log::LevelFilter::Trace)
         .init();
 
-    let engine = Engine::new()?;
+    let engine: Engine<EmptyHash, EmptyEntry, EmptyTable<EmptyEntry>> = Engine::new()?;
 
     let mut read_line = String::new();
     loop {

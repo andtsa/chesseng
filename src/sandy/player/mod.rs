@@ -11,13 +11,18 @@ use chess::Color;
 use log::error;
 use log::info;
 use sandy_engine::setup::depth::Depth;
+use sandy_engine::transposition_table::TEntry;
+use sandy_engine::transposition_table::TKey;
+use sandy_engine::transposition_table::TranspositionTable;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
 
 use crate::player::parse_move::parse_player_move;
 
 /// Main loop for playing against the engine in the terminal
-pub fn terminal_loop(mut engine: Engine) -> Result<()> {
+pub fn terminal_loop<K: TKey, E: TEntry, TT: TranspositionTable<K, E>>(
+    mut engine: Engine<K, E, TT>,
+) -> Result<()> {
     match inquire::Select::new(
         "Playing game in terminal",
         vec!["new game", "continue existing"],
