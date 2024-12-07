@@ -1,6 +1,5 @@
 //! this is a not-only-UCI engine, this module contains the backend for adapting
 //! the engine to the protocol
-use std::fmt::Write;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -63,15 +62,17 @@ impl Engine {
                             pv,
                         }) => {
                             println!(
-                                "info depth {} seldepth {} multipv {multi_pv} score {score} nodes {nodes} nps {} hashfull {hashfull} tbhits {tb_hits} time {} pv {}",
-                                depth.0,
-                                sel_depth.0,
-                                (nodes as f64 / time.as_secs_f64()) as usize,
-                                time.as_millis(),
-                                pv.iter().fold(String::new(), |mut acc, m| {
-                                    write!(acc, "{} ", m.0).expect("strings shouldn't fail");
-                                    acc
-                                })
+                                "info depth {} seldepth {} multipv {} nodes {} nps {} hashfull {} tbhits {} time {} score {} pv {}",
+                                depth.0,                              // Depth of the search
+                                sel_depth.0,                          // Selective depth
+                                multi_pv,                             // Number of principal variations
+                                nodes,                                // Total nodes searched
+                                (nodes as f64 / time.as_secs_f64()) as usize, // Nodes per second
+                                hashfull,                             // Hash table usage (in per mille)
+                                tb_hits,                              // Tablebase hits
+                                time.as_millis(),                     // Time in milliseconds
+                                score,                                // Score (in centipawns)
+                                pv.iter().map(|m| format!("{}", m.0)).collect::<Vec<_>>().join(" "), // Principal variation
                             );
                         }
                     },
@@ -90,10 +91,10 @@ impl Engine {
                 }
             }
             if let Some(mv) = &best {
-                print!("bestmove {} ", mv.0);
+                print!("bestmove {}", mv.0);
             }
             if let Some(mv) = &ponder {
-                print!("ponder {} ", mv.0);
+                print!(" ponder {}", mv.0);
             }
             println!();
             optlog!(comm;info;"best move {} pondered {} in {}ms", best.unwrap_or_default(), ponder.unwrap_or_default(), start.elapsed().as_millis());
