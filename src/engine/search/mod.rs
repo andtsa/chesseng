@@ -77,12 +77,22 @@ pub enum Message {
 /// a UCI info message during a search
 #[derive(Debug)]
 pub struct SearchInfo {
-    /// The depth that was reached
+    /// The depth that was reached (in plies)
     pub depth: Depth,
+    /// selective search depth in plies
+    pub sel_depth: Depth,
+    /// this for the multi pv mode.
+    /// for the best move/pv add "multipv 1" in the string when you send the pv.
+    /// in k-best mode always send all k variants in k strings together.
+    pub multi_pv: usize,
     /// The score of the best move found from the root position
     pub score: Value,
     /// The number of nodes that was searched for this depth
     pub nodes: usize,
+    /// number 0-1000 of how full the transposition table is
+    pub hashfull: usize,
+    /// how many table base hits were made during the search
+    pub tb_hits: usize,
     /// The time it took to search this depth
     pub time: Duration,
     /// The principal variation
@@ -108,19 +118,28 @@ pub fn exit_condition() -> bool {
 }
 
 /// shortcut for sending UCI info to the main thread
+#[allow(clippy::too_many_arguments)]
 fn info(
     publisher: &mut Sender<Message>,
     target_depth: Depth,
     best_value: Value,
     total_nodes: usize,
     el: Duration,
+    hashfull: usize,
+    tb_hits: usize,
+    sel_depth: Depth,
+    multi_pv: usize,
     pv: &[MV],
 ) {
     if let Err(e) = publisher.send(Message::Info(SearchInfo {
         depth: target_depth,
+        sel_depth,
+        multi_pv,
         score: best_value,
         nodes: total_nodes,
         time: el,
+        hashfull,
+        tb_hits,
         pv: pv.to_vec(),
     })) {
         debug!("error sending info message: {:?}", e);
