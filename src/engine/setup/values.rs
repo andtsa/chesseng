@@ -14,7 +14,7 @@ use crate::setup::depth::MAX_PLY;
 ///
 /// Each [`Value`] is a wrapper around an [`i16`] integer, with specific
 /// constants for various evaluation states.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct Value(pub i16);
 
 impl Value {

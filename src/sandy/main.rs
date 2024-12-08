@@ -15,6 +15,7 @@ use anyhow::Result;
 use chess::Board;
 use log::info;
 use log::warn;
+use sandy_engine::position::Position;
 use sandy_engine::util::fen_to_str;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
@@ -34,7 +35,7 @@ fn main() -> Result<()> {
         .filter(None, log::LevelFilter::Trace)
         .init();
 
-    let engine = Engine::new()?;
+    let engine: Engine = Engine::new()?;
 
     let mut read_line = String::new();
     loop {
@@ -64,7 +65,7 @@ fn main() -> Result<()> {
                 info!("Displaying board");
                 let b = Board::from_str(x.collect::<String>().trim_matches([' ', '\n', '"']))
                     .map_err(|e| anyhow!("board error: {e}"))?;
-                info!("{}", b.print());
+                info!("{}", Position::from(b).print());
             }
             ("display" | "fen", y) => {
                 info!("(unchecked) fen display");

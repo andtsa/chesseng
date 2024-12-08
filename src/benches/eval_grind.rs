@@ -17,13 +17,13 @@ fn move_gen() {
 /// to get the correct value, subtract [`move_gen`] and [`board_setup`]
 fn evaluation_benches() {
     let pos = Board::default();
-    sandy_engine::evaluation::evaluate(&pos, &unordered_moves(&pos));
+    sandy_engine::evaluation::evaluate(&pos.into(), &unordered_moves(&pos));
 }
 
 /// black boxed version of the same fn
 fn blackbox_evaluation_benches() {
     let pos = Board::default();
-    sandy_engine::evaluation::evaluate(black_box(&pos), black_box(&unordered_moves(&pos)));
+    sandy_engine::evaluation::evaluate(black_box(&pos.into()), black_box(&unordered_moves(&pos)));
 }
 
 iai::main!(

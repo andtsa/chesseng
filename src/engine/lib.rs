@@ -6,6 +6,7 @@ pub mod book;
 pub mod debug;
 pub mod evaluation;
 pub mod opts;
+pub mod position;
 pub mod search;
 pub mod setup;
 pub mod timing;
@@ -20,32 +21,37 @@ use std::time::Instant;
 
 use anyhow::anyhow;
 use anyhow::Result;
-use chess::Board;
 use chess::ChessMove;
 use lockfree::channel::RecvErr;
 use log::info;
 use log::trace;
 
+use crate::position::Position;
 use crate::search::exit_condition;
 use crate::search::Message;
 use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
+use crate::transposition_table::TT;
 
 /// this is why you're here, right?
 #[derive(Debug)]
 pub struct Engine {
     /// the board the engine will think on
-    pub board: Board,
+    pub board: Position,
+    /// the transposition table
+    pub table: TT,
 }
 
 impl Engine {
     /// create a new engine!
     pub fn new() -> Result<Self> {
         info!("creating engine at version {}", env!("CARGO_PKG_VERSION"));
+
         Ok(Self {
-            board: Board::default(),
+            board: Default::default(),
+            table: TT::new(),
         })
     }
 

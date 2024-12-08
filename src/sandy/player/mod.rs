@@ -25,12 +25,12 @@ pub fn terminal_loop(mut engine: Engine) -> Result<()> {
     .raw_prompt()?
     .index
     {
-        0 => engine.board = Board::default(),
+        0 => engine.board = Default::default(),
         1 => loop {
             let fen = inquire::Text::new("Enter FEN:").prompt()?;
             match Board::from_str(&fen) {
                 Ok(b) => {
-                    engine.board = b;
+                    engine.board.chessboard = b;
                     break;
                 }
                 Err(e) => {
@@ -68,17 +68,17 @@ pub fn terminal_loop(mut engine: Engine) -> Result<()> {
     info!("{}", engine.board.print());
 
     loop {
-        let mv = if engine.board.side_to_move() == player {
-            parse_player_move(&engine.board)?
+        let mv = if engine.board.chessboard.side_to_move() == player {
+            parse_player_move(&engine.board.chessboard)?
         } else {
             engine.best_move(search_depth, search_time)?
         };
-        let capture = engine.board.piece_on(mv.get_dest()).is_some();
-        engine.board = engine.board.make_move_new(mv);
+        let capture = engine.board.chessboard.piece_on(mv.get_dest()).is_some();
+        engine.board = engine.board.make_move(mv);
 
         info!("{}", engine.board.print_move(mv, capture));
 
-        match engine.board.status() {
+        match engine.board.chessboard.status() {
             BoardStatus::Ongoing => continue,
             BoardStatus::Stalemate => {
                 info!("Stalemate!");

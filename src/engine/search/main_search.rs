@@ -9,6 +9,7 @@ use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
 
 use crate::optlog;
+use crate::opts::opts;
 use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
@@ -39,11 +40,13 @@ impl Engine {
 
         let (mut publisher, receiver) = lockfree::channel::spsc::create();
         let mut root = RootNode {
-            board: self.board,
+            board: self.board.clone(),
             pv: Vec::new(),
             eval: Value::MIN,
             previous_eval: Value::MIN,
         };
+
+        let tt = self.table.get();
 
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
@@ -52,6 +55,7 @@ impl Engine {
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
             let start_time = Instant::now();
+            let search_options = opts().unwrap();
 
             while !exit_condition() && target_depth < search_to() {
                 // record the time it takes to reach this depth to see if it's worth it to go
@@ -68,9 +72,9 @@ impl Engine {
 
                 // get an ordered sequence of moves from this position
                 let moves = if let Some(first_move) = root.pv.first() {
-                    pv_ordered_moves(&root.board, &first_move.0)
+                    pv_ordered_moves(&root.board.chessboard, &first_move.0)
                 } else {
-                    ordered_moves(&root.board)
+                    ordered_moves(&root.board.chessboard)
                 };
 
                 optlog!(search;trace;"ordered moves: {}", moves);
@@ -79,10 +83,12 @@ impl Engine {
                 for mv in moves {
                     // recursively search the next position
                     let search_result = -negamax(
-                        root.board.make_move_new(mv),
+                        root.board.make_move(mv),
                         target_depth - 1,
                         -beta,
                         -alpha,
+                        &search_options,
+                        &tt,
                     );
 
                     optlog!(

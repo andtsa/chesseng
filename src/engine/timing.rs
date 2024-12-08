@@ -27,7 +27,7 @@ impl Engine {
         black_increment: Option<Duration>,
         moves_to_go: Option<u8>,
     ) -> Result<()> {
-        let (time, increment) = match self.board.side_to_move() {
+        let (time, increment) = match self.board.chessboard.side_to_move() {
             chess::Color::White => (white_time, white_increment),
             chess::Color::Black => (black_time, black_increment),
         };

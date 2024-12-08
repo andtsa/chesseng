@@ -15,6 +15,7 @@ use crate::evaluation::position::piece_position_benefit_for_side;
 use crate::optlog;
 use crate::opts::setopts;
 use crate::opts::Opts;
+use crate::position::Position;
 use crate::search::moveordering::MoveOrdering;
 use crate::setup::values::Value;
 
@@ -25,28 +26,29 @@ pub const TEMPO: Value = Value(25);
 pub type Interp = (f64, f64, f64);
 
 /// same as [`evaluate`] but first sets the global [`Opts`]
-pub fn eval(pos: &Board, moves: &MoveOrdering, opts: Opts) -> Result<Value> {
+pub fn eval(board: &Board, moves: &MoveOrdering, opts: Opts) -> Result<Value> {
     {
         setopts(opts)?;
     }
-    Ok(evaluate(pos, moves))
+    let position = Position::from(*board);
+    Ok(evaluate(&position, moves))
 }
 
 /// the main evaluation function. returns a value representing the score of the
 /// position from the point of view of the player whos turn it is to move
-pub fn evaluate(pos: &Board, moves: &MoveOrdering) -> Value {
+pub fn evaluate(pos: &Position, moves: &MoveOrdering) -> Value {
     // Initialize evaluation score
     let mut value = Value::ZERO;
-    let stm = pos.side_to_move();
+    let stm = pos.chessboard.side_to_move();
 
     // Check for mate or stalemate
     if moves.is_empty() {
-        return if pos.checkers().eq(&EMPTY) {
+        return if pos.chessboard.checkers().eq(&EMPTY) {
             optlog!(eval;debug;"eval stalemate");
             // in stalemate, give a slightly negative score to the side that's winning to
             // encourage it to keep playing instead
-            value -= material(pos, stm, (0.0, 0.0, 1.0));
-            value += material(pos, stm.not(), (0.0, 0.0, 1.0));
+            value -= material(&pos.chessboard, stm, (0.0, 0.0, 1.0));
+            value += material(&pos.chessboard, stm.not(), (0.0, 0.0, 1.0));
             // value is small as to not significantly impact the search tree
             value / 10
         } else {
@@ -56,15 +58,15 @@ pub fn evaluate(pos: &Board, moves: &MoveOrdering) -> Value {
         };
     }
 
-    let interp = interpolate(pos);
+    let interp = interpolate(&pos.chessboard);
 
     // Calculate material and positional benefits from the side to move's
     // perspective
-    value += material(pos, stm, interp);
-    value -= material(pos, stm.not(), interp);
+    value += material(&pos.chessboard, stm, interp);
+    value -= material(&pos.chessboard, stm.not(), interp);
 
-    value += piece_position_benefit_for_side(pos, stm, interp);
-    value -= piece_position_benefit_for_side(pos, stm.not(), interp);
+    value += piece_position_benefit_for_side(&pos.chessboard, stm, interp);
+    value -= piece_position_benefit_for_side(&pos.chessboard, stm.not(), interp);
 
     // Add tempo bonus
     value += TEMPO; // Always positive for the side to move
