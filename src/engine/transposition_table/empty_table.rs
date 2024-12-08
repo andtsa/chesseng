@@ -1,10 +1,12 @@
 //! a no-op transposition table
 use std::marker::PhantomData;
 
+use crate::search::SearchResult;
 use crate::setup::depth::Depth;
 use crate::transposition_table::EvalBound;
 use crate::transposition_table::TEntry;
 use crate::transposition_table::TKey;
+use crate::transposition_table::TableAccess;
 use crate::transposition_table::TranspositionTable;
 
 /// a no-op entry
@@ -47,12 +49,24 @@ impl TEntry for EmptyEntry {
         EmptyEntry
     }
 
-    fn depth(&self) -> (Depth, Depth) {
-        (Depth(0), Depth(0))
+    fn new_from_result(_result: &SearchResult, _bound: EvalBound) -> Self {
+        EmptyEntry
+    }
+
+    fn depth(&self) -> Depth {
+        Depth(0)
     }
 
     fn bound(&self) -> EvalBound {
         EvalBound::Exact
+    }
+
+    fn search_result(&self) -> SearchResult {
+        SearchResult::default()
+    }
+
+    fn is_valid(&self) -> bool {
+        false
     }
 }
 
@@ -90,5 +104,15 @@ impl<E: TEntry, K: TKey<FromType = (), PartialHash = ()>> TranspositionTable<K, 
 
     fn hashfull(&self) -> usize {
         0
+    }
+}
+
+impl TableAccess<EmptyHash, EmptyEntry, EmptyTable<EmptyHash, EmptyEntry>>
+    for EmptyTable<EmptyHash, EmptyEntry>
+{
+    fn hit(&self) {}
+    fn access(&self) -> EmptyTable<EmptyHash, EmptyEntry> {
+        // the table is always empty, just make a new one
+        EmptyTable::new(0)
     }
 }

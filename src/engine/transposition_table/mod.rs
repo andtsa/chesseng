@@ -1,9 +1,6 @@
 //! transposition tables!
 
-use std::marker::PhantomData;
-use std::sync::atomic::AtomicUsize;
-use std::sync::Arc;
-
+use crate::search::SearchResult;
 use crate::setup::depth::Depth;
 use crate::transposition_table::empty_table::EmptyEntry;
 use crate::transposition_table::empty_table::EmptyHash;
@@ -42,12 +39,16 @@ pub trait TEntry: Sync + Clone {
     fn partial_hash(&self) -> Self::PartialHash;
     /// create a new empty entry
     fn new_empty() -> Self;
-    /// the depth of the entry
-    /// - .0: the move from which the search started
-    /// - .1: the depth of the search that created this entry
-    fn depth(&self) -> (Depth, Depth);
+    /// create a new entry to store a search result
+    fn new_from_result(result: &SearchResult, bound: EvalBound) -> Self;
+    /// the depth of the search that created this entry
+    fn depth(&self) -> Depth;
     /// the relative evaluation of the entry
     fn bound(&self) -> EvalBound;
+    /// a [`SearchResult`] from this entry
+    fn search_result(&self) -> SearchResult;
+    /// do the entry's values make sense?
+    fn is_valid(&self) -> bool;
     // ...
 }
 
@@ -76,20 +77,17 @@ pub trait TranspositionTable<Key: TKey, Entry: TEntry> {
 }
 
 /// A model for concurrent access to the transposition table
-#[derive(Debug)]
-pub struct TableAccess<K: TKey, E: TEntry, T: Send + Sync + TranspositionTable<K, E>> {
-    /// how many successful reads were made in this transposition table
-    pub hits: AtomicUsize,
-    /// the actual table. must be [`Sync`]
-    pub table: Arc<T>,
-    /// phantom data for the key and entry types
-    _phantom: PhantomData<(K, E)>,
+pub trait TableAccess<K: TKey, E: TEntry, T: Send + Sync + TranspositionTable<K, E>> {
+    /// increment number of successful reads were made in this transposition
+    /// table
+    fn hit(&self);
+    /// access the table. the implementation must ensure that this is
+    /// - safe
+    /// - fast
+    /// - calling &mut self functions on the returned table is safe & updates
+    ///   the _same_ table
+    fn access(&self) -> T;
 }
-
-// // SAFETY: to-do
-// unsafe impl Send for TableAccess {}
-// // SAFETY: idk
-// unsafe impl Sync for TableAccess {}
 
 /// the type of the currently used transposition table
 pub type TableImpl = EmptyTable<EmptyHash, EmptyEntry>;
@@ -99,35 +97,24 @@ pub type TableImpl = EmptyTable<EmptyHash, EmptyEntry>;
 pub struct TT {
     /// the table access struct, defined for whatever the currently used
     /// implementation is
-    table: TableAccess<EmptyHash, EmptyEntry, TableImpl>,
+    table: TableImpl,
 }
 
 impl TT {
     /// create a new table access point
     pub fn new() -> Self {
         let table: EmptyTable<EmptyHash, EmptyEntry> = EmptyTable::new(DEFAULT_TABLE_SIZE);
-        Self {
-            table: TableAccess {
-                hits: AtomicUsize::new(0),
-                table: Arc::new(table),
-                _phantom: Default::default(),
-            },
-        }
-    }
-
-    /// get a reference to the table's arc
-    pub fn get_arc(&self) -> Arc<EmptyTable<EmptyHash, EmptyEntry>> {
-        self.table.table.clone()
+        Self { table }
     }
 
     /// get a reference to the table
-    pub fn get(&self) -> &EmptyTable<EmptyHash, EmptyEntry> {
-        &self.table.table
+    pub fn get(&self) -> EmptyTable<EmptyHash, EmptyEntry> {
+        self.table.access()
     }
 
     /// get a mutable reference to the table
-    pub fn get_mut(&mut self) -> &mut EmptyTable<EmptyHash, EmptyEntry> {
-        Arc::make_mut(&mut self.table.table)
+    pub fn get_mut(&mut self) -> EmptyTable<EmptyHash, EmptyEntry> {
+        self.table.access()
     }
 }
 

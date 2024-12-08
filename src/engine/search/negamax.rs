@@ -3,7 +3,6 @@
 //! https://en.wikipedia.org/wiki/Negamax
 
 use std::sync::atomic::Ordering;
-use std::sync::Arc;
 
 use anyhow::Result;
 use chess::Board;
@@ -21,7 +20,12 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
+use crate::transposition_table::empty_table::EmptyHash;
+use crate::transposition_table::EvalBound;
+use crate::transposition_table::TEntry;
+use crate::transposition_table::TableAccess;
 use crate::transposition_table::TableImpl;
+use crate::transposition_table::TranspositionTable;
 use crate::transposition_table::TT;
 
 /// wrapper around [`SEARCHING`]
@@ -52,14 +56,7 @@ pub fn ng_test(
     let opt = opts()?;
     let table = TT::new();
     let position = Position::from(board);
-    Ok(negamax(
-        position,
-        to_depth,
-        alpha,
-        beta,
-        &opt,
-        table.get_arc(),
-    ))
+    Ok(negamax(position, to_depth, alpha, beta, &opt, &table.get()))
 }
 
 /// mmmmmmmmmmmmm
@@ -67,9 +64,9 @@ pub fn negamax(
     pos: Position,
     to_depth: Depth,
     mut alpha: Value,
-    beta: Value,
+    mut beta: Value,
     opts: &Opts,
-    table: Arc<TableImpl>,
+    table: &TableImpl,
 ) -> SearchResult {
     let moves = ordered_moves(&pos.chessboard);
 
@@ -90,6 +87,26 @@ pub fn negamax(
         if α ≥ β then
             return ttEntry.value
     */
+    let alpha_orig = alpha;
+    if opts.use_tt {
+        let current_hash = EmptyHash; // change
+        if let Some(tt_entry) = table.get(current_hash) {
+            if tt_entry.is_valid() && tt_entry.depth() >= to_depth {
+                match tt_entry.bound() {
+                    EvalBound::Exact => return tt_entry.search_result(),
+                    EvalBound::LowerBound => {
+                        alpha = alpha.max(tt_entry.search_result().next_position_value)
+                    }
+                    EvalBound::UpperBound => {
+                        beta = beta.min(tt_entry.search_result().next_position_value)
+                    }
+                }
+                if alpha >= beta {
+                    return tt_entry.search_result();
+                }
+            }
+        }
+    }
 
     if to_depth == Depth::ZERO || moves.is_empty() {
         let ev = evaluate(&pos, &moves);
@@ -106,14 +123,7 @@ pub fn negamax(
     let mut total_nodes = 0;
 
     for mv in moves.0.iter() {
-        let mut deeper = -negamax(
-            pos.make_move(*mv),
-            to_depth - 1,
-            -beta,
-            -alpha,
-            opts,
-            table.clone(),
-        );
+        let mut deeper = -negamax(pos.make_move(*mv), to_depth - 1, -beta, -alpha, opts, table);
         total_nodes += deeper.nodes_searched + 1;
 
         if !searching() {
@@ -140,13 +150,41 @@ pub fn negamax(
         }
     }
 
-    optlog!(search;trace;"return max_val: {:?}", best);
-
-    SearchResult {
+    let search_result = SearchResult {
         pv,
         next_position_value: best.as_ref().map_or(Value::MIN, |b| b.1),
         nodes_searched: total_nodes,
+    };
+
+    /* from https://en.wikipedia.org/wiki/Negamax
+    (* Transposition Table Store; node is the lookup key for ttEntry *)
+    ttEntry.value := value
+    if value ≤ alphaOrig then
+        ttEntry.flag := UPPERBOUND
+    else if value ≥ β then
+        ttEntry.flag := LOWERBOUND
+    else
+        ttEntry.flag := EXACT
+    ttEntry.depth := depth
+    ttEntry.is_valid := true
+    transpositionTableStore(node, ttEntry)
+    */
+    if opts.use_tt {
+        let bound = if search_result.next_position_value <= alpha_orig {
+            EvalBound::UpperBound
+        } else if search_result.next_position_value >= beta {
+            EvalBound::LowerBound
+        } else {
+            EvalBound::Exact
+        };
+        let entry = TEntry::new_from_result(&search_result, bound);
+        let current_hash = EmptyHash; // change
+        table.access().insert(current_hash, entry);
     }
+
+    optlog!(search;trace;"return max_val: {:?}", best);
+
+    search_result
 }
 
 #[cfg(test)]
