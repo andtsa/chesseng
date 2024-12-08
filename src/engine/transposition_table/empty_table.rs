@@ -49,7 +49,12 @@ impl TEntry for EmptyEntry {
         EmptyEntry
     }
 
-    fn new_from_result(_result: &SearchResult, _bound: EvalBound) -> Self {
+    fn new_from_result(
+        _hash: u64,
+        _depth: Depth,
+        _result: &SearchResult,
+        _bound: EvalBound,
+    ) -> Self {
         EmptyEntry
     }
 
