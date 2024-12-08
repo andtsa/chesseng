@@ -61,13 +61,11 @@ pub trait TranspositionTable<Key: TKey, Entry: TEntry> {
     /// resize the transposition table to `kb` kilobytes
     fn resize(&mut self, kb: usize);
     /// get the entry for a hash, if it exists
-    fn get(&self, hash: Key) -> Option<&Entry>;
+    fn get(&self, hash: Key) -> Option<Entry>;
     /// insert an entry for a hash.
     ///
     /// intended as a wrapper around [`entry`]
     fn insert(&mut self, hash: Key, entry: Entry);
-    /// get the entry for a hash, creating it if it doesn't exist
-    fn entry(&mut self, hash: Key) -> &mut Entry;
     /// empty the transposition table
     fn clear(&mut self);
     /// the number of entries in the table
