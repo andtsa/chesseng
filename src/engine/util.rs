@@ -7,6 +7,8 @@ use chess::Board;
 use chess::ChessMove;
 use chess::Piece;
 
+use crate::position::Position;
+
 /// positions from rustfish github
 pub fn bench_positions() -> Vec<Board> {
     let positions = [
@@ -101,20 +103,21 @@ pub trait Print {
     fn print_move(&self, mv: ChessMove, capture: bool) -> String;
 }
 
-impl Print for Board {
+impl Print for Position {
     fn print(&self) -> String {
         format!(
             "\n+     {:?} to move\n{}",
-            self.side_to_move(),
-            fen_to_str(self.to_string())
+            self.chessboard.side_to_move(),
+            fen_to_str(self.chessboard.to_string())
         )
     }
     fn print_move(&self, mv: ChessMove, capture: bool) -> String {
         fen_to_string_highlighted(
-            self.to_string(),
+            self.chessboard.to_string(),
             mv,
             capture,
-            self.piece_on(mv.get_dest())
+            self.chessboard
+                .piece_on(mv.get_dest())
                 .is_some_and(|p| matches!(p, Piece::Pawn)),
         )
     }
@@ -242,4 +245,14 @@ pub fn fen_to_string_highlighted(
     r += "\n+ a  b  c  d  e  f  g  h";
 
     r
+}
+
+impl Print for Board {
+    fn print(&self) -> String {
+        Position::from(*self).print()
+    }
+
+    fn print_move(&self, mv: ChessMove, capture: bool) -> String {
+        Position::from(*self).print_move(mv, capture)
+    }
 }

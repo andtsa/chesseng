@@ -3,6 +3,7 @@
 //! https://en.wikipedia.org/wiki/Negamax
 
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
 use anyhow::Result;
 use chess::Board;
@@ -12,6 +13,7 @@ use crate::optlog;
 use crate::opts::opts;
 use crate::opts::setopts;
 use crate::opts::Opts;
+use crate::position::Position;
 use crate::search::moveordering::ordered_moves;
 use crate::search::SearchResult;
 use crate::search::MV;
@@ -19,6 +21,8 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
+use crate::transposition_table::TableImpl;
+use crate::transposition_table::TT;
 
 /// wrapper around [`SEARCHING`]
 #[inline(always)]
@@ -36,24 +40,56 @@ pub fn search_to() -> Depth {
 /// should be used for tests.
 #[inline(always)]
 pub fn ng_test(
-    pos: Board,
+    board: Board,
     to_depth: Depth,
     alpha: Value,
     beta: Value,
-    opts: Opts,
+    set_opts: Opts,
 ) -> Result<SearchResult> {
     {
-        setopts(opts)?;
+        setopts(set_opts)?;
     }
-    Ok(negamax(pos, to_depth, alpha, beta))
+    let opt = opts()?;
+    let table = TT::new();
+    let position = Position::from(board);
+    Ok(negamax(
+        position,
+        to_depth,
+        alpha,
+        beta,
+        &opt,
+        table.get_arc(),
+    ))
 }
 
 /// mmmmmmmmmmmmm
-pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> SearchResult {
-    let moves = ordered_moves(&pos);
+pub fn negamax(
+    pos: Position,
+    to_depth: Depth,
+    mut alpha: Value,
+    beta: Value,
+    opts: &Opts,
+    table: Arc<TableImpl>,
+) -> SearchResult {
+    let moves = ordered_moves(&pos.chessboard);
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
     optlog!(search;trace;"moves: {}", moves);
+
+    /* source: https://en.wikipedia.org/wiki/Negamax
+    (* Transposition Table Lookup; node is the lookup key for ttEntry *)
+    ttEntry := transpositionTableLookup(node)
+    if ttEntry.is_valid and ttEntry.depth ≥ depth then
+        if ttEntry.flag = EXACT then
+            return ttEntry.value
+        else if ttEntry.flag = LOWERBOUND then
+            α := max(α, ttEntry.value)
+        else if ttEntry.flag = UPPERBOUND then
+            β := min(β, ttEntry.value)
+
+        if α ≥ β then
+            return ttEntry.value
+    */
 
     if to_depth == Depth::ZERO || moves.is_empty() {
         let ev = evaluate(&pos, &moves);
@@ -70,7 +106,14 @@ pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> Se
     let mut total_nodes = 0;
 
     for mv in moves.0.iter() {
-        let mut deeper = -negamax(pos.make_move_new(*mv), to_depth - 1, -beta, -alpha);
+        let mut deeper = -negamax(
+            pos.make_move(*mv),
+            to_depth - 1,
+            -beta,
+            -alpha,
+            opts,
+            table.clone(),
+        );
         total_nodes += deeper.nodes_searched + 1;
 
         if !searching() {
@@ -91,7 +134,7 @@ pub fn negamax(pos: Board, to_depth: Depth, mut alpha: Value, beta: Value) -> Se
         }
         alpha = alpha.max(deeper.next_position_value);
 
-        if opts().unwrap().use_ab && alpha >= beta {
+        if opts.use_ab && alpha >= beta {
             optlog!(search;trace;"alpha {alpha:?} >= beta {beta:?}");
             break;
         }

@@ -2,9 +2,6 @@ use std::time::Instant;
 
 use anyhow::Result;
 use sandy_engine::timing::max_instant;
-use sandy_engine::transposition_table::TEntry;
-use sandy_engine::transposition_table::TKey;
-use sandy_engine::transposition_table::TranspositionTable;
 use sandy_engine::Engine;
 use vampirc_uci::UciTimeControl;
 
@@ -15,7 +12,7 @@ pub trait TimeControl {
     fn time_control(&mut self, tc: UciTimeControl) -> Result<()>;
 }
 
-impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> TimeControl for Engine<K, E, TT> {
+impl TimeControl for Engine {
     fn time_control(&mut self, tc: UciTimeControl) -> Result<()> {
         match tc {
             UciTimeControl::Ponder => unimplemented!("ponder not yet implemented"),

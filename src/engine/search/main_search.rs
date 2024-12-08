@@ -9,6 +9,7 @@ use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
 
 use crate::optlog;
+use crate::opts::opts;
 use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
@@ -24,13 +25,10 @@ use crate::search::SEARCH_THREADS;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
-use crate::transposition_table::TEntry;
-use crate::transposition_table::TKey;
-use crate::transposition_table::TranspositionTable;
 use crate::uci::UCI_LISTENING_FREQUENCY;
 use crate::Engine;
 
-impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
+impl Engine {
     /// Begin the search for the best move, spawns a new thread to actually do
     /// the search, and returns a listener for [`Message`]s.
     pub fn begin_search(&mut self) -> Result<Receiver<Message>> {
@@ -42,11 +40,13 @@ impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
 
         let (mut publisher, receiver) = lockfree::channel::spsc::create();
         let mut root = RootNode {
-            board: self.board,
+            board: self.board.clone(),
             pv: Vec::new(),
             eval: Value::MIN,
             previous_eval: Value::MIN,
         };
+
+        let tt = self.table.get_arc();
 
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
@@ -55,6 +55,7 @@ impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
             let start_time = Instant::now();
+            let search_options = opts().unwrap();
 
             while !exit_condition() && target_depth < search_to() {
                 // record the time it takes to reach this depth to see if it's worth it to go
@@ -71,9 +72,9 @@ impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
 
                 // get an ordered sequence of moves from this position
                 let moves = if let Some(first_move) = root.pv.first() {
-                    pv_ordered_moves(&root.board, &first_move.0)
+                    pv_ordered_moves(&root.board.chessboard, &first_move.0)
                 } else {
-                    ordered_moves(&root.board)
+                    ordered_moves(&root.board.chessboard)
                 };
 
                 optlog!(search;trace;"ordered moves: {}", moves);
@@ -82,10 +83,12 @@ impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
                 for mv in moves {
                     // recursively search the next position
                     let search_result = -negamax(
-                        root.board.make_move_new(mv),
+                        root.board.make_move(mv),
                         target_depth - 1,
                         -beta,
                         -alpha,
+                        &search_options,
+                        tt.clone(),
                     );
 
                     optlog!(

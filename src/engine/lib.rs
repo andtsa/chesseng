@@ -6,6 +6,7 @@ pub mod book;
 pub mod debug;
 pub mod evaluation;
 pub mod opts;
+pub mod position;
 pub mod search;
 pub mod setup;
 pub mod timing;
@@ -13,7 +14,6 @@ pub mod transposition_table;
 pub mod uci;
 pub mod util;
 
-use std::marker::PhantomData;
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
@@ -21,43 +21,37 @@ use std::time::Instant;
 
 use anyhow::anyhow;
 use anyhow::Result;
-use chess::Board;
 use chess::ChessMove;
 use lockfree::channel::RecvErr;
 use log::info;
 use log::trace;
 
+use crate::position::Position;
 use crate::search::exit_condition;
 use crate::search::Message;
 use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
-use crate::transposition_table::TEntry;
-use crate::transposition_table::TKey;
-use crate::transposition_table::TranspositionTable;
-use crate::transposition_table::DEFAULT_TABLE_SIZE;
+use crate::transposition_table::TT;
 
 /// this is why you're here, right?
 #[derive(Debug)]
-pub struct Engine<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> {
+pub struct Engine {
     /// the board the engine will think on
-    pub board: Board,
+    pub board: Position,
     /// the transposition table
     pub table: TT,
-    /// marker for the key and entry types
-    _phantom: PhantomData<(K, E)>,
 }
 
-impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
+impl Engine {
     /// create a new engine!
     pub fn new() -> Result<Self> {
         info!("creating engine at version {}", env!("CARGO_PKG_VERSION"));
 
         Ok(Self {
-            board: Board::default(),
-            table: TT::new(DEFAULT_TABLE_SIZE),
-            _phantom: Default::default(),
+            board: Default::default(),
+            table: TT::new(),
         })
     }
 

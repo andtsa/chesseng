@@ -1,19 +1,25 @@
 //! a no-op transposition table
+use std::marker::PhantomData;
+
+use crate::setup::depth::Depth;
+use crate::transposition_table::EvalBound;
 use crate::transposition_table::TEntry;
 use crate::transposition_table::TKey;
 use crate::transposition_table::TranspositionTable;
 
 /// a no-op entry
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EmptyEntry;
 /// a no-op hash
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct EmptyHash;
 /// a no-op transposition table
-#[derive(Debug)]
-pub struct EmptyTable<E> {
+#[derive(Debug, Clone)]
+pub struct EmptyTable<K, E> {
     /// the one entry (it's also empty)
     one_entry: E,
+    /// the table key type
+    _phantom: PhantomData<K>,
 }
 
 impl TKey for EmptyHash {
@@ -40,14 +46,23 @@ impl TEntry for EmptyEntry {
     fn new_empty() -> Self {
         EmptyEntry
     }
+
+    fn depth(&self) -> (Depth, Depth) {
+        (Depth(0), Depth(0))
+    }
+
+    fn bound(&self) -> EvalBound {
+        EvalBound::Exact
+    }
 }
 
 impl<E: TEntry, K: TKey<FromType = (), PartialHash = ()>> TranspositionTable<K, E>
-    for EmptyTable<E>
+    for EmptyTable<K, E>
 {
     fn new(_kb: usize) -> Self {
         EmptyTable {
             one_entry: E::new_empty(),
+            _phantom: Default::default(),
         }
     }
 

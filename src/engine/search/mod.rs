@@ -13,11 +13,11 @@ use std::time::Duration;
 use std::time::Instant;
 
 use anyhow::anyhow;
-use chess::Board;
 use chess::ChessMove;
 use lockfree::channel::spsc::Sender;
 use log::debug;
 
+use crate::position::Position;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 
@@ -41,7 +41,7 @@ pub struct MV(pub ChessMove, pub Value);
 #[derive(Debug)]
 pub struct RootNode {
     /// the current board state
-    pub board: Board,
+    pub board: Position,
     /// the principal variation
     pub pv: Vec<MV>,
     /// the current evaluation of the root node
