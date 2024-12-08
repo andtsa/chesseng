@@ -11,15 +11,12 @@ use crate::optlog;
 use crate::search::exit_condition;
 use crate::search::Message;
 use crate::search::SearchInfo;
-use crate::transposition_table::TEntry;
-use crate::transposition_table::TKey;
-use crate::transposition_table::TranspositionTable;
 use crate::Engine;
 
 /// How often to check for new uci messages from the search threads, in *ms*
 pub const UCI_LISTENING_FREQUENCY: usize = 10;
 
-impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
+impl Engine {
     /// Start the engine!!
     pub fn uci_go(&mut self) -> Result<()> {
         let mut listener = self.begin_search()?;

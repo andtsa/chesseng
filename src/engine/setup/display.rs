@@ -2,6 +2,7 @@
 use std::fmt::Display;
 use std::fmt::Formatter;
 
+use crate::position::Position;
 use crate::setup::values::Value;
 
 impl Display for Value {
@@ -15,5 +16,11 @@ impl Display for Value {
         } else {
             write!(f, "cp {}", self.0)
         }
+    }
+}
+
+impl Display for Position {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.chessboard)
     }
 }

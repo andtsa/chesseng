@@ -4,9 +4,6 @@ use std::time::Instant;
 
 use anyhow::Result;
 
-use crate::transposition_table::TEntry;
-use crate::transposition_table::TKey;
-use crate::transposition_table::TranspositionTable;
 use crate::Engine;
 
 /// one hundred years :)
@@ -20,7 +17,7 @@ pub fn max_instant() -> Instant {
     Instant::now() + MAX_TIME
 }
 
-impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
+impl Engine {
     /// Set the time until which the engine should search.
     pub fn game_time_constraints(
         &mut self,
@@ -30,7 +27,7 @@ impl<K: TKey, E: TEntry, TT: TranspositionTable<K, E>> Engine<K, E, TT> {
         black_increment: Option<Duration>,
         moves_to_go: Option<u8>,
     ) -> Result<()> {
-        let (time, increment) = match self.board.side_to_move() {
+        let (time, increment) = match self.board.chessboard.side_to_move() {
             chess::Color::White => (white_time, white_increment),
             chess::Color::Black => (black_time, black_increment),
         };

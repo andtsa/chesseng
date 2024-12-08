@@ -16,10 +16,8 @@ use sandy_engine::optlog;
 use sandy_engine::opts::opts;
 use sandy_engine::opts::setopts;
 use sandy_engine::opts::Opts;
+use sandy_engine::position::Position;
 use sandy_engine::setup::depth::Depth;
-use sandy_engine::transposition_table::TEntry;
-use sandy_engine::transposition_table::TKey;
-use sandy_engine::transposition_table::TranspositionTable;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
 use vampirc_uci::parse_one;
@@ -33,9 +31,7 @@ use crate::uci::time_control::TimeControl;
 ///
 /// Receives permanent ownership of the [`Engine`] for this execution of the
 /// CLI.
-pub fn uci_loop<K: TKey, E: TEntry, TT: TranspositionTable<K, E>>(
-    mut engine: Engine<K, E, TT>,
-) -> Result<()> {
+pub fn uci_loop(mut engine: Engine) -> Result<()> {
     println!("id name Sandy Chess Engine");
     println!("id author {}", env!("CARGO_PKG_AUTHORS"));
 
@@ -93,12 +89,12 @@ pub fn uci_loop<K: TKey, E: TEntry, TT: TranspositionTable<K, E>>(
                 moves,
             } => {
                 if startpos {
-                    engine.board = Board::default();
+                    engine.board = Default::default();
                 } else if let Some(fen) = fen {
-                    engine.board = Board::from_str(&fen.0).expect("invalid FEN");
+                    engine.board = Position::from(Board::from_str(&fen.0).expect("invalid FEN"));
                 }
                 for mv in moves {
-                    engine.board = engine.board.make_move_new(mv);
+                    engine.board = engine.board.make_move(mv);
                 }
                 optlog!(uci;info;"fen position: {}", engine.board);
                 optlog!(uci;debug;"{}", engine.board.print());
