@@ -7,6 +7,8 @@ use crate::transposition_table::empty_table::EmptyHash;
 use crate::transposition_table::empty_table::EmptyTable;
 
 pub mod empty_table;
+mod entry;
+mod vl;
 
 /// The default size of a transposition table, in kilobytes
 pub const DEFAULT_TABLE_SIZE: usize = 64;
@@ -32,7 +34,7 @@ pub trait TKey: Sync + Sized + Copy + Clone {
 }
 
 /// A transposition table entry
-pub trait TEntry: Sync + Clone {
+pub trait TEntry: Sync {
     /// the type of the hash used to identify this entry
     type PartialHash;
     /// the partial hash for this entry
@@ -40,7 +42,7 @@ pub trait TEntry: Sync + Clone {
     /// create a new empty entry
     fn new_empty() -> Self;
     /// create a new entry to store a search result
-    fn new_from_result(result: &SearchResult, bound: EvalBound) -> Self;
+    fn new_from_result(hash: u64, depth: Depth, result: &SearchResult, bound: EvalBound) -> Self;
     /// the depth of the search that created this entry
     fn depth(&self) -> Depth;
     /// the relative evaluation of the entry

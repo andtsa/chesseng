@@ -177,7 +177,7 @@ pub fn negamax(
         } else {
             EvalBound::Exact
         };
-        let entry = TEntry::new_from_result(&search_result, bound);
+        let entry = TEntry::new_from_result(0, to_depth, &search_result, bound);
         let current_hash = EmptyHash; // change
         table.access().insert(current_hash, entry);
     }
