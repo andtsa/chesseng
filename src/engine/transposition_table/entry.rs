@@ -131,6 +131,15 @@ impl TableEntry {
     }
 }
 
+impl Clone for TableEntry {
+    fn clone(&self) -> Self {
+        Self {
+            key: self.key,
+            value: AtomicU64::new(self.value.load(Ordering::Relaxed)),
+        }
+    }
+}
+
 impl TEntry for TableEntry {
     type PartialHash = u16;
 
