@@ -46,7 +46,7 @@ impl Engine {
             previous_eval: Value::MIN,
         };
 
-        let tt = self.table.get_arc();
+        let tt = self.table.get();
 
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
@@ -88,7 +88,7 @@ impl Engine {
                         -beta,
                         -alpha,
                         &search_options,
-                        tt.clone(),
+                        &tt,
                     );
 
                     optlog!(

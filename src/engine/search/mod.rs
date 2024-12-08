@@ -51,7 +51,7 @@ pub struct RootNode {
 }
 
 /// The result of a single negamax search call
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SearchResult {
     /// The principal variation
     pub pv: Vec<MV>,
