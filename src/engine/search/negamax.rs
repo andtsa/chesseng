@@ -87,20 +87,7 @@ pub fn negamax(
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
     optlog!(search;trace;"moves: {}", moves);
 
-    /* source: https://en.wikipedia.org/wiki/Negamax
-    (* Transposition Table Lookup; node is the lookup key for ttEntry *)
-    ttEntry := transpositionTableLookup(node)
-    if ttEntry.is_valid and ttEntry.depth ≥ depth then
-        if ttEntry.flag = EXACT then
-            return ttEntry.value
-        else if ttEntry.flag = LOWERBOUND then
-            α := max(α, ttEntry.value)
-        else if ttEntry.flag = UPPERBOUND then
-            β := min(β, ttEntry.value)
-
-        if α ≥ β then
-            return ttEntry.value
-    */
+    /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
     if opts.use_tt {
         let current_hash = pos.chessboard.get_hash(); // change
@@ -181,19 +168,7 @@ pub fn negamax(
         tb_hits,
     };
 
-    /* from https://en.wikipedia.org/wiki/Negamax
-    (* Transposition Table Store; node is the lookup key for ttEntry *)
-    ttEntry.value := value
-    if value ≤ alphaOrig then
-        ttEntry.flag := UPPERBOUND
-    else if value ≥ β then
-        ttEntry.flag := LOWERBOUND
-    else
-        ttEntry.flag := EXACT
-    ttEntry.depth := depth
-    ttEntry.is_valid := true
-    transpositionTableStore(node, ttEntry)
-    */
+    /* from https://en.wikipedia.org/wiki/Negamax */
     if opts.use_tt {
         let bound = if search_result.next_position_value <= alpha_orig {
             EvalBound::UpperBound
