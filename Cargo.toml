@@ -49,10 +49,10 @@ debug = false
 strip = "none"
 debug-assertions = false
 overflow-checks = false
-lto = false
+lto = true
 panic = 'unwind'
 incremental = false
-codegen-units = 16
+codegen-units = 1
 rpath = false
 
 [lints.rust]

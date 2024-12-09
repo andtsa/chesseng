@@ -94,17 +94,6 @@ impl Engine {
         Ok(())
     }
 
-    /// resize the transposition table
-    pub fn resize_table(&mut self, size: usize) -> Result<()> {
-        self.table
-            .get()
-            .0
-            .write()
-            .map_err(|e| anyhow!("table lock error: {e}"))?
-            .resize(size);
-        Ok(())
-    }
-
     /// # begin setting up the engine
     /// 1. load opening book
     /// 2. load parameters from file
