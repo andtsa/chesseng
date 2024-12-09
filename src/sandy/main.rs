@@ -13,6 +13,7 @@ use std::str::FromStr;
 use anyhow::anyhow;
 use anyhow::Result;
 use chess::Board;
+use log::error;
 use log::info;
 use log::warn;
 use sandy_engine::util::fen_to_str;
@@ -33,6 +34,24 @@ fn main() -> Result<()> {
     colog::basic_builder()
         .filter(None, log::LevelFilter::Trace)
         .init();
+
+    // take the default panic hook, and make sure that the *entire* process is
+    // terminated on panic. this significantly improves debugging across
+    // multiple threads.
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        // invoke the default handler
+        default_hook(panic_info);
+        // human readable error
+        error!("panic occurred: {panic_info}, exiting sandy engine.");
+        // UCI readable error
+        println!("info string panic occurred: {panic_info}");
+        // and exit the process
+        std::process::exit(1);
+        // NOTE: this *will* leak resources.
+        // since the process is killed though, the OS will clean up after us,
+        // eventually.
+    }));
 
     let engine: Engine = Engine::new()?;
 
