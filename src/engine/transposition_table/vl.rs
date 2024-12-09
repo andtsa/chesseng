@@ -46,7 +46,7 @@ impl TranspositionTable<u64, TableEntry> for VL {
         let table = vec![TableEntry::new_empty(); size];
 
         optlog!(tt;info;"resized VL table from {} to {} entries.", self.size, size);
-
+        
         self.table = table;
         self.size = size;
     }
