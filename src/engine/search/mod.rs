@@ -105,7 +105,7 @@ pub struct SearchInfo {
 pub fn search_until() -> Option<Instant> {
     *SEARCH_UNTIL
         .read()
-        .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))
+        .map_err(|e| anyhow!("SEARCH_UNTIL [fn,read] lock error: {e}"))
         // SAFETY: this only panics if another thread has already panicked,
         // and if any thread panics then the process exits anyway,
         // so this situation is unreachable.
