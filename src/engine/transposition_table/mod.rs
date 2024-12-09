@@ -13,7 +13,7 @@ pub mod entry;
 pub mod vl;
 
 /// The default size of a transposition table, in bytes
-pub const DEFAULT_TABLE_SIZE: usize = 256 * 1024;
+pub const DEFAULT_TABLE_SIZE: usize = 256;
 
 /// A key for a transposition table
 /// - FromType: the type of the position's identifier (e.g. the board state, or
