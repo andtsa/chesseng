@@ -55,7 +55,7 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                     DebugLevel::info
                 }))?;
                 info!(
-                    "debug mode: {}, log_level: {:?}, engine opts: {:?}",
+                    "debug mode: {}, max_log_level: {:?}, engine opts: {:?}",
                     value,
                     log::max_level(),
                     opts()

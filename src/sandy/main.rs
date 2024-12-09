@@ -15,7 +15,6 @@ use anyhow::Result;
 use chess::Board;
 use log::info;
 use log::warn;
-use sandy_engine::position::Position;
 use sandy_engine::util::fen_to_str;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
@@ -46,7 +45,9 @@ fn main() -> Result<()> {
             continue;
         }
         let mut parts = command.split_ascii_whitespace();
-        match (parts.next().unwrap(), parts) {
+        let cmd_name = parts.next().unwrap();
+        let cmd_body = read_line.trim_start_matches(cmd_name).trim();
+        match (cmd_name, parts) {
             ("uci", _) => {
                 info!("Entering UCI mode");
                 uci_loop(engine)?;
@@ -61,19 +62,14 @@ fn main() -> Result<()> {
                 info!("Quitting");
                 break;
             }
-            ("board", x) => {
+            ("board", _) => {
                 info!("Displaying board");
-                let b = Board::from_str(x.collect::<String>().trim_matches([' ', '\n', '"']))
-                    .map_err(|e| anyhow!("board error: {e}"))?;
-                info!("{}", Position::from(b).print());
+                let b = Board::from_str(cmd_body).map_err(|e| anyhow!("board error: {e}"))?;
+                info!("{}", b.print());
             }
-            ("display" | "fen", y) => {
+            ("display" | "fen", _) => {
                 info!("(unchecked) fen display");
-                let b = fen_to_str(
-                    y.collect::<String>()
-                        .trim_matches([' ', '\n', '"'])
-                        .to_string(),
-                );
+                let b = fen_to_str(cmd_body.to_string());
                 info!("{}", b);
             }
             ("other", _) => {
