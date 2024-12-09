@@ -183,6 +183,7 @@ impl TEntry for TableEntry {
             pv: vec![self.mv_struct()], // ?
             next_position_value: self.eval(),
             nodes_searched: 1,
+            tb_hits: 1,
         }
     }
 

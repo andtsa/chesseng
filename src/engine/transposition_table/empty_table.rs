@@ -102,7 +102,7 @@ impl TableAccess<EmptyHash, EmptyEntry, EmptyTable<EmptyHash, EmptyEntry>>
     for EmptyTable<EmptyHash, EmptyEntry>
 {
     fn hit(&self) {}
-    fn access(&self) -> EmptyTable<EmptyHash, EmptyEntry> {
+    fn share(&self) -> EmptyTable<EmptyHash, EmptyEntry> {
         // the table is always empty, just make a new one
         EmptyTable::new(0)
     }

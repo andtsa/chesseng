@@ -151,32 +151,41 @@ fn will_mate_in_2_() {
     let pos = Board::from_str("8/8/8/6Q1/8/8/8/5K1k b - - 0 1").unwrap();
     for d in 5..6 {
         let mut engine = Engine::new().unwrap();
+
+        setopts(Opts::new().tt(true).search(debug)).unwrap();
         engine.board = pos.into();
 
-        let mv = engine
+        let mv1 = engine
             .best_move(Depth(d), Duration::from_millis(10000))
             .unwrap();
-        engine.board = engine.board.make_move(mv);
+        engine.board = engine.board.make_move(mv1);
 
-        eprintln!("made first move in mating sequence: {}", mv);
+        eprintln!("made first move in mating sequence: {}", mv1);
 
         assert_eq!(
             engine.board.chessboard.status(),
             BoardStatus::Ongoing,
-            "depth=1 mv={mv} pos={}",
+            "depth=1 mv={mv1} pos={}",
             pos.print()
         );
 
-        let mv = engine
+        let mv2 = engine
             .best_move(Depth(d), Duration::from_millis(10000))
             .unwrap();
-        engine.board = engine.board.make_move(mv);
+        let board_before = engine.board.clone();
+        engine.board = engine.board.make_move(mv2);
+        let board_after = engine.board.clone();
+
+        assert_ne!(board_before, board_after);
+        assert_ne!(board_before.chessboard, board_after.chessboard);
+
+        // panic!("{}", engine.table);
 
         assert_eq!(
             engine.board.chessboard.status(),
             BoardStatus::Checkmate,
-            "depth=1 mv={mv} pos={}",
-            pos.print()
+            "depth=1 mv2={mv2} pos={}",
+            engine.board.print()
         );
     }
 }

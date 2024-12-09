@@ -20,11 +20,10 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
-use crate::transposition_table::empty_table::EmptyHash;
 use crate::transposition_table::EvalBound;
+use crate::transposition_table::ShareImpl;
 use crate::transposition_table::TEntry;
 use crate::transposition_table::TableAccess;
-use crate::transposition_table::TableImpl;
 use crate::transposition_table::TranspositionTable;
 use crate::transposition_table::TT;
 
@@ -66,7 +65,7 @@ pub fn negamax(
     mut alpha: Value,
     mut beta: Value,
     opts: &Opts,
-    table: &TableImpl,
+    table: &ShareImpl,
 ) -> SearchResult {
     let moves = ordered_moves(&pos.chessboard);
 
@@ -89,8 +88,8 @@ pub fn negamax(
     */
     let alpha_orig = alpha;
     if opts.use_tt {
-        let current_hash = EmptyHash; // change
-        if let Some(tt_entry) = table.get(current_hash) {
+        let current_hash = pos.chessboard.get_hash(); // change
+        if let Ok(Some(tt_entry)) = table.0.read().map(|l| l.get(current_hash)) {
             if tt_entry.is_valid() && tt_entry.depth() >= to_depth {
                 match tt_entry.bound() {
                     EvalBound::Exact => return tt_entry.search_result(),
@@ -115,16 +114,19 @@ pub fn negamax(
             pv: vec![],
             next_position_value: ev,
             nodes_searched: 1,
+            tb_hits: 0,
         };
     }
 
     let mut best = None;
     let mut pv = vec![];
     let mut total_nodes = 0;
+    let mut tb_hits = 0;
 
     for mv in moves.0.iter() {
         let mut deeper = -negamax(pos.make_move(*mv), to_depth - 1, -beta, -alpha, opts, table);
         total_nodes += deeper.nodes_searched + 1;
+        tb_hits += deeper.tb_hits;
 
         if !searching() {
             optlog!(search;trace;"searching() == false, breaking early");
@@ -154,6 +156,7 @@ pub fn negamax(
         pv,
         next_position_value: best.as_ref().map_or(Value::MIN, |b| b.1),
         nodes_searched: total_nodes,
+        tb_hits,
     };
 
     /* from https://en.wikipedia.org/wiki/Negamax
@@ -178,8 +181,10 @@ pub fn negamax(
             EvalBound::Exact
         };
         let entry = TEntry::new_from_result(0, to_depth, &search_result, bound);
-        let current_hash = EmptyHash; // change
-        table.access().insert(current_hash, entry);
+        let current_hash = pos.chessboard.get_hash(); // change
+        if let Ok(mut lock) = table.share().0.write() {
+            lock.insert(current_hash, entry)
+        };
     }
 
     optlog!(search;trace;"return max_val: {:?}", best);

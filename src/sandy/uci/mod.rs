@@ -71,6 +71,8 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                     Err(e) => optlog!(uci;error;"error setting option: {}", e),
                     Ok(opt) => {
                         setopts(opt)?;
+                        engine.resize_table(opt.hash_size)?;
+
                         optlog!(uci;info;
                              "option {name} set to {}.",
                              value.clone().unwrap_or("None".to_string())

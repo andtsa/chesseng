@@ -1,17 +1,19 @@
 //! transposition tables!
 
+use std::sync::Arc;
+use std::sync::RwLock;
+
 use crate::search::SearchResult;
 use crate::setup::depth::Depth;
-use crate::transposition_table::empty_table::EmptyEntry;
-use crate::transposition_table::empty_table::EmptyHash;
-use crate::transposition_table::empty_table::EmptyTable;
+use crate::transposition_table::vl::VlShare;
+use crate::transposition_table::vl::VL;
 
 pub mod empty_table;
-mod entry;
-mod vl;
+pub mod entry;
+pub mod vl;
 
-/// The default size of a transposition table, in kilobytes
-pub const DEFAULT_TABLE_SIZE: usize = 64;
+/// The default size of a transposition table, in bytes
+pub const DEFAULT_TABLE_SIZE: usize = 256 * 1024;
 
 /// A key for a transposition table
 /// - F: the type of the position's identifier (e.g. the board state, or
@@ -56,10 +58,10 @@ pub trait TEntry: Sync {
 
 /// A transposition table of hashes with type `K` and entries of type `E`
 pub trait TranspositionTable<Key: TKey, Entry: TEntry> {
-    /// create a new transposition table, with a size of `kb` kilobytes
-    fn new(kb: usize) -> Self;
-    /// resize the transposition table to `kb` kilobytes
-    fn resize(&mut self, kb: usize);
+    /// create a new transposition table, with a size of `bytes` bytes
+    fn new(bytes: usize) -> Self;
+    /// resize the transposition table to `bytes` bytes
+    fn resize(&mut self, bytes: usize);
     /// get the entry for a hash, if it exists
     fn get(&self, hash: Key) -> Option<Entry>;
     /// insert an entry for a hash.
@@ -86,35 +88,41 @@ pub trait TableAccess<K: TKey, E: TEntry, T: Send + Sync + TranspositionTable<K,
     /// - fast
     /// - calling &mut self functions on the returned table is safe & updates
     ///   the _same_ table
-    fn access(&self) -> T;
+    fn share(&self) -> Self;
 }
 
 /// the type of the currently used transposition table
-pub type TableImpl = EmptyTable<EmptyHash, EmptyEntry>;
+pub type TableImpl = VL;
+
+/// the type for the currently used thread-sharing implementation
+pub type ShareImpl = VlShare;
 
 /// the actual transposition table struct that's passed to the search threads
 #[derive(Debug)]
 pub struct TT {
     /// the table access struct, defined for whatever the currently used
     /// implementation is
-    table: TableImpl,
+    table: ShareImpl,
 }
 
 impl TT {
     /// create a new table access point
     pub fn new() -> Self {
-        let table: EmptyTable<EmptyHash, EmptyEntry> = EmptyTable::new(DEFAULT_TABLE_SIZE);
-        Self { table }
+        // let table: EmptyTable<EmptyHash, EmptyEntry> =
+        // EmptyTable::new(DEFAULT_TABLE_SIZE);
+        Self {
+            table: VlShare(Arc::new(RwLock::new(VL::new(DEFAULT_TABLE_SIZE)))),
+        }
     }
 
     /// get a reference to the table
-    pub fn get(&self) -> EmptyTable<EmptyHash, EmptyEntry> {
-        self.table.access()
+    pub fn get(&self) -> VlShare {
+        self.table.share()
     }
 
     /// get a mutable reference to the table
-    pub fn get_mut(&mut self) -> EmptyTable<EmptyHash, EmptyEntry> {
-        self.table.access()
+    pub fn get_mut(&mut self) -> VlShare {
+        self.table.share()
     }
 }
 

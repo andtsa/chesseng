@@ -33,6 +33,7 @@ use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
 use crate::setup::depth::Depth;
+use crate::transposition_table::TranspositionTable;
 use crate::transposition_table::TT;
 
 /// this is why you're here, right?
@@ -79,6 +80,17 @@ impl Engine {
         {
             SEARCHING.store(false, Ordering::Relaxed);
         }
+        Ok(())
+    }
+
+    /// resize the transposition table
+    pub fn resize_table(&mut self, size: usize) -> Result<()> {
+        self.table
+            .get()
+            .0
+            .write()
+            .map_err(|e| anyhow!("table lock error: {e}"))?
+            .resize(size);
         Ok(())
     }
 
