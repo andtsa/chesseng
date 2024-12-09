@@ -40,7 +40,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
 
     let sequence = [
         "uci",
-        "setoption name use_tt value off",
+        "setoption name use_tt value on",
         "debug off",
         "isready",
         &start_command,

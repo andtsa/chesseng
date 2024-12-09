@@ -9,10 +9,10 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
 use std::sync::RwLock;
-use std::sync::TryLockError;
 use std::time::Duration;
 use std::time::Instant;
 
+use anyhow::anyhow;
 use chess::ChessMove;
 use lockfree::channel::spsc::Sender;
 use log::debug;
@@ -20,7 +20,6 @@ use log::debug;
 use crate::position::Position;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
-use crate::timing::SUBMIT_DURATION;
 
 /// how many os threads should the search use?
 pub const SEARCH_THREADS: usize = 1;
@@ -104,28 +103,11 @@ pub struct SearchInfo {
 
 /// wrapper around [`SEARCH_UNTIL`]
 pub fn search_until() -> Option<Instant> {
-    match SEARCH_UNTIL.try_read() {
-        Ok(inst) => *inst,
-        Err(e) => match e {
-            TryLockError::Poisoned(e) => {
-                SEARCH_UNTIL.clear_poison();
-                eprintln!("SearchUntil lock is poisoned: {e}");
-                Some(Instant::now() - SUBMIT_DURATION)
-            }
-            TryLockError::WouldBlock => {
-                eprintln!("Options lock is blocked for reading. This should never happen.");
-                match SEARCH_UNTIL.read() {
-                    Ok(inst) => *inst,
-                    Err(e) => {
-                        eprintln!("SearchUntil lock is blocked for reading: {e}. This should never happen.");
-                        // SAFETY: not really
-                        SEARCH_UNTIL.clear_poison();
-                        Some(Instant::now() - SUBMIT_DURATION)
-                    }
-                }
-            }
-        },
-    }
+    *SEARCH_UNTIL
+        .try_read()
+        .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))
+        // SAFETY: not safe
+        .unwrap()
 }
 
 /// has the exit condition been reached?
