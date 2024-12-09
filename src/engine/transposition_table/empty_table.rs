@@ -75,7 +75,9 @@ impl<E: TEntry, K: TKey<FromType = ()>> TranspositionTable<K, E> for EmptyTable<
             _phantom: Default::default(),
         }
     }
-    fn resize(&mut self, _kb: usize) {}
+    fn resize(&mut self, _kb: usize) -> usize {
+        0
+    }
     fn get(&self, _hash: K) -> Option<E> {
         None
     }
