@@ -58,7 +58,9 @@ pub struct SearchResult {
     /// The value of the best move found
     pub next_position_value: Value,
     /// how many nodes were searched by this call and its recursive sub-calls
-    pub nodes_searched: usize,
+    pub nodes_searched: u32,
+    /// how many transposition table hits were made
+    pub tb_hits: u32,
 }
 
 /// A message that can be sent from the search threads to the main/UCI thread
@@ -88,11 +90,11 @@ pub struct SearchInfo {
     /// The score of the best move found from the root position
     pub score: Value,
     /// The number of nodes that was searched for this depth
-    pub nodes: usize,
+    pub nodes: u32,
     /// number 0-1000 of how full the transposition table is
     pub hashfull: usize,
     /// how many table base hits were made during the search
-    pub tb_hits: usize,
+    pub tb_hits: u32,
     /// The time it took to search this depth
     pub time: Duration,
     /// The principal variation
@@ -104,6 +106,7 @@ pub fn search_until() -> Option<Instant> {
     *SEARCH_UNTIL
         .try_read()
         .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))
+        // SAFETY: not safe
         .unwrap()
 }
 
@@ -123,10 +126,10 @@ fn info(
     publisher: &mut Sender<Message>,
     target_depth: Depth,
     best_value: Value,
-    total_nodes: usize,
+    total_nodes: u32,
     el: Duration,
     hashfull: usize,
-    tb_hits: usize,
+    tb_hits: u32,
     sel_depth: Depth,
     multi_pv: usize,
     pv: &[MV],

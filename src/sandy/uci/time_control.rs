@@ -32,9 +32,7 @@ impl TimeControl for Engine {
                     moves_to_go,
                 )?;
             }
-            UciTimeControl::MoveTime(d) => {
-                self.set_search_until(Instant::now() + d.to_std().unwrap())?
-            }
+            UciTimeControl::MoveTime(d) => self.set_search_until(Instant::now() + d.to_std()?)?,
         }
         Ok(())
     }
