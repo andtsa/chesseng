@@ -1,4 +1,6 @@
 //! the main iterative deepening search, that calls several [`negamax`] searches
+use std::sync::atomic::AtomicI16;
+use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -7,6 +9,8 @@ use anyhow::bail;
 use anyhow::Result;
 use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 
 use crate::optlog;
 use crate::opts::opts;
@@ -20,6 +24,7 @@ use crate::search::search_until;
 use crate::search::send;
 use crate::search::Message;
 use crate::search::RootNode;
+use crate::search::SearchResult;
 use crate::search::MV;
 use crate::search::SEARCH_THREADS;
 use crate::setup::depth::Depth;
@@ -57,8 +62,20 @@ impl Engine {
             let mut total_nodes = 0;
             let mut tb_hits = 0;
             let start_time = Instant::now();
-            // SAFETY: it isn't safe
+            // SAFETY: if it fails it's due to poison,
+            // and that means another thread panicked,
+            // so we should panic as well anyway
             let search_options = opts().unwrap();
+
+            // create a thread pool for the search.
+            // the one we're in right now is the main search thread.
+            // let pool = rayon::ThreadPoolBuilder::new()
+            //     .num_threads(SEARCH_THREADS)
+            //     .use_current_thread()
+            //     .thread_name(|i| format!("search_thread_{}", i))
+            //     .build()
+            //     // SAFETY: probably?
+            //     .unwrap();
 
             while !exit_condition() && target_depth < search_to() {
                 // record the time it takes to reach this depth to see if it's worth it to go
@@ -82,17 +99,41 @@ impl Engine {
 
                 optlog!(search;trace;"ordered moves: {}", moves);
 
+                let par_alpha = AtomicI16::new(alpha.0);
+                let all_results = moves
+                    .0
+                    .clone()
+                    .into_par_iter()
+                    .map(|mv| {
+                        let partial = -negamax(
+                            root.board.make_move(mv),
+                            target_depth - 1,
+                            -beta,
+                            -Value(par_alpha.load(Ordering::Relaxed)),
+                            &search_options,
+                            &tt,
+                        );
+                        par_alpha.store(
+                            par_alpha
+                                .load(Ordering::Acquire)
+                                .max(partial.next_position_value.0),
+                            Ordering::Release,
+                        );
+                        partial
+                    })
+                    .collect::<Vec<SearchResult>>();
+
                 // iterate through all the possible moves from [`RootNode`]
-                for mv in moves {
+                for (mv, search_result) in moves.0.iter().zip(all_results.into_iter()) {
                     // recursively search the next position
-                    let search_result = -negamax(
-                        root.board.make_move(mv),
-                        target_depth - 1,
-                        -beta,
-                        -alpha,
-                        &search_options,
-                        &tt,
-                    );
+                    // let search_result = -negamax(
+                    //     root.board.make_move(mv),
+                    //     target_depth - 1,
+                    //     -beta,
+                    //     -alpha,
+                    //     &search_options,
+                    //     &tt,
+                    // );
 
                     optlog!(
                         search;
@@ -116,9 +157,9 @@ impl Engine {
                     // + send info to the UCI thread
                     if search_result.next_position_value > best_value {
                         best_value = search_result.next_position_value;
-                        best_move = Some(mv);
+                        best_move = Some(*mv);
 
-                        root.pv = vec![MV(mv, search_result.next_position_value)];
+                        root.pv = vec![MV(*mv, search_result.next_position_value)];
                         root.pv.extend(search_result.pv);
 
                         // UCI guess, not final move but have one ready in case stop is received
