@@ -25,6 +25,7 @@ use crate::search::SEARCH_THREADS;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
+use crate::transposition_table::TranspositionTable;
 use crate::uci::UCI_LISTENING_FREQUENCY;
 use crate::Engine;
 
@@ -54,7 +55,9 @@ impl Engine {
 
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
+            let mut tb_hits = 0;
             let start_time = Instant::now();
+            // SAFETY: it isn't safe
             let search_options = opts().unwrap();
 
             while !exit_condition() && target_depth < search_to() {
@@ -101,6 +104,8 @@ impl Engine {
 
                     // add up all the recursively searched nodes, and the one the search begun from
                     total_nodes += search_result.nodes_searched + 1;
+                    // add up all the transposition table hits
+                    tb_hits += search_result.tb_hits;
 
                     // we found a better match, update:
                     // * best available value for a next position
@@ -138,19 +143,21 @@ impl Engine {
                 root.previous_eval = root.eval;
                 root.eval = best_value;
 
-                // new depth info
-                info(
-                    &mut publisher,
-                    target_depth,
-                    best_value,
-                    total_nodes,
-                    start_time.elapsed(),
-                    0,
-                    0,
-                    target_depth,
-                    1,
-                    &root.pv,
-                );
+                {
+                    // new depth info
+                    info(
+                        &mut publisher,
+                        target_depth,
+                        best_value,
+                        total_nodes,
+                        start_time.elapsed(),
+                        tt.0.read().map_or(0, |l| l.hashfull()),
+                        tb_hits,
+                        target_depth,
+                        1,
+                        &root.pv,
+                    );
+                } // ensure lock is dropped asap
 
                 if let Some(mv) = best_move {
                     send(&mut publisher, Message::BestMove(MV(mv, best_value)));

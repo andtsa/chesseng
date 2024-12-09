@@ -8,6 +8,7 @@ use vampirc_uci::UciOptionConfig;
 
 use crate::debug::DebugLevel;
 use crate::optlog;
+use crate::transposition_table::DEFAULT_TABLE_SIZE;
 
 /// Read the global options for the engine, attempting to go through the
 /// [`RwLock`] of [`OPTS`] to do so
@@ -95,7 +96,7 @@ pub struct Opts {
     pub use_mo: bool,
     /// should the engine ponder?
     pub ponder: bool,
-    /// how big should the transposition table be? value in
+    /// how big should the transposition table be? value in **bytes**
     pub hash_size: usize,
 }
 
@@ -129,7 +130,7 @@ impl Opts {
             use_tt: false,
             use_mo: false,
             ponder: false,
-            hash_size: 16 * 1024,
+            hash_size: DEFAULT_TABLE_SIZE,
         }
     }
 
@@ -150,7 +151,7 @@ impl Opts {
             use_tt: true,
             use_mo: true,
             ponder: false,
-            hash_size: 32,
+            hash_size: 32 * 1024,
         }
     }
 
@@ -213,9 +214,9 @@ impl Opts {
             },
             UciOptionConfig::Spin {
                 name: "hash".to_string(),
-                default: Some(16),
+                default: Some((DEFAULT_TABLE_SIZE / (1024 * 1024)).max(1) as i64),
                 min: Some(0),
-                max: Some(1024),
+                max: Some(4096),
             },
         ]
     }
@@ -259,7 +260,8 @@ impl Opts {
             "comm_debug" => self.comm = DebugLevel::from(parse_spin("comm_debug", 0, 5, value)?),
             "tt_debug" => self.tt = DebugLevel::from(parse_spin("tt_debug", 0, 5, value)?),
             "uci_debug" => self.uci = DebugLevel::from(parse_spin("uci_debug", 0, 5, value)?),
-            "hash" => self.hash_size = 1024 * parse_spin("hash", 0, 1024, value)? as usize,
+            // hash input is in megabytes, according to UCI specification
+            "hash" => self.hash_size = 1024 * 1024 * parse_spin("hash", 0, 1024, value)? as usize,
             unknown => bail!("unknown option: {:?}", unknown),
         }
 
