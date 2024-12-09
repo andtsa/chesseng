@@ -1,6 +1,6 @@
 [package]
 name = "chesseng"
-version = "0.4.1"
+version = "0.5.0"
 edition = "2021"
 authors = ["Andreas Tsatsanis"]
 
@@ -24,6 +24,7 @@ chrono = "0.4.38"
 inquire = "0.7.5"
 smallvec = "1.13.2"
 lockfree = "0.5.1"
+rayon = "1.10.0"
 #jja = { version = "0.9.1", features = [] }
 
 [dev-dependencies]
