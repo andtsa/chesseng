@@ -166,8 +166,12 @@ impl Engine {
                     send(&mut publisher, Message::Ponder(*ponder));
                 }
 
-                // check if we should even try to go deeper
-                if search_until().is_some_and(|u| u < Instant::now() + cur_depth_start.elapsed()) {
+                // check if we should even try to go deeper.
+                let next_search_estimate =
+                    cur_depth_start.elapsed() * ((1 + target_depth.0) / 3) as u32;
+                // we expect the next depth to take much longer than the current depth.
+                // this may be pessimistic, but that's offset by a generous time allocation
+                if search_until().is_some_and(|u| u < Instant::now() + next_search_estimate) {
                     optlog!(
                         search;
                         debug;
