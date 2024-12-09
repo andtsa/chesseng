@@ -1,18 +1,18 @@
-Score of sandy_release vs sv1.1: 3 - 1 - 2 [0.667]
-...      sandy_release playing White: 2 - 0 - 1  [0.833] 3
-...      sandy_release playing Black: 1 - 1 - 1  [0.500] 3
-...      White vs Black: 3 - 1 - 2  [0.667] 6
-Elo difference: 120.4 +/- 333.3, LOS: 84.1 %, DrawRatio: 33.3 %
+Score of s0_3_2_83694ca vs s0_4_0_590755d: 1 - 3 - 2 [0.333]
+...      s0_3_2_83694ca playing White: 1 - 2 - 0  [0.333] 3
+...      s0_3_2_83694ca playing Black: 0 - 1 - 2  [0.333] 3
+...      White vs Black: 2 - 2 - 2  [0.500] 6
+Elo difference: -120.4 +/- 333.3, LOS: 15.9 %, DrawRatio: 33.3 %
 SPRT: llr 0 (0.0%), lbound -inf, ubound inf
 6 of 6 games finished.
 
-Player: sandy_release
+Player: s0_3_2_83694ca
+   "Draw by 3-fold repetition": 2
+   "Loss: White loses on time": 2
+   "Loss: White mates": 1
+   "Win: White mates": 1
+Player: s0_4_0_590755d
    "Draw by 3-fold repetition": 2
    "Loss: White mates": 1
-   "Win: Black mates": 1
-   "Win: White mates": 2
-Player: sv1.1
-   "Draw by 3-fold repetition": 2
-   "Loss: Black mates": 1
-   "Loss: White mates": 2
+   "Win: White loses on time": 2
    "Win: White mates": 1

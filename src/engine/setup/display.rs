@@ -11,9 +11,9 @@ use crate::transposition_table::TT;
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if *self >= Value::MATE_IN_MAX_PLY {
-            write!(f, "mate {}", (1 + (Value::MATE - *self).0) / 2)
+            write!(f, "mate {}", ((Value::MATE.0 - self.0 + 1) / 2).max(1))
         } else if *self <= Value::MATED_IN_MAX_PLY {
-            write!(f, "mate {}", (1 - (*self + Value::MATE)).0 / 2)
+            write!(f, "mate {}", ((-1 - self.0 - Value::MATE.0) / 2).min(-1))
         } else if *self == Value::MIN {
             write!(f, "-inf")
         } else if *self == Value::MAX {
