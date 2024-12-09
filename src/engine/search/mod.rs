@@ -104,7 +104,7 @@ pub struct SearchInfo {
 /// wrapper around [`SEARCH_UNTIL`]
 pub fn search_until() -> Option<Instant> {
     *SEARCH_UNTIL
-        .try_read()
+        .read()
         .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))
         // SAFETY: not safe
         .unwrap()
