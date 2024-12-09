@@ -24,6 +24,10 @@ fn main() {
     let mate_in_2 = "8/1k6/8/8/7n/4Nn2/8/1rq2R1K b - - 0 1";
     let valid_best_moves = ["c1f1"];
     test_mating(mate_in_2, &valid_best_moves);
+
+    let castling_mate_in_1 = "rn3r2/pbppq1p1/1p2pN2/8/6NP/6P1/PPPPBP1R/R3K1k1 w Q - 0 1";
+    let valid_best_moves = ["e1c1"];
+    test_mating(castling_mate_in_1, &valid_best_moves);
 }
 
 /// Test whether the engine will find one of the valid mating moves
@@ -36,7 +40,8 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
 
     let sequence = [
         "uci",
-        // "setoption name use_tt value off",
+        "setoption name use_tt value off",
+        "debug off",
         "isready",
         &start_command,
         "go movetime 5000",

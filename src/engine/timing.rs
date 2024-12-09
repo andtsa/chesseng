@@ -35,9 +35,8 @@ impl Engine {
             (Some(t), Some(i), x) => self.set_search_until(
                 Instant::now() + i - SUBMIT_DURATION + (t / x.unwrap_or(50) as u32),
             ),
-            (Some(t), None, x) => {
-                self.set_search_until(Instant::now() + t - SUBMIT_DURATION / x.unwrap_or(50) as u32)
-            }
+            (Some(t), None, x) => self
+                .set_search_until(Instant::now() - SUBMIT_DURATION + (t / x.unwrap_or(50) as u32)),
             (None, Some(i), _) => self.set_search_until(Instant::now() + i - SUBMIT_DURATION),
             (None, None, _) => self.set_search_until(Instant::now() - SUBMIT_DURATION),
         }

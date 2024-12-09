@@ -82,9 +82,9 @@ impl Engine {
         }
         Ok(())
     }
-    
+
     /// resize the transposition table
-    pub fn resize_table(&mut self, size: usize) -> Result<()>{
+    pub fn resize_table(&mut self, size: usize) -> Result<()> {
         self.table
             .get()
             .0

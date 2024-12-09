@@ -16,20 +16,15 @@ pub mod vl;
 pub const DEFAULT_TABLE_SIZE: usize = 256 * 1024;
 
 /// A key for a transposition table
-/// - F: the type of the position's identifier (e.g. the board state, or
+/// - FromType: the type of the position's identifier (e.g. the board state, or
 ///   [`chess::Board`] object)
-/// - P: the partial identifier, e.g. [`u16`] for 1/4 match on a 64-bit hash
 pub trait TKey: Sync + Sized + Copy + Clone {
     /// the type of the position's identifier
     type FromType;
-    /// the type of the partial hash used to identify this key
-    type PartialHash;
 
     /// create a new key from the position's identifier
     /// (e.g. the board state, or [`chess::Board`] object)
     fn hash(from: &Self::FromType) -> Self;
-    /// a partial match between keys, used to determine inequality
-    fn matches(&self, other: Self::PartialHash) -> bool;
     /// a full match between keys, used to determine equality
     /// (slower than [`matches`])
     fn equals(&self, other: &Self) -> bool;
@@ -38,9 +33,9 @@ pub trait TKey: Sync + Sized + Copy + Clone {
 /// A transposition table entry
 pub trait TEntry: Sync {
     /// the type of the hash used to identify this entry
-    type PartialHash;
-    /// the partial hash for this entry
-    fn partial_hash(&self) -> Self::PartialHash;
+    type Key: TKey;
+    /// the hash-key of this entry
+    fn key(&self) -> Self::Key;
     /// create a new empty entry
     fn new_empty() -> Self;
     /// create a new entry to store a search result

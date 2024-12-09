@@ -46,7 +46,7 @@ impl TranspositionTable<u64, TableEntry> for VL {
         let table = vec![TableEntry::new_empty(); size];
 
         optlog!(tt;info;"resized VL table from {} to {} entries.", self.size, size);
-        
+
         self.table = table;
         self.size = size;
     }
@@ -54,10 +54,10 @@ impl TranspositionTable<u64, TableEntry> for VL {
     fn get(&self, hash: u64) -> Option<TableEntry> {
         let idx = (hash as usize) % self.size;
         let entry = self.table.get(idx);
-        if entry.is_some_and(|e| !hash.matches(e.partial_hash())) {
-            None
-        } else {
+        if entry.is_some_and(|e| hash.equals(&e.key())) {
             entry.cloned()
+        } else {
+            None
         }
     }
 
@@ -89,16 +89,10 @@ impl TranspositionTable<u64, TableEntry> for VL {
 
 impl TKey for u64 {
     type FromType = Board;
-    type PartialHash = u16;
 
     fn hash(from: &Self::FromType) -> Self {
         from.get_hash()
     }
-
-    fn matches(&self, other: Self::PartialHash) -> bool {
-        *self as u16 == other
-    }
-
     fn equals(&self, other: &Self) -> bool {
         *self == *other
     }

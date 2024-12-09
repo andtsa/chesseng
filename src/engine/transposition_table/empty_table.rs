@@ -24,25 +24,21 @@ pub struct EmptyTable<K, E> {
 
 impl TKey for EmptyHash {
     type FromType = ();
-    type PartialHash = ();
-
     fn hash(_from: &Self::FromType) -> Self {
         EmptyHash
     }
-
-    fn matches(&self, _other: Self::PartialHash) -> bool {
-        false
-    }
-
     fn equals(&self, _other: &Self) -> bool {
         false
     }
 }
 
 impl TEntry for EmptyEntry {
-    type PartialHash = ();
+    type Key = EmptyHash;
 
-    fn partial_hash(&self) -> Self::PartialHash {}
+    fn key(&self) -> Self::Key {
+        EmptyHash
+    }
+
     fn new_empty() -> Self {
         EmptyEntry
     }
@@ -73,9 +69,7 @@ impl TEntry for EmptyEntry {
     }
 }
 
-impl<E: TEntry, K: TKey<FromType = (), PartialHash = ()>> TranspositionTable<K, E>
-    for EmptyTable<K, E>
-{
+impl<E: TEntry, K: TKey<FromType = ()>> TranspositionTable<K, E> for EmptyTable<K, E> {
     fn new(_kb: usize) -> Self {
         EmptyTable {
             _phantom: Default::default(),
