@@ -57,7 +57,7 @@ fn mate_in_1_is_mate() {
             ng_test(pos, Depth(x), Value::MIN, Value::MAX, Opts::new())
                 .unwrap()
                 .next_position_value,
-            Value::MATE,
+            Value::MATE - 1,
             "depth = {x} pos={}",
             pos.print()
         );
@@ -106,7 +106,7 @@ fn mate_in_1_is_mate_ngm() {
             ng_test(pos, Depth(x), Value::MIN, Value::MAX, Opts::new())
                 .unwrap()
                 .next_position_value,
-            Value::MATE,
+            Value::MATE - 1,
             "depth = {x} pos={}",
             Position::from(pos).print()
         );
@@ -139,7 +139,7 @@ fn mate_in_2_is_mate_ngm() {
             ng_test(pos, Depth(x), Value::MIN, Value::MAX, Opts::new())
                 .unwrap()
                 .next_position_value,
-            Value::MATE,
+            Value::MATE - 3,
             "depth = {x} pos={}",
             pos.print(),
         );

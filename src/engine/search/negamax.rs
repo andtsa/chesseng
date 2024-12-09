@@ -152,9 +152,16 @@ pub fn negamax(
         }
     }
 
+    let mut best_value = best.as_ref().map_or(Value::MIN, |b| b.1);
+    if best_value >= Value::MATE_IN_MAX_PLY {
+        best_value.0 = best_value.0.saturating_sub(1);
+    } else if best_value <= Value::MATED_IN_MAX_PLY {
+        best_value.0 = best_value.0.saturating_add(1);
+    }
+
     let search_result = SearchResult {
         pv,
-        next_position_value: best.as_ref().map_or(Value::MIN, |b| b.1),
+        next_position_value: best_value,
         nodes_searched: total_nodes,
         tb_hits,
     };
@@ -180,8 +187,8 @@ pub fn negamax(
         } else {
             EvalBound::Exact
         };
-        let entry = TEntry::new_from_result(0, to_depth, &search_result, bound);
         let current_hash = pos.chessboard.get_hash(); // change
+        let entry = TEntry::new_from_result(current_hash, to_depth, &search_result, bound);
         if let Ok(mut lock) = table.share().0.write() {
             lock.insert(current_hash, entry)
         };

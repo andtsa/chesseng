@@ -7,7 +7,6 @@
 use chess::Color;
 
 use crate::setup::depth::MAX_MATE_PLY;
-use crate::setup::depth::MAX_PLY;
 
 /// A struct representing a *centipawn* value in the evaluation function, which
 /// can be used to assign scores to positions.
@@ -49,12 +48,11 @@ impl Value {
     ///
     /// This is slightly less than [`MATE`], adjusted by [`MAX_MATE_PLY`] and
     /// [`MAX_PLY`] to prioritize closer checkmates.
-    pub const MATE_IN_MAX_PLY: Value = Value(Value::MATE.0 - MAX_MATE_PLY as i16 - MAX_PLY as i16);
+    pub const MATE_IN_MAX_PLY: Value = Value(Value::MATE.0 - MAX_MATE_PLY as i16);
 
     /// The score for when the engine expects to be checkmated within
     /// [`MAX_PLY`], meaning it evaluates the position as lost.
-    pub const MATED_IN_MAX_PLY: Value =
-        Value(-Value::MATE.0 + MAX_MATE_PLY as i16 + MAX_PLY as i16);
+    pub const MATED_IN_MAX_PLY: Value = Value(-Value::MATE.0 + MAX_MATE_PLY as i16);
 
     /// Returns the absolute value of a [`Value`].
     pub fn abs(self) -> Value {

@@ -10,8 +10,10 @@ use crate::transposition_table::TT;
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if *self == Value::MATE {
-            write!(f, "mate")
+        if *self >= Value::MATE - Value::MATE_IN_MAX_PLY {
+            write!(f, "mate {}", Value::MATE - *self)
+        } else if *self <= Value::MATED_IN_MAX_PLY {
+            write!(f, "mate {}", -(*self + Value::MATE))
         } else if *self == Value::MIN {
             write!(f, "-inf")
         } else if *self == Value::MAX {

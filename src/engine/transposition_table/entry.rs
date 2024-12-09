@@ -32,7 +32,7 @@ use crate::transposition_table::TEntry;
 #[derive(Debug)]
 pub struct TableEntry {
     /// only store 2 bytes of the key to verify if a collision occurred
-    pub key: u16,
+    pub key: u64,
     /// the packed value of this entry
     pub value: AtomicU64,
 }
@@ -78,7 +78,7 @@ impl TableEntry {
         // ensures the full value is always odd parity
         value |= 1 ^ (value.count_ones() & 1) as u64;
         Self {
-            key: key as u16,
+            key,
             value: AtomicU64::new(value),
         }
     }
@@ -141,10 +141,10 @@ impl Clone for TableEntry {
 }
 
 impl TEntry for TableEntry {
-    type PartialHash = u16;
+    type Key = u64;
 
     #[inline]
-    fn partial_hash(&self) -> Self::PartialHash {
+    fn key(&self) -> Self::Key {
         self.key
     }
 
@@ -158,7 +158,7 @@ impl TEntry for TableEntry {
 
     fn new_from_result(hash: u64, depth: Depth, result: &SearchResult, bound: EvalBound) -> Self {
         Self::pack(
-            hash & 0xFFFF,
+            hash,
             result.next_position_value,
             depth,
             result.pv[0].0,
