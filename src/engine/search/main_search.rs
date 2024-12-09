@@ -151,7 +151,7 @@ impl Engine {
                         best_value,
                         total_nodes,
                         start_time.elapsed(),
-                        tt.0.read().map_or(0, |l| l.hashfull()),
+                        tt.read().map_or(0, |l| l.hashfull()),
                         tb_hits,
                         target_depth,
                         1,

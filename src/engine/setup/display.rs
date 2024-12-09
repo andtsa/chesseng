@@ -48,7 +48,7 @@ impl Display for TableEntry {
 
 impl Display for TT {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self.get().0.read() {
+        match self.get().read() {
             Ok(lock) => {
                 writeln!(
                     f,

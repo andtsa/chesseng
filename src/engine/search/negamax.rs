@@ -55,7 +55,22 @@ pub fn ng_test(
     let opt = opts()?;
     let table = TT::new();
     let position = Position::from(board);
-    Ok(negamax(position, to_depth, alpha, beta, &opt, &table.get()))
+    ng_bench(position, to_depth, alpha, beta, opt, &table)
+}
+
+/// same as [`negamax`], but with a fixed signature to be used across benchmarks
+///
+/// unlike [`ng_test`], this function does not and should not do any extra work
+/// or allocations, in order to preserve benchmark accuracy.
+pub fn ng_bench(
+    position: Position,
+    to_depth: Depth,
+    alpha: Value,
+    beta: Value,
+    opt: Opts,
+    tt: &TT,
+) -> Result<SearchResult> {
+    Ok(negamax(position, to_depth, alpha, beta, &opt, &tt.get()))
 }
 
 /// mmmmmmmmmmmmm
@@ -89,7 +104,7 @@ pub fn negamax(
     let alpha_orig = alpha;
     if opts.use_tt {
         let current_hash = pos.chessboard.get_hash(); // change
-        if let Ok(Some(tt_entry)) = table.0.read().map(|l| l.get(current_hash)) {
+        if let Ok(Some(tt_entry)) = table.read().map(|l| l.get(current_hash)) {
             if tt_entry.is_valid() && tt_entry.depth() >= to_depth {
                 match tt_entry.bound() {
                     EvalBound::Exact => return tt_entry.search_result(),
@@ -189,7 +204,7 @@ pub fn negamax(
         };
         let current_hash = pos.chessboard.get_hash(); // change
         let entry = TEntry::new_from_result(current_hash, to_depth, &search_result, bound);
-        if let Ok(mut lock) = table.share().0.write() {
+        if let Ok(mut lock) = table.share().write() {
             lock.insert(current_hash, entry)
         };
     }
