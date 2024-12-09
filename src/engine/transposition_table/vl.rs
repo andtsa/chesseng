@@ -41,13 +41,12 @@ impl TranspositionTable<u64, TableEntry> for VL {
 
         if size == self.size {
             return;
+        } else {
+            self.table.resize(size, TableEntry::new_empty());
         }
-
-        let table = vec![TableEntry::new_empty(); size];
 
         optlog!(tt;info;"resized VL table from {} to {} entries.", self.size, size);
 
-        self.table = table;
         self.size = size;
     }
 
@@ -72,6 +71,7 @@ impl TranspositionTable<u64, TableEntry> for VL {
 
     fn clear(&mut self) {
         self.table.clear();
+        self.occupied = 0;
     }
 
     fn entry_count(&self) -> usize {
@@ -99,15 +99,16 @@ impl TKey for u64 {
 }
 
 /// a shared reference to a VL transposition table
-#[derive(Debug)]
-pub struct VlShare(pub Arc<RwLock<VL>>);
+pub type VlShare = Arc<RwLock<VL>>;
 
 impl TableAccess<u64, TableEntry, VL> for VlShare {
     fn hit(&self) {
         // to-do
+        // currently hit counts are accumulated in the search functionality as
+        // TB_HITS
     }
 
     fn share(&self) -> VlShare {
-        VlShare(self.0.clone())
+        self.clone()
     }
 }

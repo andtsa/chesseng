@@ -70,12 +70,12 @@ impl Engine {
     pub fn set_search_until(&self, until: Instant) -> Result<()> {
         let until = until - Duration::from_millis(1);
         let _ = SEARCH_UNTIL
-            .try_write()
-            .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))?
+            .write()
+            .map_err(|e| anyhow!("SEARCH_UNTIL [set,write] lock error: {e}"))?
             .insert(until);
         if SEARCH_UNTIL
-            .try_read()
-            .map_err(|e| anyhow!("SEARCH_UNTIL lock error: {e}"))?
+            .read()
+            .map_err(|e| anyhow!("SEARCH_UNTIL [set,read] lock error: {e}"))?
             .is_some_and(|u| u < Instant::now())
         {
             SEARCHING.store(false, Ordering::Relaxed);
@@ -87,7 +87,6 @@ impl Engine {
     pub fn resize_table(&mut self, size: usize) -> Result<()> {
         self.table
             .get()
-            .0
             .write()
             .map_err(|e| anyhow!("table lock error: {e}"))?
             .resize(size);

@@ -110,7 +110,7 @@ impl TT {
         // let table: EmptyTable<EmptyHash, EmptyEntry> =
         // EmptyTable::new(DEFAULT_TABLE_SIZE);
         Self {
-            table: VlShare(Arc::new(RwLock::new(VL::new(DEFAULT_TABLE_SIZE)))),
+            table: Arc::new(RwLock::new(VL::new(DEFAULT_TABLE_SIZE))),
         }
     }
 
