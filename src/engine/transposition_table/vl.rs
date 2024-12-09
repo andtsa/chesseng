@@ -44,6 +44,7 @@ impl TranspositionTable<u64, TableEntry> for VL {
             .next_power_of_two()
             .checked_shr(1)
             .unwrap_or_default();
+
         if size == self.size {
             return size;
         } else {
