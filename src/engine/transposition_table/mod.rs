@@ -12,7 +12,11 @@ pub mod empty_table;
 pub mod entry;
 pub mod vl;
 
-/// The default size of a transposition table, in bytes
+/// The default size of a transposition table, in bytes [release mode]
+#[cfg(not(debug_assertions))]
+pub const DEFAULT_TABLE_SIZE: usize = 16 * 1024 * 1024;
+/// The default size of a transposition table, in bytes [debug mode]
+#[cfg(debug_assertions)]
 pub const DEFAULT_TABLE_SIZE: usize = 256;
 
 /// A key for a transposition table
