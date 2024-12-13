@@ -5,6 +5,7 @@ pub mod time_control;
 
 use std::io::BufRead;
 use std::str::FromStr;
+use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use anyhow::Result;
@@ -17,7 +18,14 @@ use sandy_engine::opts::opts;
 use sandy_engine::opts::setopts;
 use sandy_engine::opts::Opts;
 use sandy_engine::position::Position;
+use sandy_engine::search::should_ponder;
+use sandy_engine::search::EXIT;
+use sandy_engine::search::MV;
+use sandy_engine::search::SEARCH_UNTIL;
 use sandy_engine::setup::depth::Depth;
+use sandy_engine::timing::max_instant;
+use sandy_engine::timing::SUBMIT_DURATION;
+use sandy_engine::uci::PONDER_BEST_MOVE;
 use sandy_engine::util::Print;
 use sandy_engine::Engine;
 use vampirc_uci::parse_one;
@@ -42,9 +50,21 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
 
     println!("uciok");
 
+    let mut intended_search_until = Instant::now();
+
     for line in std::io::stdin().lock().lines() {
+        println!("info string uci received: {:?}", line);
+
+        // because the uci message does not say whether we should ponder, we can
+        // manually extract this information from the line (unfortunate)
+        engine.set_ponder(
+            line.as_ref()
+                .is_ok_and(|l| l.to_ascii_lowercase().contains("ponder")),
+        );
+
         let msg: UciMessage = parse_one(&line?);
         optlog!(uci;trace;"Received message: {}", msg);
+        println!("info string uci message: {msg}");
         match msg {
             UciMessage::Uci => warn!("already in uci mode!"),
             UciMessage::Debug(value) => {
@@ -107,6 +127,7 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                 time_control,
                 search_control,
             } => {
+                EXIT.store(false, Ordering::Relaxed);
                 engine.set_search_to(Depth::MAX);
                 if let Some(tc) = time_control {
                     optlog!(uci;debug;"time control: {:?}", tc);
@@ -117,14 +138,30 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                     engine.search_control(sc)?;
                 }
 
+                if should_ponder() {
+                    intended_search_until = SEARCH_UNTIL.read().unwrap().unwrap_or(Instant::now());
+                    engine.set_search_until(max_instant())?;
+                }
+
                 // start the engine!
                 engine.uci_go()?;
             }
             UciMessage::Stop => {
                 // stop the search
+                engine.set_ponder(false);
+                EXIT.store(true, Ordering::Relaxed);
                 engine.set_search_until(Instant::now())?;
+                if let Some((best, _)) = MV::from_u64(PONDER_BEST_MOVE.0.load(Ordering::Relaxed)) {
+                    print!("bestmove {}", best.0);
+                }
+                if let Some((pond, _)) = MV::from_u64(PONDER_BEST_MOVE.1.load(Ordering::Relaxed)) {
+                    print!(" ponder {}", pond.0);
+                }
             }
-            UciMessage::PonderHit => {}
+            UciMessage::PonderHit => {
+                engine.set_ponder(false);
+                engine.set_search_until(intended_search_until + SUBMIT_DURATION)?;
+            }
             UciMessage::Quit => {
                 // clean up and EXIT
                 optlog!(uci;info;"quitting");

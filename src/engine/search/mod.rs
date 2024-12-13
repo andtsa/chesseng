@@ -14,12 +14,14 @@ use std::time::Instant;
 
 use anyhow::anyhow;
 use chess::ChessMove;
+use chess::Square;
 use lockfree::channel::spsc::Sender;
 use log::debug;
 
 use crate::position::Position;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
+use crate::transposition_table::entry::TableEntry;
 
 /// how many os threads should the search use?
 pub const SEARCH_THREADS: usize = 1;
@@ -32,6 +34,10 @@ pub static SEARCH_TO: AtomicU16 = AtomicU16::new(0);
 pub static SEARCHING: AtomicBool = AtomicBool::new(false);
 /// should the search exit?
 pub static EXIT: AtomicBool = AtomicBool::new(false);
+
+/// If true, think in ponder mode: fill in transposition table for expected move
+/// and print it on ponder hit (not yet implemented)
+pub static PONDER: AtomicBool = AtomicBool::new(false);
 
 /// A move and its value
 #[derive(Debug, Clone, Copy)]
@@ -102,6 +108,7 @@ pub struct SearchInfo {
 }
 
 /// wrapper around [`SEARCH_UNTIL`]
+#[inline]
 pub fn search_until() -> Option<Instant> {
     *SEARCH_UNTIL
         .read()
@@ -113,8 +120,12 @@ pub fn search_until() -> Option<Instant> {
 }
 
 /// has the exit condition been reached?
+#[inline]
 pub fn exit_condition() -> bool {
-    if EXIT.load(Ordering::Relaxed) || search_until().is_some_and(|u| u < Instant::now()) {
+    // if we're pondering we should not stop!
+    if !should_ponder()
+        && (EXIT.load(Ordering::Relaxed) || search_until().is_some_and(|u| u < Instant::now()))
+    {
         SEARCHING.store(false, Ordering::Relaxed);
         true
     } else {
@@ -122,8 +133,15 @@ pub fn exit_condition() -> bool {
     }
 }
 
+/// [`PONDER`] shorthand
+#[inline]
+pub fn should_ponder() -> bool {
+    PONDER.load(Ordering::Relaxed)
+}
+
 /// shortcut for sending UCI info to the main thread
 #[allow(clippy::too_many_arguments)]
+#[inline]
 fn info(
     publisher: &mut Sender<Message>,
     target_depth: Depth,
@@ -152,6 +170,7 @@ fn info(
 }
 
 /// shortcut for sending a message to the main thread
+#[inline]
 fn send(publisher: &mut Sender<Message>, msg: Message) {
     if let Err(e) = publisher.send(msg) {
         debug!("error sending message: {:?}", e);
@@ -176,5 +195,49 @@ impl Display for MV {
 impl Default for MV {
     fn default() -> Self {
         MV(ChessMove::default(), Value::ZERO)
+    }
+}
+
+impl MV {
+    /// store a move as a u64, for use in atomics.
+    /// stores the [`ChessMove`], the [`Value`] and the [`Depth`] of the move
+    /// from the search that generated it.
+    pub fn as_u64(&self, at_depth: Depth) -> u64 {
+        let mut value = 0;
+        value |= (self.1 .0 as u64) << 48;
+
+        value |= (at_depth.0 as u64) << 32;
+        value |= (self.0.get_source().to_int() as u64) << 24;
+        value |= (self.0.get_dest().to_int() as u64) << 16;
+        value |= (TableEntry::PROMOTION_BITS
+            .iter()
+            .position(|x| x.eq(&self.0.get_promotion()))
+            .unwrap_or(0) as u64)
+            << 13;
+
+        value
+    }
+
+    /// try reading a u64 to extract an instance of [`MV`]. invalid values
+    /// should ALWAYS be 0, otherwise this may panic; in case of 0 it will
+    /// simply return None.
+    pub fn from_u64(value: u64) -> Option<(Self, Depth)> {
+        if value == 0 {
+            return None;
+        }
+        let cm = {
+            let src = (value >> 24) as u8;
+            let dest = (value >> 16) as u8;
+            let promotion = TableEntry::PROMOTION_BITS[(0b111 & (value >> 13)) as usize];
+            // SAFETY: the values are stored in the correct range since they're always
+            //         // created from a [`ChessMove`] struct in the first place
+            unsafe { ChessMove::new(Square::new(src), Square::new(dest), promotion) }
+        };
+
+        let v = Value((value >> 48) as i16);
+
+        let d = Depth((value >> 32) as u16);
+
+        Some((MV(cm, v), d))
     }
 }

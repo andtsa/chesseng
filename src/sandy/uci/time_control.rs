@@ -14,8 +14,10 @@ pub trait TimeControl {
 
 impl TimeControl for Engine {
     fn time_control(&mut self, tc: UciTimeControl) -> Result<()> {
+        // don't ponder unless set true in the next match statement. not optimal but
+        // still O(1) :)
         match tc {
-            UciTimeControl::Ponder => unimplemented!("ponder not yet implemented"),
+            UciTimeControl::Ponder => self.set_ponder(true),
             UciTimeControl::Infinite => self.set_search_until(max_instant())?,
             UciTimeControl::TimeLeft {
                 white_time,      // Option<Duration>,
@@ -41,7 +43,11 @@ impl TimeControl for Engine {
 /// chrono_duration_to_std_time
 fn cdt(d: chrono::Duration) -> std::time::Duration {
     std::time::Duration::new(
-        d.num_seconds() as u64,
-        d.num_microseconds().unwrap_or(0) as u32,
+        d.num_seconds().max(0).unsigned_abs(),
+        d.num_nanoseconds()
+            .unwrap_or(0)
+            .max(0)
+            .unsigned_abs()
+            .max(1_000_000_000 - 1) as u32,
     )
 }
