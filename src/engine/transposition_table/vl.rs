@@ -26,7 +26,10 @@ pub struct VL {
 impl TranspositionTable<u64, TableEntry> for VL {
     fn new(bytes: usize) -> Self {
         // the number of entries must be a power of 2
-        let size = (bytes / size_of::<TableEntry>()).next_power_of_two();
+        let size = (bytes / size_of::<TableEntry>())
+            .next_power_of_two()
+            .checked_shr(1)
+            .unwrap_or_default();
         optlog!(tt;info;"created VL table with {size} entries.");
         let table = vec![TableEntry::new_empty(); size];
         Self {
@@ -36,11 +39,14 @@ impl TranspositionTable<u64, TableEntry> for VL {
         }
     }
 
-    fn resize(&mut self, bytes: usize) {
-        let size = (bytes / size_of::<TableEntry>()).next_power_of_two();
+    fn resize(&mut self, bytes: usize) -> usize {
+        let size = (bytes / size_of::<TableEntry>())
+            .next_power_of_two()
+            .checked_shr(1)
+            .unwrap_or_default();
 
         if size == self.size {
-            return;
+            return size;
         } else {
             self.table.resize(size, TableEntry::new_empty());
         }
@@ -48,6 +54,7 @@ impl TranspositionTable<u64, TableEntry> for VL {
         optlog!(tt;info;"resized VL table from {} to {} entries.", self.size, size);
 
         self.size = size;
+        size
     }
 
     fn get(&self, hash: u64) -> Option<TableEntry> {

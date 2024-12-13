@@ -59,8 +59,9 @@ pub trait TEntry: Sync {
 pub trait TranspositionTable<Key: TKey, Entry: TEntry> {
     /// create a new transposition table, with a size of `bytes` bytes
     fn new(bytes: usize) -> Self;
-    /// resize the transposition table to `bytes` bytes
-    fn resize(&mut self, bytes: usize);
+    /// resize the transposition table to `bytes` bytes.
+    /// return the number of entries in the new table
+    fn resize(&mut self, bytes: usize) -> usize;
     /// get the entry for a hash, if it exists
     fn get(&self, hash: Key) -> Option<Entry>;
     /// insert an entry for a hash.
