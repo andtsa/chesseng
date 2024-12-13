@@ -39,7 +39,7 @@ pub struct TableEntry {
 
 impl TableEntry {
     /// the possible promotion pieces
-    const PROMOTION_BITS: [Option<Piece>; 8] = [
+    pub const PROMOTION_BITS: [Option<Piece>; 8] = [
         None,
         Some(Piece::Knight),
         Some(Piece::Bishop),

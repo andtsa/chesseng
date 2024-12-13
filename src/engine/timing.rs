@@ -7,8 +7,8 @@ use anyhow::Result;
 
 use crate::Engine;
 
-/// one hundred years :)
-const MAX_TIME: Duration = Duration::from_secs(60 * 60 * 24 * 365 * 100);
+/// one day :)
+const MAX_TIME: Duration = Duration::from_secs(60 * 60 * 24);
 
 /// The duration before the search should end to allow for submitting the move.
 pub const SUBMIT_DURATION: Duration = Duration::from_millis(5);

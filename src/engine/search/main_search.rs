@@ -1,5 +1,6 @@
 //! the main iterative deepening search, that calls several [`negamax`] searches
-use std::sync::atomic::{AtomicI16, Ordering};
+use std::sync::atomic::AtomicI16;
+use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -9,10 +10,11 @@ use anyhow::Result;
 use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
 use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 
 use crate::optlog;
 use crate::opts::opts;
-use crate::search::{exit_condition, SearchResult};
+use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
@@ -22,6 +24,7 @@ use crate::search::search_until;
 use crate::search::send;
 use crate::search::Message;
 use crate::search::RootNode;
+use crate::search::SearchResult;
 use crate::search::MV;
 use crate::search::SEARCH_THREADS;
 use crate::setup::depth::Depth;
@@ -29,8 +32,7 @@ use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
 use crate::transposition_table::TranspositionTable;
 use crate::uci::UCI_LISTENING_FREQUENCY;
-use crate::Engine;use rayon::iter::ParallelIterator;
-
+use crate::Engine;
 
 impl Engine {
     /// Begin the search for the best move, spawns a new thread to actually do
@@ -98,19 +100,29 @@ impl Engine {
                 optlog!(search;trace;"ordered moves: {}", moves);
 
                 let par_alpha = AtomicI16::new(alpha.0);
-                let all_results = moves.0.clone().into_par_iter().map(|mv| {
-                    let partial = -negamax(
-                        root.board.make_move(mv),
-                        target_depth - 1,
-                        -beta,
-                        -Value(par_alpha.load(Ordering::Relaxed)),
-                        &search_options,
-                        &tt,
-                    );
-                    par_alpha.store(par_alpha.load(Ordering::Acquire).max(partial.next_position_value.0), Ordering::Release);
-                    partial
-                }).collect::<Vec<SearchResult>>();
-                
+                let all_results = moves
+                    .0
+                    .clone()
+                    .into_par_iter()
+                    .map(|mv| {
+                        let partial = -negamax(
+                            root.board.make_move(mv),
+                            target_depth - 1,
+                            -beta,
+                            -Value(par_alpha.load(Ordering::Relaxed)),
+                            &search_options,
+                            &tt,
+                        );
+                        par_alpha.store(
+                            par_alpha
+                                .load(Ordering::Acquire)
+                                .max(partial.next_position_value.0),
+                            Ordering::Release,
+                        );
+                        partial
+                    })
+                    .collect::<Vec<SearchResult>>();
+
                 // iterate through all the possible moves from [`RootNode`]
                 for (mv, search_result) in moves.0.iter().zip(all_results.into_iter()) {
                     // recursively search the next position

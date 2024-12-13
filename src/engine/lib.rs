@@ -29,6 +29,7 @@ use log::trace;
 use crate::position::Position;
 use crate::search::exit_condition;
 use crate::search::Message;
+use crate::search::PONDER;
 use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
@@ -54,6 +55,11 @@ impl Engine {
             board: Default::default(),
             table: TT::new(),
         })
+    }
+
+    /// set the global [`PONDER`]
+    pub fn set_ponder(&self, x: bool) {
+        PONDER.store(x, Ordering::Relaxed);
     }
 
     /// set the global [`SEARCHING`]
