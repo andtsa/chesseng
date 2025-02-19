@@ -32,7 +32,7 @@ fn main() -> Result<()> {
     println!("Sandy Chess Engine v0.0.0");
 
     colog::basic_builder()
-        .filter(None, log::LevelFilter::Trace)
+        .filter(None, log::LevelFilter::Info)
         .init();
 
     // take the default panic hook, and make sure that the *entire* process is
