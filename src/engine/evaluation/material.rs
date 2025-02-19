@@ -56,11 +56,9 @@ pub const ENDGAME_VALUES: [Value; 5] = [
 pub fn material(board: &Board, side: Color, interp: Interp) -> Value {
     let mut value = Value::ZERO;
 
+    let side_board = board.color_combined(side);
     for (idx, piece) in MAT_PIECE_TYPES.iter().enumerate() {
-        let count = board
-            .pieces(*piece)
-            .bitand(board.color_combined(side))
-            .popcnt();
+        let count = board.pieces(*piece).bitand(side_board).popcnt();
         value += (INITIAL_VALUES[idx] * Value::from(count)) * interp.0;
         value += (MIDGAME_VALUES[idx] * Value::from(count)) * interp.1;
         value += (ENDGAME_VALUES[idx] * Value::from(count)) * interp.2;
