@@ -7,10 +7,13 @@ use std::ops::Not;
 
 use anyhow::Result;
 use chess::Board;
+use chess::ChessMove;
+use chess::MoveGen;
 use chess::EMPTY;
 
 use crate::evaluation::material::interpolate;
 use crate::evaluation::material::material;
+use crate::evaluation::position::current_mobility_evaluation;
 use crate::evaluation::position::piece_position_benefit_for_side;
 use crate::optlog;
 use crate::opts::setopts;
@@ -68,6 +71,15 @@ pub fn evaluate(pos: &Position, moves: &MoveOrdering) -> Value {
 
     value += piece_position_benefit_for_side(&pos.chessboard, stm, interp);
     value -= piece_position_benefit_for_side(&pos.chessboard, stm.not(), interp);
+
+    value += current_mobility_evaluation(&pos.chessboard, interp, &moves.0);
+    value -= pos.chessboard.null_move().map_or(Value::ZERO, |null_move| {
+        current_mobility_evaluation(
+            &null_move,
+            interp,
+            &MoveGen::new_legal(&null_move).collect::<Vec<ChessMove>>(),
+        )
+    });
 
     // Add tempo bonus
     value += TEMPO; // Always positive for the side to move
