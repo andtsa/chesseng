@@ -74,6 +74,7 @@ fn will_mate_in_1_() {
         opts.search = debug;
         opts.use_ab = false;
         opts.use_pv = false;
+        opts.threads = 1;
         {
             setopts(opts).unwrap();
         }

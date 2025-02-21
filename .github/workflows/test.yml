@@ -160,6 +160,7 @@ jobs:
         run: |
           RUST_BACKTRACE="full" cargo bench --bench mg_grind >> ./target/tmp/mg_bench.out || echo "cachegrind bench failed, continuing anyway..."
 
+
       - name: Read Output File
         id: read-mg-output
         run: |

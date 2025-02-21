@@ -32,6 +32,7 @@ pub fn depth_test(depth: usize) {
         "uci",
         "setoption name use_tt value on",
         "setoption name bench_log value on",
+        "setoption name threads value 8",
         "isready",
         "position startpos",
         &go_command,
