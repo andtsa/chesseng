@@ -60,23 +60,18 @@ impl Engine {
 
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
+            // for now I'm using tablebase_hits to refer to transposition table hits,
+            // because it is displayed more prominently on cutechess UI, and I
+            // don't have an endgame tablebase yet.
             let mut tb_hits = 0;
             let start_time = Instant::now();
+
             // SAFETY: if it fails it's due to poison,
             // and that means another thread panicked,
             // so we should panic as well anyway
             let search_options = opts().unwrap();
 
-            // create a thread pool for the search.
-            // the one we're in right now is the main search thread.
-            // let pool = rayon::ThreadPoolBuilder::new()
-            //     .num_threads(SEARCH_THREADS)
-            //     .use_current_thread()
-            //     .thread_name(|i| format!("search_thread_{}", i))
-            //     .build()
-            //     // SAFETY: probably?
-            //     .unwrap();
-
+            // iterative deepening loop
             while !exit_condition() && target_depth < search_to() {
                 // record the time it takes to reach this depth to see if it's worth it to go
                 // deeper
@@ -99,42 +94,54 @@ impl Engine {
 
                 optlog!(search;trace;"ordered moves: {}", moves);
 
+                // in case of parallel search, use the same (thread-safe) alpha value across all
+                // searches. when one finishes it will update for all that haven't run yet (this
+                // is unimpactful if all searches are run in parallel, but 30+
+                // threads for complex positions are impractical).
                 let par_alpha = AtomicI16::new(alpha.0);
-                let all_results = moves
-                    .0
-                    .clone()
-                    .into_par_iter()
-                    .map(|mv| {
-                        let partial = -negamax(
-                            root.board.make_move(mv),
-                            target_depth - 1,
-                            -beta,
-                            -Value(par_alpha.load(Ordering::Relaxed)),
-                            &search_options,
-                            &tt,
-                        );
-                        par_alpha.store(
-                            par_alpha
-                                .load(Ordering::Acquire)
-                                .max(partial.next_position_value.0),
-                            Ordering::Release,
-                        );
-                        partial
-                    })
-                    .collect::<Vec<SearchResult>>();
+
+                // call the [`negamax`] search, update the alpha value and return the
+                // [`SearchResult`]
+                let search_fn = |mv| {
+                    let partial = -negamax(
+                        root.board.make_move(mv),
+                        target_depth - 1,
+                        -beta,
+                        -Value(par_alpha.load(Ordering::Relaxed)),
+                        &search_options,
+                        &tt,
+                    );
+                    par_alpha.store(
+                        par_alpha
+                            .load(Ordering::Acquire)
+                            .max(partial.next_position_value.0),
+                        Ordering::Release,
+                    );
+                    partial
+                };
+
+                // if we want the search to be single-threaded, we use the current thread and a
+                // normal iterator.
+                // fine-grained control of the nuber of threads is not implemented yet, mostly
+                // because the current implementation does not support it
+                let all_results = if search_options.threads <= 1 {
+                    moves
+                        .0
+                        .clone()
+                        .into_iter()
+                        .map(search_fn)
+                        .collect::<Vec<SearchResult>>()
+                } else {
+                    moves
+                        .0
+                        .clone()
+                        .into_par_iter()
+                        .map(search_fn)
+                        .collect::<Vec<SearchResult>>()
+                };
 
                 // iterate through all the possible moves from [`RootNode`]
                 for (mv, search_result) in moves.0.iter().zip(all_results.into_iter()) {
-                    // recursively search the next position
-                    // let search_result = -negamax(
-                    //     root.board.make_move(mv),
-                    //     target_depth - 1,
-                    //     -beta,
-                    //     -alpha,
-                    //     &search_options,
-                    //     &tt,
-                    // );
-
                     optlog!(
                         search;
                         debug;
