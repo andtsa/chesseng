@@ -8,6 +8,7 @@ use vampirc_uci::UciOptionConfig;
 
 use crate::debug::DebugLevel;
 use crate::optlog;
+use crate::search::SEARCH_THREADS;
 use crate::transposition_table::DEFAULT_TABLE_SIZE;
 
 /// Read the global options for the engine, attempting to go through the
@@ -98,6 +99,8 @@ pub struct Opts {
     pub ponder: bool,
     /// how big should the transposition table be? value in **bytes**
     pub hash_size: usize,
+    /// how many threads should the search use?
+    pub threads: usize,
 }
 
 impl Opts {
@@ -105,12 +108,14 @@ impl Opts {
     /// and all improvement options are enabled:
     /// * alpha-beta: true
     /// * use_pv: true
+    /// * use_tt: true
+    /// * threads: 8
     ///
     /// [`Opts::default()`] will not enable any performance improvement options!
     ///
     /// Use [`Opts::new()`] instead.
     pub const fn new() -> Self {
-        Self::initial().ab(true).pv(true).tt(true)
+        Self::initial().ab(true).pv(true).tt(true).num_threads(8)
     }
 
     /// Baseline configuration for [`Opts`]:
@@ -131,12 +136,14 @@ impl Opts {
             use_mo: false,
             ponder: false,
             hash_size: DEFAULT_TABLE_SIZE,
+            threads: 1,
         }
     }
 
     /// configure the [`Opts`] for a benchmarking environment:
     /// * no debug prints
     /// * all optimisations enabled
+    /// * only one thread, otherwise stack overflows
     /// * very small memory footprint
     pub const fn bench() -> Self {
         Self {
@@ -152,6 +159,7 @@ impl Opts {
             use_mo: true,
             ponder: false,
             hash_size: 32 * 1024,
+            threads: 1,
         }
     }
 
@@ -218,6 +226,12 @@ impl Opts {
                 min: Some(0),
                 max: Some(4096),
             },
+            UciOptionConfig::Spin {
+                name: "threads".to_string(),
+                default: Some(SEARCH_THREADS as i64),
+                min: Some(0),
+                max: Some(1024),
+            },
         ]
     }
 
@@ -262,6 +276,7 @@ impl Opts {
             "uci_debug" => self.uci = DebugLevel::from(parse_spin("uci_debug", 0, 5, value)?),
             // hash input is in megabytes, according to UCI specification
             "hash" => self.hash_size = 1024 * 1024 * parse_spin("hash", 0, 1024, value)? as usize,
+            "threads" => self.threads = parse_spin("threads", 0, 1024, value)? as usize,
             unknown => bail!("unknown option: {:?}", unknown),
         }
 
@@ -333,5 +348,10 @@ impl Opts {
             hash_size: x,
             ..self
         }
+    }
+
+    /// Set the number of threads to be used for the search
+    pub const fn num_threads(self, x: usize) -> Self {
+        Self { threads: x, ..self }
     }
 }
