@@ -90,17 +90,30 @@ impl Engine {
 
                 optlog!(search;trace;"ordered moves: {}", moves);
 
+                // in case of parallel search, use the same (thread-safe) alpha value across all
+                // searches. when one finishes it will update for all that haven't run yet (this
+                // is unimpactful if all searches are run in parallel, but 30+
+                // threads for complex positions are impractical).
+                let par_alpha = AtomicI16::new(alpha.0);
+
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
                 let search_fn = |mv| {
-                    -negamax(
+                    let partial = -negamax(
                         root.board.make_move(mv),
                         target_depth - 1,
-                        Value::MIN,
-                        Value::MAX,
+                        -beta,
+                        -Value(par_alpha.load(Ordering::Relaxed)),
                         &search_options,
                         &tt,
-                    )
+                    );
+                    par_alpha.store(
+                        par_alpha
+                            .load(Ordering::Acquire)
+                            .max(partial.next_position_value.0),
+                        Ordering::Release,
+                    );
+                    partial
                 };
 
                 // if we want the search to be single-threaded, we use the current thread and a
