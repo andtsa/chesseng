@@ -201,10 +201,15 @@ jobs:
           git fetch origin ${{ github.base_ref }}
           git checkout ${{ github.base_ref }}
 
+      - name: Compile tests
+        run: |
+          cargo test --test d6 --no-run
+
       - name: Run baseline integration benchmark
         run: |
           mkdir -p ./target/tmp
-          echo "d6 on TARGET branch:\n---------------------\n" > ./target/tmp/d6.out
+          echo "d6 on TARGET branch:" > ./target/tmp/d6.out
+          echo "--------------------" >> ./target/tmp/d6.out
           cargo test --test d6 -- --nocapture &>> ./target/tmp/d6.out || echo "baseline bench failed, continuing anyway..." 
 
       - name: Checkout source branch
@@ -214,14 +219,16 @@ jobs:
 
       - name: Run integration benchmark on new code
         run: |
-          echo "\n\nd6 on SOURCE branch:\n---------------------\n" >> ./target/tmp/d6.out
+          echo "********************" >> ./target/tmp/d6.out
+          echo "d6 on SOURCE branch:" >> ./target/tmp/d6.out
+          echo "--------------------" >> ./target/tmp/d6.out
           cargo test --test d6 -- --nocapture &>> ./target/tmp/d6.out
 
       - name: Read Output File
         id: read-id-output
         run: |
           cat ./target/tmp/d6.out
-          content=$(base64 -w 0 ./target/tmp/id_bench.out) # Single-line base64 output
+          content=$(base64 -w 0 ./target/tmp/d6.out) # Single-line base64 output
           echo "content=$content" >> $GITHUB_ENV
 
       - name: Post Comment with Benchmark Results
