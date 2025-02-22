@@ -1,4 +1,6 @@
 //! the main iterative deepening search, that calls several [`negamax`] searches
+use std::sync::atomic::AtomicI16;
+use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -94,7 +96,7 @@ impl Engine {
                 // searches. when one finishes it will update for all that haven't run yet (this
                 // is unimpactful if all searches are run in parallel, but 30+
                 // threads for complex positions are impractical).
-                let par_alpha = AtomicI16::new(alpha.0);
+                let par_alpha = AtomicI16::new(Value::MIN.0);
 
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
@@ -102,8 +104,8 @@ impl Engine {
                     let partial = -negamax(
                         root.board.make_move(mv),
                         target_depth - 1,
-                        -beta,
-                        -Value(par_alpha.load(Ordering::Relaxed)),
+                        Value(par_alpha.load(Ordering::Relaxed)),
+                        Value::MAX,
                         &search_options,
                         &tt,
                     );
