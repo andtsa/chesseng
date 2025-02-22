@@ -1,6 +1,4 @@
 //! the main iterative deepening search, that calls several [`negamax`] searches
-use std::sync::atomic::AtomicI16;
-use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -82,8 +80,6 @@ impl Engine {
 
                 // reset best move
                 best_value = Value::MIN;
-                let mut alpha = Value::MIN;
-                let beta = Value::MAX;
 
                 // get an ordered sequence of moves from this position
                 let moves = if let Some(first_move) = root.pv.first() {
@@ -94,30 +90,17 @@ impl Engine {
 
                 optlog!(search;trace;"ordered moves: {}", moves);
 
-                // in case of parallel search, use the same (thread-safe) alpha value across all
-                // searches. when one finishes it will update for all that haven't run yet (this
-                // is unimpactful if all searches are run in parallel, but 30+
-                // threads for complex positions are impractical).
-                let par_alpha = AtomicI16::new(alpha.0);
-
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
                 let search_fn = |mv| {
-                    let partial = -negamax(
+                    -negamax(
                         root.board.make_move(mv),
                         target_depth - 1,
-                        -beta,
-                        -Value(par_alpha.load(Ordering::Relaxed)),
+                        Value::MIN,
+                        Value::MAX,
                         &search_options,
                         &tt,
-                    );
-                    par_alpha.store(
-                        par_alpha
-                            .load(Ordering::Acquire)
-                            .max(partial.next_position_value.0),
-                        Ordering::Release,
-                    );
-                    partial
+                    )
                 };
 
                 // if we want the search to be single-threaded, we use the current thread and a
@@ -177,8 +160,6 @@ impl Engine {
                             }
                         }
                     }
-                    // always keep the best evaluation to prune worse ones
-                    alpha = alpha.max(search_result.next_position_value);
 
                     // check on [`SEARCHING`] and [`SEARCH_UNTIL`] to see if we need to quit this
                     // search
