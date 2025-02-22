@@ -50,7 +50,8 @@ pub fn evaluate(pos: &Position, moves: &MoveOrdering) -> Value {
             value -= material(&pos.chessboard, stm, (0.0, 0.0, 1.0));
             value += material(&pos.chessboard, stm.not(), (0.0, 0.0, 1.0));
             // value is small as to not significantly impact the search tree
-            value / 10
+            value.0 = value.0.checked_shr(3).unwrap_or_default();
+            value
         } else {
             // Side to move is checkmated
             optlog!(eval;debug;"eval checkmate");
