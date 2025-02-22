@@ -14,9 +14,9 @@ use sandy_engine::transposition_table::TT;
 use sandy_engine::util::bench_positions;
 
 /// Search benchmarks with different depths
-fn search_benches(c: &mut Criterion) {
+fn negamax_benches(c: &mut Criterion) {
     let depths = [3, 4, 5, 6];
-    let mut group = c.benchmark_group("search_bench");
+    let mut group = c.benchmark_group("negamax_bench");
 
     group.noise_threshold(0.08);
 
@@ -56,6 +56,6 @@ fn search_benches(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = search_benches
+    targets = negamax_benches
 }
 criterion_main!(benches);
