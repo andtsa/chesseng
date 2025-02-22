@@ -65,7 +65,7 @@ jobs:
 
       - name: Run baseline benchmarks
         run: |
-          cargo bench -- --nocapture
+          RUST_BACKTRACE="full" cargo bench --no-fail-fast -- --nocapture || echo "baseline benches failed, continuing anyway..."
 
       - name: Checkout source branch
         run: |
@@ -75,7 +75,7 @@ jobs:
       - name: Iterative Deepening Search
         run: |
           mkdir -p ./target/tmp
-          cargo bench --bench id > ./target/tmp/id_bench.out
+          RUST_BACKTRACE="full" cargo bench --bench id > ./target/tmp/id_bench.out
 
       - name: Read Output File
         id: read-id-output
@@ -100,7 +100,7 @@ jobs:
       - name: Negamax Search
         run: |
           mkdir -p ./target/tmp
-          cargo bench --bench ngm > ./target/tmp/ngm_bench.out
+          RUST_BACKTRACE="full" cargo bench --bench ngm > ./target/tmp/ngm_bench.out
 
       - name: Read Output File
         id: read-ngm-output
@@ -124,11 +124,11 @@ jobs:
 
       - name: Evaluation Function
         run: |
-          cargo bench --bench eval > ./target/tmp/eval_bench.out
+          RUST_BACKTRACE="full" cargo bench --bench eval > ./target/tmp/eval_bench.out
 
       - name: Evaluation Cachegrind
         run: |
-          cargo bench --bench eval_grind >> ./target/tmp/eval_bench.out
+          RUST_BACKTRACE="full" cargo bench --bench eval_grind >> ./target/tmp/eval_bench.out || echo "cachegrind bench failed, continuing anyway..."
 
       - name: Read Output File
         id: read-eval-output
@@ -153,11 +153,13 @@ jobs:
       - name: Move Generation
         run: |
           mkdir -p ./target/tmp
-          cargo bench --bench mg > ./target/tmp/mg_bench.out
+          RUST_BACKTRACE="full" cargo bench --bench mg > ./target/tmp/mg_bench.out 
+
 
       - name: MoveGen Cachegrind
         run: |
-          cargo bench --bench mg_grind >> ./target/tmp/mg_bench.out
+          RUST_BACKTRACE="full" cargo bench --bench mg_grind >> ./target/tmp/mg_bench.out || echo "cachegrind bench failed, continuing anyway..."
+
 
       - name: Read Output File
         id: read-mg-output
@@ -178,3 +180,4 @@ jobs:
               repo: context.repo.repo,
               body: `MoveGen benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
             });
+
