@@ -181,7 +181,7 @@ jobs:
               body: `MoveGen benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
             });
 
-  integration_bench:
+  integration_depth_bench:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
     runs-on: ubuntu-latest
 
@@ -191,10 +191,6 @@ jobs:
 
       - name: Gather rust nightly
         uses: dtolnay/rust-toolchain@nightly
-
-      - name: apt install valgrind
-        run: |
-          sudo apt-get -y install valgrind
 
       - name: Checkout PR's Target Branch
         run: |
@@ -220,6 +216,7 @@ jobs:
       - name: Run integration benchmark on new code
         run: |
           echo "********************" >> ./target/tmp/d6.out
+          echo " "                    >> ./target/tmp/d6.out
           echo "d6 on SOURCE branch:" >> ./target/tmp/d6.out
           echo "--------------------" >> ./target/tmp/d6.out
           cargo test --test d6 -- --nocapture &>> ./target/tmp/d6.out
@@ -242,6 +239,66 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `d6 benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
+            });
+
+  integration_time_bench:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'ready') && (contains(github.event.pull_request.labels.*.name, 'draft') || github.event.pull_request.reviewers == '') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare
+        uses: actions/checkout@v4
+
+      - name: Gather rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Checkout PR's Target Branch
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git checkout ${{ github.base_ref }}
+
+      - name: Compile tests
+        run: |
+          cargo test --test 1m --no-run || echo "source branch is missing this test"
+
+      - name: Run baseline integration benchmark
+        run: |
+          mkdir -p ./target/tmp
+          echo "1m on TARGET branch:" > ./target/tmp/1m.out
+          echo "--------------------" >> ./target/tmp/1m.out
+          cargo test --test 1m -- --nocapture &>> ./target/tmp/1m.out || echo "baseline bench failed, continuing anyway..." 
+
+      - name: Checkout source branch
+        run: |
+          git fetch origin ${{ github.head_ref }} 
+          git checkout ${{ github.head_ref }}   
+
+      - name: Run integration benchmark on new code
+        run: |
+          echo "********************" >> ./target/tmp/1m.out
+          echo " "                    >> ./target/tmp/1m.out
+          echo "1m on SOURCE branch:" >> ./target/tmp/1m.out
+          echo "--------------------" >> ./target/tmp/1m.out
+          cargo test --test 1m -- --nocapture &>> ./target/tmp/1m.out
+
+      - name: Read Output File
+        id: read-id-output
+        run: |
+          cat ./target/tmp/1m.out
+          content=$(base64 -w 0 ./target/tmp/1m.out) # Single-line base64 output
+          echo "content=$content" >> $GITHUB_ENV
+
+      - name: Post Comment with Benchmark Results
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const decodedContent = Buffer.from(process.env.content, 'base64').toString('utf-8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `1m benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
             });
 
 
