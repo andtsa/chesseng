@@ -102,6 +102,10 @@ name = "10s"
 path = "tests/10s.rs"
 
 [[test]]
+name = "1m"
+path = "tests/1m.rs"
+
+[[test]]
 name = "d6"
 path = "tests/d6.rs"
 
