@@ -23,7 +23,7 @@ use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 
 /// how many os threads should the search use?
-pub const SEARCH_THREADS: usize = 1;
+pub const SEARCH_THREADS: usize = 8;
 
 /// when should the search stop?
 pub static SEARCH_UNTIL: RwLock<Option<Instant>> = RwLock::new(None);
@@ -102,6 +102,15 @@ pub struct SearchInfo {
     pub time: Duration,
     /// The principal variation
     pub pv: Vec<MV>,
+}
+
+/// information for a search root to pass to its children, in order to inform
+/// dependent heuristics.
+#[derive(Debug, Copy, Clone, Default)]
+pub struct SearchOptions {
+    /// how many times have we already extended the search? this is necessary to
+    /// ensure the recursion terminates, and to prevent stack overflow.
+    pub extensions: Depth,
 }
 
 /// wrapper around [`SEARCH_UNTIL`]
