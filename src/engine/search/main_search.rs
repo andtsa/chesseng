@@ -26,6 +26,7 @@ use crate::search::search_until;
 use crate::search::send;
 use crate::search::Message;
 use crate::search::RootNode;
+use crate::search::SearchOptions;
 use crate::search::SearchResult;
 use crate::search::MV;
 use crate::search::SEARCH_THREADS;
@@ -72,6 +73,10 @@ impl Engine {
             // don't have an endgame tablebase yet.
             let mut tb_hits = 0;
             let start_time = Instant::now();
+
+            let initial_options = SearchOptions {
+                extensions: Depth::ZERO,
+            };
 
             // SAFETY: if it fails it's due to poison,
             // and that means another thread panicked,
@@ -122,6 +127,7 @@ impl Engine {
                             target_depth - 1,
                             Value(par_alpha.load(Ordering::Relaxed)),
                             Value::MAX,
+                            initial_options,
                             &search_options,
                             &tt,
                         );
