@@ -7,6 +7,7 @@ use std::sync::atomic::Ordering;
 use anyhow::Result;
 use chess::Board;
 
+use super::SearchOptions;
 use crate::evaluation::evaluate;
 use crate::optlog;
 use crate::opts::opts;
@@ -71,7 +72,15 @@ pub fn ng_bench(
     opt: Opts,
     tt: &TT,
 ) -> Result<SearchResult> {
-    Ok(negamax(position, to_depth, alpha, beta, &opt, &tt.get()))
+    Ok(negamax(
+        position,
+        to_depth,
+        alpha,
+        beta,
+        Default::default(),
+        &opt,
+        &tt.get(),
+    ))
 }
 
 /// mmmmmmmmmmmmm
@@ -80,6 +89,7 @@ pub fn negamax(
     to_depth: Depth,
     mut alpha: Value,
     mut beta: Value,
+    mut search_options: SearchOptions,
     opts: &Opts,
     table: &ShareImpl,
 ) -> SearchResult {
@@ -123,7 +133,18 @@ pub fn negamax(
     }
 
     // adjust depth based on heuristics
-    let next_depth = to_depth + (moves.0.len() <= 3) + (moves.0.len() <= 5) - 1;
+    let next_depth = if search_options.extensions >= Depth::MAX_EXTEND {
+        Depth::ZERO
+    } else {
+        to_depth + (moves.0.len() <= 3) - 1
+    };
+
+    search_options = SearchOptions {
+        extensions: search_options
+            .extensions
+            .max(search_options.extensions + next_depth + 1 - to_depth),
+        // ..search_options
+    };
 
     let mut best = None;
     let mut pv = vec![];
@@ -132,7 +153,15 @@ pub fn negamax(
     let mut max_depth = Depth::ZERO;
 
     for mv in moves.0.iter() {
-        let mut deeper = -negamax(pos.make_move(*mv), next_depth, -beta, -alpha, opts, table);
+        let mut deeper = -negamax(
+            pos.make_move(*mv),
+            next_depth,
+            -beta,
+            -alpha,
+            search_options,
+            opts,
+            table,
+        );
         total_nodes += deeper.nodes_searched + 1;
         tb_hits += deeper.tb_hits;
         max_depth = max_depth.max(deeper.depth);
