@@ -12,12 +12,14 @@ use lockfree::channel::spsc::Receiver;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
+use crate::evaluation::evaluate;
 use crate::optlog;
 use crate::opts::opts;
 use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
+use crate::search::moveordering::MoveOrdering;
 use crate::search::negamax::negamax;
 use crate::search::negamax::search_to;
 use crate::search::search_until;
@@ -53,6 +55,8 @@ impl Engine {
         };
 
         let tt = self.table.get();
+
+        let engine_history = self.history.make_contiguous().to_vec();
 
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
@@ -101,27 +105,38 @@ impl Engine {
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
                 let search_fn = |mv| {
-                    let partial = -negamax(
-                        root.board.make_move(mv),
-                        target_depth - 1,
-                        Value(par_alpha.load(Ordering::Relaxed)),
-                        Value::MAX,
-                        &search_options,
-                        &tt,
-                    );
-                    par_alpha.store(
-                        par_alpha
-                            .load(Ordering::Acquire)
-                            .max(partial.next_position_value.0),
-                        Ordering::Release,
-                    );
-                    partial
+                    let next_position = root.board.make_move(mv);
+                    if next_position.causes_threefold(&engine_history) {
+                        SearchResult {
+                            pv: vec![],
+                            next_position_value: -evaluate(&next_position, &MoveOrdering::empty()),
+                            nodes_searched: 1,
+                            tb_hits: 0,
+                        }
+                    } else {
+                        let partial = -negamax(
+                            next_position,
+                            target_depth - 1,
+                            Value(par_alpha.load(Ordering::Relaxed)),
+                            Value::MAX,
+                            &search_options,
+                            &tt,
+                        );
+                        par_alpha.store(
+                            par_alpha
+                                .load(Ordering::Acquire)
+                                .max(partial.next_position_value.0),
+                            Ordering::Release,
+                        );
+                        partial
+                    }
                 };
 
                 // if we want the search to be single-threaded, we use the current thread and a
                 // normal iterator.
                 // fine-grained control of the nuber of threads is not implemented yet, mostly
-                // because the current implementation does not support it
+                // because the current implementation trades that off for instead being very
+                // easy to implement and rely on
                 let all_results = if search_options.threads <= 1 {
                     moves
                         .0

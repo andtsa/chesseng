@@ -14,6 +14,7 @@ pub mod transposition_table;
 pub mod uci;
 pub mod util;
 
+use std::collections::VecDeque;
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
@@ -43,6 +44,8 @@ pub struct Engine {
     pub board: Position,
     /// the transposition table
     pub table: TT,
+    /// recently played positions. used to detect 3-fold repetition.
+    pub history: VecDeque<Position>,
 }
 
 impl Engine {
@@ -53,7 +56,21 @@ impl Engine {
         Ok(Self {
             board: Default::default(),
             table: TT::new(),
+            history: VecDeque::new(),
         })
+    }
+
+    /// register a new move that has been played in the game.
+    pub fn make_move(&mut self, mv: ChessMove) {
+        self.board = self.board.make_move(mv);
+        self.log_position(self.board.clone());
+    }
+
+    /// add a new position to the engine history, preserving only enough
+    /// positions to detect threefold repetition.
+    pub fn log_position(&mut self, pos: Position) {
+        self.history.push_front(pos);
+        self.history.truncate(6);
     }
 
     /// set the global [`SEARCHING`]
