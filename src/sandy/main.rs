@@ -30,7 +30,15 @@ pub mod player;
 mod uci;
 
 fn main() -> Result<()> {
-    println!("Sandy Chess Engine v0.0.0");
+    println!(
+        "Sandy Chess Engine v{} [{}]",
+        env!("CARGO_PKG_VERSION"),
+        if cfg!(debug_assertions) || cfg!(test) {
+            "DEBUG"
+        } else {
+            "RELEASE"
+        }
+    );
 
     colog::basic_builder()
         .filter(None, log::LevelFilter::Info)

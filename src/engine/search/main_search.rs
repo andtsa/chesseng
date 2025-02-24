@@ -64,6 +64,9 @@ impl Engine {
 
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
+            let mut max_depth = Depth::ZERO;
+            let mut min_depth = Depth::MAX;
+
             // for now I'm using tablebase_hits to refer to transposition table hits,
             // because it is displayed more prominently on cutechess UI, and I
             // don't have an endgame tablebase yet.
@@ -168,6 +171,9 @@ impl Engine {
                     // add up all the transposition table hits
                     tb_hits += search_result.tb_hits;
 
+                    max_depth = max_depth.max(search_result.depth);
+                    min_depth = min_depth.min(search_result.depth);
+
                     // we found a better match, update:
                     // * best available value for a next position
                     // * best move to get to that position
@@ -212,7 +218,7 @@ impl Engine {
                         start_time.elapsed(),
                         tt.read().map_or(0, |l| l.hashfull()),
                         tb_hits,
-                        target_depth,
+                        max_depth,
                         1,
                         &root.pv,
                     );

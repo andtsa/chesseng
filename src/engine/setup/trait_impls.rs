@@ -146,6 +146,38 @@ impl Sub<u16> for Depth {
     }
 }
 
+impl Sub<bool> for Depth {
+    type Output = Depth;
+
+    fn sub(self, rhs: bool) -> Self::Output {
+        Depth(self.0 - rhs as u16)
+    }
+}
+
+impl Add<bool> for Depth {
+    type Output = Depth;
+
+    fn add(self, rhs: bool) -> Self::Output {
+        Depth(self.0 + rhs as u16)
+    }
+}
+
+impl Add<Depth> for Depth {
+    type Output = Depth;
+
+    fn add(self, rhs: Depth) -> Self::Output {
+        Depth(self.0 + rhs.0)
+    }
+}
+
+impl Add<u16> for Depth {
+    type Output = Depth;
+
+    fn add(self, rhs: u16) -> Self::Output {
+        Depth(self.0 + rhs)
+    }
+}
+
 impl From<u32> for Value {
     fn from(v: u32) -> Self {
         Value(v as i16)
