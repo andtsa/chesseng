@@ -6,6 +6,7 @@ use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use chess::Board;
+use chess::Piece;
 
 use super::SearchOptions;
 use crate::evaluation::evaluate;
@@ -132,10 +133,38 @@ pub fn negamax(
         };
     }
 
+    // Disable NMP in positions likely to be zugzwang (endgames)
+    let is_endgame = pos.chessboard.pieces(Piece::Queen).popcnt() <= 1
+        && pos.chessboard.pieces(Piece::Rook).popcnt() <= 1;
+
+    // Null move pruning
+    if to_depth >= Depth(3) && !is_endgame {
+        if let Some(next_pos) = pos.make_null_move() {
+            let null_move_result = -negamax(
+                next_pos,
+                to_depth - 2, // Reduce depth more aggressively
+                -beta,
+                -beta + 1, // Narrow window for efficiency
+                search_options,
+                opts,
+                table,
+            );
+
+            // If the opponent still has a good evaluation, prune
+            if null_move_result.next_position_value >= beta {
+                return null_move_result; // Beta cutoff
+            }
+        }
+    }
+
     // adjust depth based on heuristics
     let next_depth = if search_options.extensions >= Depth::MAX_EXTEND {
         Depth::ZERO
     } else {
+        // * always subtract 1 since we looked at this level already
+        // * if there's fewer than 3 moves, add 1 again, meaning next_depth <= to_depth
+        //   which is necessary to prevent stack overflow
+        // * you can add a [`bool`] to a [`Depth`] value (equiv to +1)
         to_depth + (moves.0.len() <= 3) - 1
     };
 
@@ -216,9 +245,11 @@ pub fn negamax(
         };
         let current_hash = pos.chessboard.get_hash(); // change
         let entry = TEntry::new_from_result(current_hash, to_depth, &search_result, bound);
-        if let Ok(mut lock) = table.share().write() {
-            lock.insert(current_hash, entry)
-        };
+        {
+            if let Ok(mut lock) = table.share().write() {
+                lock.insert(current_hash, entry)
+            };
+        }
     }
 
     optlog!(search;trace;"return max_val: {:?}", best);
