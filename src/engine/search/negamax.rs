@@ -19,6 +19,7 @@ use crate::search::MV;
 use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::setup::depth::Depth;
+use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
 use crate::transposition_table::EvalBound;
 use crate::transposition_table::ShareImpl;
@@ -117,18 +118,24 @@ pub fn negamax(
             next_position_value: ev,
             nodes_searched: 1,
             tb_hits: 0,
+            depth: ONE_PLY,
         };
     }
+
+    // adjust depth based on heuristics
+    let next_depth = to_depth + (moves.0.len() <= 3) + (moves.0.len() <= 5) - 1;
 
     let mut best = None;
     let mut pv = vec![];
     let mut total_nodes = 0;
     let mut tb_hits = 0;
+    let mut max_depth = Depth::ZERO;
 
     for mv in moves.0.iter() {
-        let mut deeper = -negamax(pos.make_move(*mv), to_depth - 1, -beta, -alpha, opts, table);
+        let mut deeper = -negamax(pos.make_move(*mv), next_depth, -beta, -alpha, opts, table);
         total_nodes += deeper.nodes_searched + 1;
         tb_hits += deeper.tb_hits;
+        max_depth = max_depth.max(deeper.depth);
 
         if !searching() {
             optlog!(search;trace;"searching() == false, breaking early");
@@ -166,6 +173,7 @@ pub fn negamax(
         next_position_value: best_value,
         nodes_searched: total_nodes,
         tb_hits,
+        depth: max_depth + ONE_PLY,
     };
 
     /* from https://en.wikipedia.org/wiki/Negamax */
