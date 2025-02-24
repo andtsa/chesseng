@@ -76,6 +76,11 @@ impl MoveOrdering {
     pub fn pop(&mut self) -> Option<ChessMove> {
         self.0.pop()
     }
+
+    /// No moves in this [`MoveOrdering`]!
+    pub fn empty() -> Self {
+        Self(vec![])
+    }
 }
 
 impl IntoIterator for MoveOrdering {

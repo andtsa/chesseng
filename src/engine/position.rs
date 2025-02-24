@@ -24,6 +24,16 @@ impl Position {
             moves_played: self.moves_played + 1,
         }
     }
+
+    /// check whether this position, if added to the engine history, will cause
+    /// a draw by threefold repetition
+    pub fn causes_threefold(&self, history: &[Position]) -> bool {
+        history
+            .iter()
+            .filter(|p| p.chessboard.eq(&self.chessboard))
+            .count()
+            >= 2
+    }
 }
 
 impl From<Board> for Position {
