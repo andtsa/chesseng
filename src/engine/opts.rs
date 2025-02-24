@@ -229,7 +229,7 @@ impl Opts {
             UciOptionConfig::Spin {
                 name: "threads".to_string(),
                 default: Some(SEARCH_THREADS as i64),
-                min: Some(0),
+                min: Some(1),
                 max: Some(1024),
             },
         ]

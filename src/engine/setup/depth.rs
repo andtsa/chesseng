@@ -20,9 +20,11 @@ pub struct Depth(pub u16);
 
 impl Depth {
     /// maximum depth
-    pub const MAX: Depth = Depth(MAX_PLY / 2);
+    pub const MAX: Depth = Depth(MAX_PLY);
     /// zero depth
     pub const ZERO: Depth = Depth(0);
+    /// the largest allowed value for sel_depth - target_depth in a search
+    pub const MAX_EXTEND: Depth = Depth(16);
 }
 
 impl From<u8> for Depth {
