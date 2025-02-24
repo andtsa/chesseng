@@ -10,6 +10,7 @@ use chess::Square;
 use crate::search::SearchResult;
 use crate::search::MV;
 use crate::setup::depth::Depth;
+use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
 use crate::transposition_table::EvalBound;
 use crate::transposition_table::TEntry;
@@ -184,6 +185,7 @@ impl TEntry for TableEntry {
             next_position_value: self.eval(),
             nodes_searched: 1,
             tb_hits: 1,
+            depth: ONE_PLY,
         }
     }
 
