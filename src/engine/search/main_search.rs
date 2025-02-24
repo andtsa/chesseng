@@ -120,6 +120,7 @@ impl Engine {
                             next_position_value: -evaluate(&next_position, &MoveOrdering::empty()),
                             nodes_searched: 1,
                             tb_hits: 0,
+                            depth: ONE_PLY,
                         }
                     } else {
                         let partial = -negamax(
