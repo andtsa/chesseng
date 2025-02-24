@@ -62,6 +62,8 @@ pub struct SearchResult {
     pub nodes_searched: u32,
     /// how many transposition table hits were made
     pub tb_hits: u32,
+    /// actual depth the search reached
+    pub depth: Depth,
 }
 
 /// A message that can be sent from the search threads to the main/UCI thread
