@@ -1,7 +1,7 @@
 //! This file contains valgrind benchmarks for the evaluation function.
 use chess::Board;
 use iai::black_box;
-use sandy_engine::search::moveordering::unordered_moves;
+use sandy_engine::move_generation::unordered_moves;
 
 /// how many instructions does it take to set up a board
 fn board_setup() {

@@ -8,8 +8,14 @@ use chess::BitBoard;
 use chess::Board;
 use chess::ChessMove;
 use chess::MoveGen;
+use heuristics::score_move;
+use history::MoveHistory;
 
-use crate::search::mv_heuristics::move_gen_ordering;
+pub mod heuristics;
+pub mod history;
+
+use crate::move_generation::heuristics::move_gen_ordering;
+use crate::position::Position;
 
 /// A struct that holds a vector of moves, ordered by importance
 #[derive(Debug)]
@@ -17,32 +23,47 @@ pub struct MoveOrdering(pub Vec<ChessMove>);
 
 /// return all moves possible from this position, ordered by importance,
 /// prioritising the principal variation
-pub fn pv_ordered_moves(b: &Board, pv: &ChessMove) -> MoveOrdering {
+pub fn pv_ordered_moves(pos: &Position, pv: &ChessMove, hist: &MoveHistory) -> MoveOrdering {
     let mut moves = vec![];
-    let mut mg = MoveGen::new_legal(b);
+    let mut mg = MoveGen::new_legal(&pos.chessboard);
 
     mg.set_iterator_mask(BitBoard::from_square(pv.get_dest()));
     for m in mg.by_ref().collect::<Vec<ChessMove>>() {
-        if m == *pv {
-            moves.insert(0, m);
-        } else {
+        if m != *pv {
             moves.push(m);
         }
     }
 
-    move_gen_ordering(b, mg, &mut moves);
+    move_gen_ordering(&pos.chessboard, mg, &mut moves);
 
-    MoveOrdering(moves)
+    let mut valued = moves
+        .iter()
+        .map(|mv| (*mv, score_move(pos, mv, hist)))
+        .collect::<Vec<_>>();
+    valued.sort_unstable_by_key(|e| e.1);
+
+    MoveOrdering(
+        [*pv]
+            .into_iter()
+            .chain(valued.into_iter().map(|x| x.0))
+            .collect::<Vec<_>>(),
+    )
 }
 
 /// return all moves possible from this position, ordered by importance
-pub fn ordered_moves(b: &Board) -> MoveOrdering {
+pub fn ordered_moves(pos: &Position, hist: &MoveHistory) -> MoveOrdering {
     let mut moves = vec![];
-    let mg = MoveGen::new_legal(b);
+    let mg = MoveGen::new_legal(&pos.chessboard);
 
-    move_gen_ordering(b, mg, &mut moves);
+    move_gen_ordering(&pos.chessboard, mg, &mut moves);
 
-    MoveOrdering(moves)
+    let mut valued = moves
+        .iter()
+        .map(|mv| (*mv, score_move(pos, mv, hist)))
+        .collect::<Vec<_>>();
+    valued.sort_unstable_by_key(|e| e.1);
+
+    MoveOrdering(valued.into_iter().map(|x| x.0).collect())
 }
 
 /// return all moves possible from this position, unordered

@@ -1,11 +1,11 @@
 use anyhow::Result;
-use chess::Board;
 use chess::ChessMove;
 use inquire::Select;
-use sandy_engine::search::moveordering::ordered_moves;
+use sandy_engine::move_generation::ordered_moves;
+use sandy_engine::position::Position;
 
 /// Parse a player move from the terminal
-pub fn parse_player_move(pos: &Board) -> Result<ChessMove> {
+pub fn parse_player_move(pos: &Position) -> Result<ChessMove> {
     let moves = ordered_moves(pos);
     let move_options = moves.0.iter().map(|m| m.to_string()).collect();
     let move_choice = Select::new("Your move (type to filter)", move_options)

@@ -18,7 +18,20 @@ impl std::ops::Neg for Value {
 impl Add<Value> for Value {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
-        Value(self.0 + rhs.0)
+        Value(self.0.saturating_add(rhs.0))
+    }
+}
+
+impl Add<usize> for Value {
+    type Output = Self;
+    fn add(self, rhs: usize) -> Self {
+        self + Value(rhs as i16)
+    }
+}
+impl Add<i32> for Value {
+    type Output = Self;
+    fn add(self, rhs: i32) -> Self {
+        self + Value(rhs as i16)
     }
 }
 
@@ -39,7 +52,7 @@ impl Sub<i16> for Value {
 impl Sub<Value> for Value {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
-        Value(self.0 - rhs.0)
+        Value(self.0.saturating_sub(rhs.0))
     }
 }
 
@@ -52,6 +65,12 @@ impl Mul<Value> for Value {
 
 impl AddAssign<Value> for Value {
     fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl AddAssign<usize> for Value {
+    fn add_assign(&mut self, rhs: usize) {
         *self = *self + rhs;
     }
 }

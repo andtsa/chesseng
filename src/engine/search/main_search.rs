@@ -13,13 +13,14 @@ use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
 use crate::evaluation::evaluate;
+use crate::move_generation::history::MoveHistory;
+use crate::move_generation::ordered_moves;
+use crate::move_generation::pv_ordered_moves;
+use crate::move_generation::MoveOrdering;
 use crate::optlog;
 use crate::opts::opts;
 use crate::search::exit_condition;
 use crate::search::info;
-use crate::search::moveordering::ordered_moves;
-use crate::search::moveordering::pv_ordered_moves;
-use crate::search::moveordering::MoveOrdering;
 use crate::search::negamax::negamax;
 use crate::search::negamax::search_to;
 use crate::search::search_until;
@@ -97,9 +98,9 @@ impl Engine {
 
                 // get an ordered sequence of moves from this position
                 let moves = if let Some(first_move) = root.pv.first() {
-                    pv_ordered_moves(&root.board.chessboard, &first_move.0)
+                    pv_ordered_moves(&root.board, &first_move.0, &MoveHistory::empty())
                 } else {
-                    ordered_moves(&root.board.chessboard)
+                    ordered_moves(&root.board, &MoveHistory::empty())
                 };
 
                 optlog!(search;trace;"ordered moves: {}", moves);
@@ -113,6 +114,7 @@ impl Engine {
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
                 let search_fn = |mv| {
+                    let history = MoveHistory::empty();
                     let next_position = root.board.make_move(mv);
                     if next_position.causes_threefold(&engine_history) {
                         SearchResult {

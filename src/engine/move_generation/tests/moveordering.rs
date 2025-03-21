@@ -3,11 +3,12 @@ use std::time::Instant;
 
 use chess::Board;
 
+use crate::move_generation::ordered_moves;
+use crate::move_generation::pv_ordered_moves;
+use crate::move_generation::unordered_moves;
 use crate::opts::setopts;
 use crate::opts::Opts;
-use crate::search::moveordering::ordered_moves;
-use crate::search::moveordering::pv_ordered_moves;
-use crate::search::moveordering::unordered_moves;
+use crate::position::Position;
 
 #[test]
 fn ordered_same_as_mg() {
@@ -17,7 +18,8 @@ fn ordered_same_as_mg() {
     ];
 
     for b in boards {
-        let ordered = ordered_moves(&b);
+        let pos = Position::from(b);
+        let ordered = ordered_moves(&pos);
 
         let mg = chess::MoveGen::new_legal(&b).collect::<Vec<_>>();
 
@@ -43,8 +45,10 @@ fn pv_ordered_same_as_mg() {
 
         setopts(Opts::new().pv(true)).unwrap();
 
+        let pos = Position::from(b);
+
         for m in &mg {
-            let pv_ordered = pv_ordered_moves(&b, m);
+            let pv_ordered = pv_ordered_moves(&pos, m);
             assert_eq!(
                 pv_ordered.len(),
                 mg.len(),
@@ -65,17 +69,10 @@ fn pv_ordered_same_as_mg() {
 #[test]
 fn profile_move_ordering() {
     let duration = 5_000;
-    let b = Board::default();
-    let mg = chess::MoveGen::new_legal(&b).collect::<Vec<_>>();
+    let b = Position::default();
+    let mg = chess::MoveGen::new_legal(&b.chessboard).collect::<Vec<_>>();
 
-    let start_b = Instant::now();
-    for _ in 0..duration {
-        for _m in &mg {
-            let _m = ordered_moves(&b);
-        }
-    }
-    let elapsed_b = start_b.elapsed();
-
+    // pv ordered move generation
     let start_a = Instant::now();
     for _ in 0..duration {
         for m in &mg {
@@ -84,18 +81,29 @@ fn profile_move_ordering() {
     }
     let elapsed_a = start_a.elapsed();
 
+    // normal ordered moves
+    let start_b = Instant::now();
+    for _ in 0..duration {
+        for _m in &mg {
+            let _m = ordered_moves(&b);
+        }
+    }
+    let elapsed_b = start_b.elapsed();
+
+    // the lib move generation function
     let start_c = Instant::now();
     for _ in 0..duration {
         for _m in &mg {
-            let _m = chess::MoveGen::new_legal(&b).collect::<Vec<_>>();
+            let _m = chess::MoveGen::new_legal(&b.chessboard).collect::<Vec<_>>();
         }
     }
     let elapsed_c = start_c.elapsed();
 
+    // unordered move generation
     let start_d = Instant::now();
     for _ in 0..duration {
         for _m in &mg {
-            let _m = unordered_moves(&b);
+            let _m = unordered_moves(&b.chessboard);
         }
     }
     let elapsed_d = start_d.elapsed();

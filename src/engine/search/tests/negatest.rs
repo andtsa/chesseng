@@ -7,10 +7,10 @@ use chess::BoardStatus;
 use chess::Color;
 
 use crate::debug::DebugLevel::debug;
+use crate::move_generation::ordered_moves;
 use crate::opts::opts;
 use crate::opts::setopts;
 use crate::position::Position;
-use crate::search::moveordering::ordered_moves;
 use crate::search::negamax::ng_test;
 use crate::search::negamax::Opts;
 use crate::search::SEARCHING;
@@ -79,10 +79,7 @@ fn will_mate_in_1_() {
             setopts(opts).unwrap();
         }
 
-        eprintln!(
-            "all possible moves: {}",
-            ordered_moves(&engine.board.chessboard)
-        );
+        eprintln!("all possible moves: {}", ordered_moves(&engine.board));
 
         let mv = engine
             .best_move(Depth(d), Duration::from_millis(2000))
