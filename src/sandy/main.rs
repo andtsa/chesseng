@@ -9,6 +9,7 @@
 
 use std::io::stdin;
 use std::str::FromStr;
+use std::time::Duration;
 
 use anyhow::anyhow;
 use anyhow::Result;
@@ -53,7 +54,16 @@ fn main() -> Result<()> {
         // eventually.
     }));
 
-    let engine: Engine = Engine::new()?;
+    let mut engine: Engine = Engine::new()?;
+
+    if cfg!(feature = "perf") {
+        let x = engine.best_move(
+            sandy_engine::setup::depth::Depth(9),
+            Duration::from_secs(60),
+        )?;
+        println!("bestmove {x}");
+        return Ok(());
+    }
 
     let mut read_line = String::new();
     loop {
