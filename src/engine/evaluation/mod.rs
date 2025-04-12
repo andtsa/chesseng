@@ -12,11 +12,11 @@ use chess::EMPTY;
 use crate::evaluation::material::interpolate;
 use crate::evaluation::material::material;
 use crate::evaluation::position::piece_position_benefit_for_side;
+use crate::move_generation::MoveOrdering;
 use crate::optlog;
 use crate::opts::setopts;
 use crate::opts::Opts;
 use crate::position::Position;
-use crate::search::moveordering::MoveOrdering;
 use crate::setup::values::Value;
 
 /// a bonus given to the side-to-move for having a tempo advantage

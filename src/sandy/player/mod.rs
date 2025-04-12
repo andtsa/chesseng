@@ -69,7 +69,7 @@ pub fn terminal_loop(mut engine: Engine) -> Result<()> {
 
     loop {
         let mv = if engine.board.chessboard.side_to_move() == player {
-            parse_player_move(&engine.board.chessboard)?
+            parse_player_move(&engine.board)?
         } else {
             engine.best_move(search_depth, search_time)?
         };

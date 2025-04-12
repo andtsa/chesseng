@@ -4,8 +4,9 @@ use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
 use criterion::Criterion;
-use sandy_engine::search::moveordering::ordered_moves;
-use sandy_engine::search::moveordering::unordered_moves;
+use sandy_engine::move_generation::ordered_moves;
+use sandy_engine::move_generation::unordered_moves;
+use sandy_engine::position::Position;
 use sandy_engine::util::bench_positions;
 
 /// Benchmark the move generation
@@ -30,7 +31,7 @@ fn move_generation(c: &mut Criterion) {
             for _ in 0..20 {
                 // 20 iterations on 50 positions = 1_000 executions.
                 for startpos in bench_positions() {
-                    let _ = ordered_moves(black_box(&startpos));
+                    let _ = ordered_moves(black_box(&Position::from(startpos)));
                 }
             }
         })

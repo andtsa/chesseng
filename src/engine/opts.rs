@@ -85,6 +85,8 @@ pub struct Opts {
     pub tt: DebugLevel,
     /// the [`DebugLevel`] for the UCI module
     pub uci: DebugLevel,
+    /// the [`DebugLevel`] for the moveordering module
+    pub mv: DebugLevel,
     /// the [`DebugLevel`] for other options
     pub opts: DebugLevel,
     /// should the search use alpha beta pruning?
@@ -129,6 +131,7 @@ impl Opts {
             comm: DebugLevel::info,
             tt: DebugLevel::info,
             uci: DebugLevel::info,
+            mv: DebugLevel::info,
             opts: DebugLevel::debug,
             use_ab: false,
             use_pv: false,
@@ -152,6 +155,7 @@ impl Opts {
             comm: DebugLevel::off,
             tt: DebugLevel::off,
             uci: DebugLevel::off,
+            mv: DebugLevel::off,
             opts: DebugLevel::error,
             use_ab: true,
             use_pv: true,

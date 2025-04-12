@@ -25,6 +25,15 @@ impl Position {
         }
     }
 
+    /// pass the turn to the other player without moving any pieces. allocates a
+    /// new [`Board`] and increments the number of plies
+    pub fn make_null_move(&self) -> Option<Self> {
+        self.chessboard.null_move().map(|new_pos| Self {
+            chessboard: new_pos,
+            moves_played: self.moves_played + 1,
+        })
+    }
+
     /// check whether this position, if added to the engine history, will cause
     /// a draw by threefold repetition
     pub fn causes_threefold(&self, history: &[Position]) -> bool {

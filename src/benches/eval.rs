@@ -4,8 +4,9 @@ use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
 use criterion::Criterion;
+use sandy_engine::move_generation::ordered_moves;
 use sandy_engine::opts::Opts;
-use sandy_engine::search::moveordering::ordered_moves;
+use sandy_engine::position::Position;
 use sandy_engine::util::bench_positions;
 
 /// Benchmark the evaluation function
@@ -21,7 +22,7 @@ fn evaluation_benches(c: &mut Criterion) {
                     // 20 iterations on 50 positions = 1_000 executions.
                     let _ = sandy_engine::evaluation::eval(
                         black_box(&pos),
-                        &ordered_moves(&pos),
+                        &ordered_moves(&Position::from(pos)),
                         Opts::bench(),
                     );
                 }

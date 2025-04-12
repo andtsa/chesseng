@@ -6,15 +6,19 @@ use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use chess::Board;
+use chess::Piece;
 
 use super::SearchOptions;
 use crate::evaluation::evaluate;
+use crate::move_generation::history::MoveHistory;
+use crate::move_generation::history::MOVE_HISTORY;
+use crate::move_generation::ordered_moves;
+use crate::move_generation::pv_ordered_moves;
 use crate::optlog;
 use crate::opts::opts;
 use crate::opts::setopts;
 use crate::opts::Opts;
 use crate::position::Position;
-use crate::search::moveordering::ordered_moves;
 use crate::search::SearchResult;
 use crate::search::MV;
 use crate::search::SEARCHING;
@@ -92,12 +96,12 @@ pub fn negamax(
     mut search_options: SearchOptions,
     opts: &Opts,
     table: &ShareImpl,
-) -> SearchResult {
-    let moves = ordered_moves(&pos.chessboard);
-
-    optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
-    optlog!(search;trace;"moves: {}", moves);
-
+    mut history: MoveHistory,
+) -> (SearchResult, MoveHistory) {
+    // we if the transposition table has a best move saved, we use that one for the
+    // principal variation
+    let mut pv_move = None;
+    // check the transposition table to see if there's an entry
     /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
     if opts.use_tt {
@@ -105,7 +109,7 @@ pub fn negamax(
         if let Ok(Some(tt_entry)) = table.read().map(|l| l.get(current_hash)) {
             if tt_entry.is_valid() && tt_entry.depth() >= to_depth {
                 match tt_entry.bound() {
-                    EvalBound::Exact => return tt_entry.search_result(),
+                    EvalBound::Exact => return (tt_entry.search_result(), history),
                     EvalBound::LowerBound => {
                         alpha = alpha.max(tt_entry.search_result().next_position_value)
                     }
@@ -114,28 +118,66 @@ pub fn negamax(
                     }
                 }
                 if alpha >= beta {
-                    return tt_entry.search_result();
+                    return (tt_entry.search_result(), history);
+                } else {
+                    pv_move = Some(tt_entry.mv());
                 }
             }
         }
     }
 
+    let moves = pv_move
+        .as_ref()
+        .map_or_else(|| ordered_moves(&pos, &history), |mv| pv_ordered_moves(&pos, mv, &history));
+
+    optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
+    optlog!(search;trace;"moves: {}", moves);
+
     if to_depth == Depth::ZERO || moves.is_empty() {
         let ev = evaluate(&pos, &moves);
         optlog!(search;trace;"return eval: {:?}", ev);
-        return SearchResult {
+        return (SearchResult {
             pv: vec![],
             next_position_value: ev,
             nodes_searched: 1,
             tb_hits: 0,
             depth: ONE_PLY,
-        };
+        }, history);
+    }
+
+    // Disable NMP in positions likely to be zugzwang (endgames)
+    let is_endgame = pos.chessboard.pieces(Piece::Queen).popcnt() <= 1
+        && pos.chessboard.pieces(Piece::Rook).popcnt() <= 1;
+
+    // Null move pruning
+    if to_depth >= Depth(3) && !is_endgame && moves.len() > 3 {
+        if let Some(next_pos) = pos.make_null_move() {
+            let (null_move_result, history) = negamax(
+                next_pos,
+                to_depth - 2, // Reduce depth more aggressively
+                -beta,
+                -beta + 1, // Narrow window for efficiency
+                search_options,
+                opts,
+                table,
+                history,
+            );
+
+            // If the opponent still has a good evaluation, prune
+            if null_move_result.next_position_value >= beta {
+                return (null_move_result, history); // Beta cutoff
+            }
+        }
     }
 
     // adjust depth based on heuristics
     let next_depth = if search_options.extensions >= Depth::MAX_EXTEND {
         Depth::ZERO
     } else {
+        // * always subtract 1 since we looked at this level already
+        // * if there's fewer than 3 moves, add 1 again, meaning next_depth <= to_depth
+        //   which is necessary to prevent stack overflow
+        // * you can add a [`bool`] to a [`Depth`] value (equiv to +1)
         to_depth + (moves.0.len() <= 3) - 1
     };
 
@@ -186,6 +228,13 @@ pub fn negamax(
 
         if opts.use_ab && alpha >= beta {
             optlog!(search;trace;"alpha {alpha:?} >= beta {beta:?}");
+
+            if pos.chessboard.piece_on(mv.get_dest()).is_none() {
+                MOVE_HISTORY.save_killer(mv, pos.moves_played);
+            }
+
+            MOVE_HISTORY.log_history(mv, pos.moves_played);
+
             break;
         }
     }
@@ -216,9 +265,11 @@ pub fn negamax(
         };
         let current_hash = pos.chessboard.get_hash(); // change
         let entry = TEntry::new_from_result(current_hash, to_depth, &search_result, bound);
-        if let Ok(mut lock) = table.share().write() {
-            lock.insert(current_hash, entry)
-        };
+        {
+            if let Ok(mut lock) = table.share().write() {
+                lock.insert(current_hash, entry)
+            };
+        }
     }
 
     optlog!(search;trace;"return max_val: {:?}", best);
