@@ -1,14 +1,18 @@
 //! Negamax search algorithm.
 //!
 //! https://en.wikipedia.org/wiki/Negamax
+#![allow(unused_labels)]
 
 use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use chess::Board;
+use chess::ChessMove;
+use chess::MoveGen;
 
 use super::SearchOptions;
 use crate::evaluation::evaluate;
+use crate::move_generation::prio_iterator;
 use crate::optlog;
 use crate::opts::Opts;
 use crate::opts::opts;
@@ -93,10 +97,12 @@ pub fn negamax(
     opts: &Opts,
     table: &ShareImpl,
 ) -> SearchResult {
-    let moves = ordered_moves(&pos.chessboard);
+    // the initial move generator
+    let mut base_gen = MoveGen::new_legal(&pos.chessboard);
+    // slice for already generated moves.
+    let mut mgend: [Option<ChessMove>; 5] = [None; 5];
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
-    optlog!(search;trace;"moves: {}", moves);
 
     /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
@@ -115,13 +121,26 @@ pub fn negamax(
                 }
                 if alpha >= beta {
                     return tt_entry.search_result();
+                } else {
+                    mgend[0] = Some(tt_entry.mv());
+                    base_gen.remove_move(tt_entry.mv());
                 }
             }
         }
     }
 
-    if to_depth == Depth::ZERO || moves.is_empty() {
-        let ev = evaluate(&pos, &moves);
+    // ordering wrapper around the move generation iterator
+    let mut mgen = prio_iterator(base_gen, &pos.chessboard);
+    // first move generated in this [`negamax`] call.
+    mgend[1] = mgen.next();
+    // Priority of course goes to the previously found best move, since it is more
+    // likely to cause a cutoff. The first generated move is used for checking
+    // if we're mated, since a hash collision would otherwise be catastrophic
+
+    let out_of_moves = mgend[1].is_none();
+    if to_depth == Depth::ZERO || out_of_moves {
+        // moves.is_empty() {
+        let ev = evaluate(&pos, out_of_moves);
         optlog!(search;trace;"return eval: {:?}", ev);
         return SearchResult {
             pv: vec![],
@@ -136,7 +155,14 @@ pub fn negamax(
     let next_depth = if search_options.extensions >= Depth::MAX_EXTEND {
         Depth::ZERO
     } else {
-        to_depth + (moves.0.len() <= 3) - 1
+        // check the first 3 moves generated from the current position,
+        mgend[2] = mgen.next();
+        mgend[3] = mgen.next();
+        // if the 4th one is [`None`], then <=> moves.len() <= 3,
+        mgend[4] = mgen.next();
+        // depth implements addition with booleans.
+        to_depth + (mgend[4].is_none()) - 1
+        // if theres 3 moves or less, search +1 level deeper
     };
 
     search_options = SearchOptions {
@@ -152,9 +178,9 @@ pub fn negamax(
     let mut tb_hits = 0;
     let mut max_depth = Depth::ZERO;
 
-    for mv in moves.0.iter() {
+    'next_moves: for mv in mgend.into_iter().flatten().chain(mgen) {
         let mut deeper = -negamax(
-            pos.make_move(*mv),
+            pos.make_move(mv),
             next_depth,
             -beta,
             -alpha,
@@ -168,7 +194,7 @@ pub fn negamax(
 
         if !searching() {
             optlog!(search;trace;"searching() == false, breaking early");
-            deeper.next_position_value = evaluate(&pos, &moves);
+            deeper.next_position_value = evaluate(&pos, out_of_moves);
             deeper.nodes_searched = total_nodes;
             return deeper;
         }
@@ -177,11 +203,12 @@ pub fn negamax(
             .as_ref()
             .is_none_or(|b: &MV| b.1 < deeper.next_position_value)
         {
-            best = Some(MV(*mv, deeper.next_position_value));
+            best = Some(MV(mv, deeper.next_position_value));
             // Build the principal variation by prepending the current move
-            pv = vec![MV(*mv, deeper.next_position_value)];
+            pv = vec![MV(mv, deeper.next_position_value)];
             pv.extend(deeper.pv);
         }
+
         alpha = alpha.max(deeper.next_position_value);
 
         if opts.use_ab && alpha >= beta {

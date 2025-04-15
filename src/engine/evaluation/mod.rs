@@ -31,18 +31,19 @@ pub fn eval(board: &Board, moves: &MoveOrdering, opts: Opts) -> Result<Value> {
         setopts(opts)?;
     }
     let position = Position::from(*board);
-    Ok(evaluate(&position, moves))
+    Ok(evaluate(&position, moves.is_empty()))
 }
 
 /// the main evaluation function. returns a value representing the score of the
 /// position from the point of view of the player whos turn it is to move
-pub fn evaluate(pos: &Position, moves: &MoveOrdering) -> Value {
+// pub fn evaluate(pos: &Position, moves: &MoveOrdering) -> Value {
+pub fn evaluate(pos: &Position, out_of_moves: bool) -> Value {
     // Initialize evaluation score
     let mut value = Value::ZERO;
     let stm = pos.chessboard.side_to_move();
 
     // Check for mate or stalemate
-    if moves.is_empty() {
+    if out_of_moves {
         return if pos.chessboard.checkers().eq(&EMPTY) {
             optlog!(eval;debug;"eval stalemate");
             // in stalemate, give a slightly negative score to the side that's winning to

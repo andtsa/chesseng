@@ -117,7 +117,7 @@ impl Engine {
                     if next_position.causes_threefold(&engine_history) {
                         SearchResult {
                             pv: vec![],
-                            next_position_value: -evaluate(&next_position, &MoveOrdering::empty()),
+                            next_position_value: -evaluate(&next_position, true),
                             nodes_searched: 1,
                             tb_hits: 0,
                             depth: ONE_PLY,
