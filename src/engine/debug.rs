@@ -29,8 +29,23 @@ pub enum DebugLevel {
 }
 
 /// # `optlog!`
-/// ###### optional logging based on the debug level from global options
-/// examples:
+/// optional logging based on the debug level from global options
+/// ### conditional compilation
+/// in release mode (cfg debug_assertions),
+/// debug and trace levels will be CFG'd out:
+/// ```ignore
+/// optlog!(search;debug;"test:)")
+/// // compiles to
+/// match crate::debug::DebugLevel::search {
+///     crate::debug::DebugLevel::debug | crate::debug::DebugLevel::trace => {
+///         #[cfg(debug_assertions)]
+///         {..}
+///     }
+///     _ => {..}
+/// }
+/// ```
+/// and is hence assumed to be entirely optimised out by the compiler.
+/// ## examples:
 /// ```rust
 /// # use sandy_engine::optlog;
 /// // suppose we are doing some calculations
@@ -44,7 +59,8 @@ pub enum DebugLevel {
 /// # use sandy_engine::optlog;
 /// // in the universal chess interface...
 /// optlog!(uci;error;"not allowed!");
-/// // this will only *not* print if the global option for `uci` is set to `off`,
+/// // this will only *not* print
+/// // if the global option for `uci` is set to `off`,
 /// ```
 #[macro_export]
 macro_rules! optlog {

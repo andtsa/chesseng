@@ -5,6 +5,7 @@
 pub mod book;
 pub mod debug;
 pub mod evaluation;
+pub mod move_generation;
 pub mod opts;
 pub mod position;
 pub mod search;
