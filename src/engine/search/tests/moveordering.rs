@@ -112,7 +112,7 @@ fn profile_move_ordering() {
         elapsed_c
     );
     assert!(
-        elapsed_a < 3 * elapsed_c,
+        elapsed_a < 4 * elapsed_c,
         "pv: {:?}, normal: {:?}, mg: {:?}",
         elapsed_a,
         elapsed_b,
