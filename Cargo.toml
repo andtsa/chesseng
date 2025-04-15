@@ -114,5 +114,9 @@ name = "d6"
 path = "tests/d6.rs"
 
 [[test]]
+name = "prune"
+path = "tests/prune.rs"
+
+[[test]]
 name = "mate"
 path = "tests/mate.rs"
