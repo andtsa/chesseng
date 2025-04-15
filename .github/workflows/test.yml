@@ -199,7 +199,8 @@ jobs:
 
       - name: Compile tests
         run: |
-          cargo test --test d6 --no-run
+          cargo test --test d6 --no-run;
+          cargo test --test prune --no-run
 
       - name: Run baseline integration benchmark
         run: |
@@ -207,6 +208,9 @@ jobs:
           echo "d6 on TARGET branch:" > ./target/tmp/d6.out
           echo "--------------------" >> ./target/tmp/d6.out
           cargo test --test d6 -- --nocapture &>> ./target/tmp/d6.out || echo "baseline bench failed, continuing anyway..." 
+          echo "prune on TARGET branch:" > ./target/tmp/p.out
+          echo "-----------------------" >> ./target/tmp/p.out
+          cargo test --test prune -- --nocapture &>> ./target/tmp/p.out || echo "baseline bench failed, continuing anyway..." 
 
       - name: Checkout source branch
         run: |
@@ -220,6 +224,11 @@ jobs:
           echo "d6 on SOURCE branch:" >> ./target/tmp/d6.out
           echo "--------------------" >> ./target/tmp/d6.out
           cargo test --test d6 -- --nocapture &>> ./target/tmp/d6.out
+          echo "***********************" >> ./target/tmp/p.out
+          echo " "                    >> ./target/tmp/p.out
+          echo "prune on SOURCE branch:" >> ./target/tmp/p.out
+          echo "-----------------------" >> ./target/tmp/p.out
+          cargo test --test prune -- --nocapture &>> ./target/tmp/d6.out
 
       - name: Read Output File
         id: read-id-output
@@ -239,6 +248,26 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `d6 benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
+            });
+
+      - name: Read Output File 2
+        id: read-prune-output
+        run: |
+          cat ./target/tmp/p.out
+          content=$(base64 -w 0 ./target/tmp/p.out) # Single-line base64 output
+          echo "content=$content" >> $GITHUB_ENV
+
+      - name: Post Comment with Benchmark Results
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const decodedContent = Buffer.from(process.env.content, 'base64').toString('utf-8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `prune benchmark results:\n\`\`\`\n${decodedContent}\n\`\`\``
             });
 
   integration_time_bench:
