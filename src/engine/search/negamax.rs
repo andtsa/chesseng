@@ -100,7 +100,7 @@ pub fn negamax(
     // the initial move generator
     let mut base_gen = MoveGen::new_legal(&pos.chessboard);
     // slice for already generated moves.
-    let mut mgend: [Option<ChessMove>; 5] = [None; 5];
+    let mut pre_generated: [Option<ChessMove>; 5] = [None; 5];
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
 
@@ -109,35 +109,36 @@ pub fn negamax(
     if opts.use_tt {
         let current_hash = pos.chessboard.get_hash(); // change
         if let Ok(Some(tt_entry)) = table.read().map(|l| l.get(current_hash)) {
-            if tt_entry.is_valid() && tt_entry.depth() >= to_depth {
-                match tt_entry.bound() {
-                    EvalBound::Exact => return tt_entry.search_result(),
-                    EvalBound::LowerBound => {
-                        alpha = alpha.max(tt_entry.search_result().next_position_value)
+            if tt_entry.is_valid() {
+                if tt_entry.depth() >= to_depth {
+                    match tt_entry.bound() {
+                        EvalBound::Exact => return tt_entry.search_result(),
+                        EvalBound::LowerBound => {
+                            alpha = alpha.max(tt_entry.search_result().next_position_value)
+                        }
+                        EvalBound::UpperBound => {
+                            beta = beta.min(tt_entry.search_result().next_position_value)
+                        }
                     }
-                    EvalBound::UpperBound => {
-                        beta = beta.min(tt_entry.search_result().next_position_value)
+                    if alpha >= beta {
+                        return tt_entry.search_result();
                     }
                 }
-                if alpha >= beta {
-                    return tt_entry.search_result();
-                } else {
-                    mgend[0] = Some(tt_entry.mv());
-                    base_gen.remove_move(tt_entry.mv());
-                }
+                pre_generated[0] = Some(tt_entry.mv());
+                base_gen.remove_move(tt_entry.mv());
             }
         }
     }
 
     // ordering wrapper around the move generation iterator
-    let mut mgen = prio_iterator(base_gen, &pos.chessboard);
+    let mut mgen = prio_iterator(base_gen, &pos.chessboard, &[]);
     // first move generated in this [`negamax`] call.
-    mgend[1] = mgen.next();
+    pre_generated[1] = mgen.next();
     // Priority of course goes to the previously found best move, since it is more
     // likely to cause a cutoff. The first generated move is used for checking
     // if we're mated, since a hash collision would otherwise be catastrophic
 
-    let out_of_moves = mgend[1].is_none();
+    let out_of_moves = pre_generated[1].is_none();
     if to_depth == Depth::ZERO || out_of_moves {
         // moves.is_empty() {
         let ev = evaluate(&pos, out_of_moves);
@@ -156,12 +157,12 @@ pub fn negamax(
         Depth::ZERO
     } else {
         // check the first 3 moves generated from the current position,
-        mgend[2] = mgen.next();
-        mgend[3] = mgen.next();
+        pre_generated[2] = mgen.next();
+        pre_generated[3] = mgen.next();
         // if the 4th one is [`None`], then <=> moves.len() <= 3,
-        mgend[4] = mgen.next();
+        pre_generated[4] = mgen.next();
         // depth implements addition with booleans.
-        to_depth + (mgend[4].is_none()) - 1
+        to_depth + (pre_generated[4].is_none()) - 1
         // if theres 3 moves or less, search +1 level deeper
     };
 
@@ -178,7 +179,7 @@ pub fn negamax(
     let mut tb_hits = 0;
     let mut max_depth = Depth::ZERO;
 
-    'next_moves: for mv in mgend.into_iter().flatten().chain(mgen) {
+    'next_moves: for mv in pre_generated.into_iter().flatten().chain(mgen) {
         let mut deeper = -negamax(
             pos.make_move(mv),
             next_depth,
