@@ -26,6 +26,7 @@ use crate::search::search_until;
 use crate::search::send;
 use crate::search::Message;
 use crate::search::RootNode;
+use crate::search::SearchOptions;
 use crate::search::SearchResult;
 use crate::search::MV;
 use crate::search::SEARCH_THREADS;
@@ -64,11 +65,18 @@ impl Engine {
 
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
+            let mut max_depth = Depth::ZERO;
+            let mut min_depth = Depth::MAX;
+
             // for now I'm using tablebase_hits to refer to transposition table hits,
             // because it is displayed more prominently on cutechess UI, and I
             // don't have an endgame tablebase yet.
             let mut tb_hits = 0;
             let start_time = Instant::now();
+
+            let initial_options = SearchOptions {
+                extensions: Depth::ZERO,
+            };
 
             // SAFETY: if it fails it's due to poison,
             // and that means another thread panicked,
@@ -112,6 +120,7 @@ impl Engine {
                             next_position_value: -evaluate(&next_position, &MoveOrdering::empty()),
                             nodes_searched: 1,
                             tb_hits: 0,
+                            depth: ONE_PLY,
                         }
                     } else {
                         let partial = -negamax(
@@ -119,6 +128,7 @@ impl Engine {
                             target_depth - 1,
                             Value(par_alpha.load(Ordering::Relaxed)),
                             Value::MAX,
+                            initial_options,
                             &search_options,
                             &tt,
                         );
@@ -168,6 +178,9 @@ impl Engine {
                     // add up all the transposition table hits
                     tb_hits += search_result.tb_hits;
 
+                    max_depth = max_depth.max(search_result.depth);
+                    min_depth = min_depth.min(search_result.depth);
+
                     // we found a better match, update:
                     // * best available value for a next position
                     // * best move to get to that position
@@ -212,7 +225,7 @@ impl Engine {
                         start_time.elapsed(),
                         tt.read().map_or(0, |l| l.hashfull()),
                         tb_hits,
-                        target_depth,
+                        max_depth,
                         1,
                         &root.pv,
                     );

@@ -142,7 +142,47 @@ impl Sub<u16> for Depth {
     type Output = Depth;
 
     fn sub(self, rhs: u16) -> Self::Output {
-        Depth(self.0 - rhs)
+        Depth(self.0.saturating_sub(rhs))
+    }
+}
+
+impl Sub<Depth> for Depth {
+    type Output = Depth;
+
+    fn sub(self, rhs: Depth) -> Self::Output {
+        Depth(self.0.saturating_sub(rhs.0))
+    }
+}
+
+impl Sub<bool> for Depth {
+    type Output = Depth;
+
+    fn sub(self, rhs: bool) -> Self::Output {
+        Depth(self.0.saturating_sub(rhs as u16))
+    }
+}
+
+impl Add<bool> for Depth {
+    type Output = Depth;
+
+    fn add(self, rhs: bool) -> Self::Output {
+        Depth(self.0.saturating_add(rhs as u16))
+    }
+}
+
+impl Add<Depth> for Depth {
+    type Output = Depth;
+
+    fn add(self, rhs: Depth) -> Self::Output {
+        Depth(self.0.saturating_add(rhs.0))
+    }
+}
+
+impl Add<u16> for Depth {
+    type Output = Depth;
+
+    fn add(self, rhs: u16) -> Self::Output {
+        Depth(self.0 + rhs)
     }
 }
 
