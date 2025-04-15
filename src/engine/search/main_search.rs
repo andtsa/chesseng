@@ -8,12 +8,14 @@ use std::time::Instant;
 use anyhow::Result;
 use anyhow::bail;
 use chess::ChessMove;
+use chess::MoveGen;
 use lockfree::channel::spsc::Receiver;
-use rayon::iter::IntoParallelIterator;
+use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 
 use crate::Engine;
 use crate::evaluation::evaluate;
+use crate::move_generation::prio_iterator;
 use crate::optlog;
 use crate::opts::opts;
 use crate::search::MV;
@@ -95,14 +97,20 @@ impl Engine {
                 // reset best move
                 best_value = Value::MIN;
 
+                let base_gen = MoveGen::new_legal(&root.board.chessboard);
                 // get an ordered sequence of moves from this position
-                let moves = if let Some(first_move) = root.pv.first() {
-                    pv_ordered_moves(&root.board.chessboard, &first_move.0)
+                let moves = if search_options.use_pv {
+                    if let Some(first_move) = root.pv.first() {
+                        prio_iterator(base_gen, &root.board.chessboard, &[first_move.0])
+                    } else {
+                        prio_iterator(base_gen, &root.board.chessboard, &[])
+                    }
                 } else {
-                    ordered_moves(&root.board.chessboard)
-                };
+                    prio_iterator(base_gen, &root.board.chessboard, &[])
+                }
+                .collect::<Vec<_>>();
 
-                optlog!(search;trace;"ordered moves: {}", moves);
+                // optlog!(search;trace;"ordered moves: {}", moves);
 
                 // in case of parallel search, use the same (thread-safe) alpha value across all
                 // searches. when one finishes it will update for all that haven't run yet (this
@@ -112,8 +120,8 @@ impl Engine {
 
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
-                let search_fn = |mv| {
-                    let next_position = root.board.make_move(mv);
+                let search_fn = |mv: &ChessMove| {
+                    let next_position = root.board.make_move(*mv);
                     if next_position.causes_threefold(&engine_history) {
                         SearchResult {
                             pv: vec![],
@@ -148,23 +156,16 @@ impl Engine {
                 // because the current implementation trades that off for instead being very
                 // easy to implement and rely on
                 let all_results = if search_options.threads <= 1 {
-                    moves
-                        .0
-                        .clone()
-                        .into_iter()
-                        .map(search_fn)
-                        .collect::<Vec<SearchResult>>()
+                    moves.iter().map(search_fn).collect::<Vec<SearchResult>>()
                 } else {
                     moves
-                        .0
-                        .clone()
-                        .into_par_iter()
+                        .par_iter()
                         .map(search_fn)
                         .collect::<Vec<SearchResult>>()
                 };
 
                 // iterate through all the possible moves from [`RootNode`]
-                for (mv, search_result) in moves.0.iter().zip(all_results.into_iter()) {
+                for (mv, search_result) in moves.iter().zip(all_results.into_iter()) {
                     optlog!(
                         search;
                         debug;

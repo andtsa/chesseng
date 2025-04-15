@@ -90,7 +90,9 @@ impl TranspositionTable<u64, TableEntry> for VL {
     }
 
     fn hashfull(&self) -> usize {
-        self.occupied * 1000 / self.size
+        (self.occupied * 1000)
+            .checked_div(self.size)
+            .unwrap_or_default()
     }
 }
 
