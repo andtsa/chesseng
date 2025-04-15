@@ -4,7 +4,7 @@ use crate::shared::test_uci;
 /// get testing functions
 mod shared;
 
-/// a depth test of 5
+/// a depth test
 #[test]
 fn main() {
     let sequence = [
@@ -15,7 +15,7 @@ fn main() {
         "setoption name hash value 128",
         "isready",
         "position startpos",
-        "go depth 6",
+        "go depth 7",
     ];
 
     test_uci(&sequence);
