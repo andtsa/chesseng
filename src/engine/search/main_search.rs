@@ -19,7 +19,6 @@ use crate::search::exit_condition;
 use crate::search::info;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
-use crate::search::moveordering::MoveOrdering;
 use crate::search::negamax::negamax;
 use crate::search::negamax::search_to;
 use crate::search::search_until;
@@ -117,7 +116,7 @@ impl Engine {
                     if next_position.causes_threefold(&engine_history) {
                         SearchResult {
                             pv: vec![],
-                            next_position_value: -evaluate(&next_position, &MoveOrdering::empty()),
+                            next_position_value: -evaluate(&next_position, true),
                             nodes_searched: 1,
                             tb_hits: 0,
                             depth: ONE_PLY,
