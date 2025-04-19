@@ -109,6 +109,9 @@ pub struct SearchOptions {
     /// how many times have we already extended the search? this is necessary to
     /// ensure the recursion terminates, and to prevent stack overflow.
     pub extensions: Depth,
+
+    /// previously played position that would cause draw by threefold repetition
+    pub history: [u64; 6],
 }
 
 /// wrapper around [`SEARCH_UNTIL`]

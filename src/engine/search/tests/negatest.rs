@@ -24,11 +24,11 @@ use crate::util::short_benches;
 fn startpos_is_positive() {
     let pos = Board::default();
     SEARCHING.store(true, Ordering::Relaxed);
+    let val = ng_test(pos, Depth(4), Value::MIN, Value::MAX, Opts::new()).unwrap();
     assert!(
-        ng_test(pos, Depth(4), Value::MIN, Value::MAX, Opts::new())
-            .unwrap()
-            .next_position_value
-            > Value::ZERO
+        val.next_position_value > Value::ZERO,
+        "startpos was {}",
+        val.next_position_value
     );
 }
 
