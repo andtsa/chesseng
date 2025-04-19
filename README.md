@@ -27,7 +27,7 @@ the evaluation function computed at every leaf node resides in [`./src/engine/ev
 everything else in the module is a helper to the main `evaluate()` function
 
 #### Move Generation
-deceptive name since I use [`jordanbray/chess`](/jordanbray/chess) for the actual *generation* of moves (as well as for board & bitboard representations). this module is responsible for *move ordering*, ie giving the moves to the search function in order from best to worst, based on a heuristic guess.
+deceptive name since I use [`jordanbray/chess`](https://github.com/jordanbray/chess) for the actual *generation* of moves (as well as for board & bitboard representations). this module is responsible for *move ordering*, ie giving the moves to the search function in order from best to worst, based on a heuristic guess.
 
 since alpha/beta pruning relies on this, it has a **huge** impact on engine performance.
 
@@ -84,9 +84,10 @@ everything under [`./src/sandy/`](src/sandy/) is part of the frontend (almost)
 - [`./src/sandy/player/`](src/sandy/player/) is for playing against the engine CLI using a TUI
 - [`./src/sandy/uci/mod.rs`](src/sandy/uci/mod.rs) handles the UCI part of the CLI: converting commands to engine internal instructions
 - [`./src/sandy/uci/time_control.rs`](src/sandy/uci/time_control.rs) passes UCI time controls (eg `go btime 1000 wtime 1000`) to the engine, while also heuristically calculating how much time the engine should think for
-- [`./src/sandy/uci/search_control.rs`](src/sandy/uci/search_control.rs) does the same for search controls (eg `go depth 4`)
+- [`./src/sandy/uci/search_controls.rs`](src/sandy/uci/search_controls.rs) does the same for search controls (eg `go depth 4`)
 
 ## Changelog
+- `v0.6.3` TBD, TODO
 - `v0.6.2` inline move ordering: switch from an allocated `Vec<ChessMove>` to an iterator that only generates moves as needed, performing all move ordering operations on the construction of the iterator.
 - `v0.6.1` variable search depth: when a node has <= 3 children, increase search depth by 1, just for this case. this massively helps lookahead in positions with a lot of checks 
 - lost versions: i did not actually keep a changelog until `v0.6.1`. i do not remember the details here
