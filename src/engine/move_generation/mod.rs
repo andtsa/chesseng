@@ -1,11 +1,8 @@
 //! move generation utilities
-#![allow(unused)] // TODO: remove
 
+pub mod moveordering;
+pub mod mv_heuristics;
 use std::fmt::Debug;
-use std::fmt::Display;
-use std::ops::BitAnd;
-use std::ops::Not;
-use std::str::FromStr;
 
 use chess::BitBoard;
 use chess::Board;

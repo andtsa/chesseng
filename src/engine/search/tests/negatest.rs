@@ -8,11 +8,11 @@ use chess::Color;
 
 use crate::Engine;
 use crate::debug::DebugLevel::debug;
+use crate::move_generation::moveordering::ordered_moves;
 use crate::opts::opts;
 use crate::opts::setopts;
 use crate::position::Position;
 use crate::search::SEARCHING;
-use crate::search::moveordering::ordered_moves;
 use crate::search::negamax::Opts;
 use crate::search::negamax::ng_test;
 use crate::setup::depth::Depth;

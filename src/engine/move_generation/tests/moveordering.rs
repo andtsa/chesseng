@@ -4,12 +4,12 @@ use std::time::Instant;
 use chess::Board;
 use chess::MoveGen;
 
+use crate::move_generation::moveordering::ordered_moves;
+use crate::move_generation::moveordering::pv_ordered_moves;
+use crate::move_generation::moveordering::unordered_moves;
 use crate::move_generation::prio_iterator;
 use crate::opts::Opts;
 use crate::opts::setopts;
-use crate::search::moveordering::ordered_moves;
-use crate::search::moveordering::pv_ordered_moves;
-use crate::search::moveordering::unordered_moves;
 
 #[test]
 fn ordered_same_as_mg() {

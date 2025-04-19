@@ -9,7 +9,7 @@ use chess::Board;
 use chess::ChessMove;
 use chess::MoveGen;
 
-use crate::search::mv_heuristics::move_gen_ordering;
+use super::mv_heuristics::move_gen_ordering;
 
 /// A struct that holds a vector of moves, ordered by importance
 #[derive(Debug)]
