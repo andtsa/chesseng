@@ -8,7 +8,7 @@ use chess::Color;
 
 use crate::Engine;
 use crate::debug::DebugLevel::debug;
-use crate::move_generation::moveordering::ordered_moves;
+use crate::move_generation::ordering::ordered_moves;
 use crate::opts::opts;
 use crate::opts::setopts;
 use crate::position::Position;

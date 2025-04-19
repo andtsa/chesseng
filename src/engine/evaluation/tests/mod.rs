@@ -3,7 +3,7 @@ use std::str::FromStr;
 use chess::Board;
 
 use crate::evaluation;
-use crate::move_generation::moveordering::ordered_moves;
+use crate::move_generation::ordering::ordered_moves;
 use crate::opts::Opts;
 use crate::setup::values::Value;
 

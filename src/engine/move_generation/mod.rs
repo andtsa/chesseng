@@ -1,7 +1,7 @@
 //! move generation utilities
 
-pub mod moveordering;
-pub mod mv_heuristics;
+pub mod heuristics;
+pub mod ordering;
 use std::fmt::Debug;
 
 use chess::BitBoard;
@@ -9,7 +9,7 @@ use chess::Board;
 use chess::ChessMove;
 use chess::EMPTY;
 use chess::MoveGen;
-use mv_heuristics::mvv_lva_score;
+use heuristics::mvv_lva_score;
 
 use crate::evaluation::bitboards::CENTER_4;
 use crate::evaluation::bitboards::CENTER_16;
