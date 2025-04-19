@@ -228,7 +228,7 @@ jobs:
           echo " "                    >> ./target/tmp/p.out
           echo "prune on SOURCE branch:" >> ./target/tmp/p.out
           echo "-----------------------" >> ./target/tmp/p.out
-          cargo test --test prune -- --nocapture &>> ./target/tmp/d6.out
+          cargo test --test prune -- --nocapture &>> ./target/tmp/p.out
 
       - name: Read Output File
         id: read-id-output
