@@ -10,24 +10,24 @@ use chess::Board;
 use super::SearchOptions;
 use crate::evaluation::evaluate;
 use crate::optlog;
+use crate::opts::Opts;
 use crate::opts::opts;
 use crate::opts::setopts;
-use crate::opts::Opts;
 use crate::position::Position;
-use crate::search::moveordering::ordered_moves;
-use crate::search::SearchResult;
 use crate::search::MV;
-use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
+use crate::search::SEARCHING;
+use crate::search::SearchResult;
+use crate::search::moveordering::ordered_moves;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
 use crate::transposition_table::EvalBound;
 use crate::transposition_table::ShareImpl;
 use crate::transposition_table::TEntry;
+use crate::transposition_table::TT;
 use crate::transposition_table::TableAccess;
 use crate::transposition_table::TranspositionTable;
-use crate::transposition_table::TT;
 
 /// wrapper around [`SEARCHING`]
 #[inline(always)]

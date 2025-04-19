@@ -6,14 +6,14 @@
 use std::time::Duration;
 use std::time::Instant;
 
+use criterion::Criterion;
 use criterion::criterion_group;
 use criterion::criterion_main;
-use criterion::Criterion;
-use sandy_engine::opts::setopts;
+use sandy_engine::Engine;
 use sandy_engine::opts::Opts;
+use sandy_engine::opts::setopts;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::short_benches;
-use sandy_engine::Engine;
 
 /// Search benchmarks with different depths
 fn search_benches(c: &mut Criterion) {

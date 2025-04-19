@@ -10,9 +10,9 @@ use chess::BoardStatus;
 use chess::Color;
 use log::error;
 use log::info;
+use sandy_engine::Engine;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::Print;
-use sandy_engine::Engine;
 
 use crate::player::parse_move::parse_player_move;
 

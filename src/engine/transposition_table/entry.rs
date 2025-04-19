@@ -7,8 +7,8 @@ use chess::ChessMove;
 use chess::Piece;
 use chess::Square;
 
-use crate::search::SearchResult;
 use crate::search::MV;
+use crate::search::SearchResult;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;

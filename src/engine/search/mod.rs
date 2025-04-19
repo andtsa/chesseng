@@ -6,10 +6,10 @@ pub mod negamax;
 
 use std::fmt::Display;
 use std::ops::Neg;
+use std::sync::RwLock;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
-use std::sync::RwLock;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -181,7 +181,7 @@ impl Neg for SearchResult {
 
 impl Display for MV {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} [{:+}]", self.0, self.1 .0)
+        write!(f, "{} [{:+}]", self.0, self.1.0)
     }
 }
 

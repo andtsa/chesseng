@@ -6,8 +6,8 @@ use chess::Square;
 
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
-use crate::transposition_table::entry::TableEntry;
 use crate::transposition_table::EvalBound;
+use crate::transposition_table::entry::TableEntry;
 
 #[test]
 fn test_pack_then_unpack() {

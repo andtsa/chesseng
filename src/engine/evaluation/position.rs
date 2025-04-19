@@ -5,10 +5,10 @@ use chess::Board;
 use chess::Color;
 use chess::Square;
 
+use crate::evaluation::Interp;
 use crate::evaluation::bitboards::EG_PESTO_TABLE;
 use crate::evaluation::bitboards::MG_PESTO_TABLE;
 use crate::evaluation::bitboards::POS_PIECE_TYPES;
-use crate::evaluation::Interp;
 use crate::setup::values::Value;
 
 /// returns the benefit this side has from its pieces' positions
