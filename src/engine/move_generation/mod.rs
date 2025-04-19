@@ -9,6 +9,7 @@ use chess::Board;
 use chess::ChessMove;
 use chess::EMPTY;
 use chess::MoveGen;
+use mv_heuristics::mvv_lva_score;
 
 use crate::evaluation::bitboards::CENTER_4;
 use crate::evaluation::bitboards::CENTER_16;
@@ -29,8 +30,8 @@ pub struct OrderedMoves {
 ///
 /// prio_moves will have elements removed from the end, so order them from least
 /// important to most important
-pub fn prio_iterator(mut mgen: MoveGen, pos: &Board, prio_moves: &[ChessMove]) -> OrderedMoves {
-    for mv in prio_moves {
+pub fn prio_iterator(mut mgen: MoveGen, pos: &Board, prio: &[ChessMove]) -> OrderedMoves {
+    for mv in prio {
         mgen.remove_move(*mv);
     }
     let masks = [
@@ -44,10 +45,18 @@ pub fn prio_iterator(mut mgen: MoveGen, pos: &Board, prio_moves: &[ChessMove]) -
         !EMPTY,
     ];
 
+    // collect capture moves and sort by mvv-lva
+    mgen.set_iterator_mask(*pos.color_combined(!pos.side_to_move()));
+
+    let mut prio_moves: Vec<ChessMove> = mgen.by_ref().collect();
+    prio_moves.sort_by_cached_key(|mv| mvv_lva_score(pos, mv));
+
+    prio_moves.extend_from_slice(prio);
+
     mgen.set_iterator_mask(masks[0]);
 
     OrderedMoves {
-        prio_moves: prio_moves.to_vec(),
+        prio_moves,
         mgen,
         masks,
         cur_mask: 0,
