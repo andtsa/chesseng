@@ -121,6 +121,27 @@ pub fn negamax(
     // we are mated!
     let out_of_moves = base_gen.len() == 0;
 
+    optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
+
+    let current_hash = pos.chessboard.get_hash();
+    if search_options
+        .history
+        .iter()
+        .filter(|x| **x == current_hash)
+        .count()
+        >= 2
+    {
+        // threefold repetition
+        let ev = evaluate(&pos, true);
+        return SearchResult {
+            pv: vec![],
+            next_position_value: ev,
+            nodes_searched: 1,
+            tb_hits: 0,
+            depth: ONE_PLY,
+        };
+    }
+
     /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
     if opts.use_tt
@@ -181,8 +202,8 @@ pub fn negamax(
         // if theres 3 moves or less, search +1 level deeper
     };
 
-    search_options.history.rotate_right(1);
-    search_options.history[0] = current_hash;
+    search_options.history.rotate_left(1);
+    search_options.history[6] = current_hash;
     search_options = SearchOptions {
         extensions: search_options
             .extensions
