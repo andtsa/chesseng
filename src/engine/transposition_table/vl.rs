@@ -6,11 +6,11 @@ use std::sync::RwLock;
 use chess::Board;
 
 use crate::optlog;
-use crate::transposition_table::entry::TableEntry;
 use crate::transposition_table::TEntry;
 use crate::transposition_table::TKey;
 use crate::transposition_table::TableAccess;
 use crate::transposition_table::TranspositionTable;
+use crate::transposition_table::entry::TableEntry;
 
 /// a lock-based Vec transposition table
 #[derive(Debug)]

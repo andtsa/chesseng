@@ -20,22 +20,22 @@ use std::thread;
 use std::time::Duration;
 use std::time::Instant;
 
-use anyhow::anyhow;
 use anyhow::Result;
+use anyhow::anyhow;
 use chess::ChessMove;
 use lockfree::channel::RecvErr;
 use log::info;
 use log::trace;
 
 use crate::position::Position;
-use crate::search::exit_condition;
 use crate::search::Message;
-use crate::search::SEARCHING;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
+use crate::search::SEARCHING;
+use crate::search::exit_condition;
 use crate::setup::depth::Depth;
-use crate::transposition_table::TranspositionTable;
 use crate::transposition_table::TT;
+use crate::transposition_table::TranspositionTable;
 
 /// this is why you're here, right?
 #[derive(Debug)]
@@ -147,9 +147,7 @@ impl Engine {
                     Message::BestGuess(_) => {}
                     Message::Info(si) => trace!(
                         "depth: {}, score: {}, nodes: {}",
-                        si.depth.0,
-                        si.score,
-                        si.nodes
+                        si.depth.0, si.score, si.nodes
                     ),
                 },
                 Err(RecvErr::NoMessage) => {
@@ -160,7 +158,7 @@ impl Engine {
                         Ok(mv.0)
                     } else {
                         Err(anyhow!("sender dropped before best move found"))
-                    }
+                    };
                 }
             }
             if exit_condition() {

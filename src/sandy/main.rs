@@ -11,15 +11,15 @@ use std::io::stdin;
 use std::str::FromStr;
 use std::time::Duration;
 
-use anyhow::anyhow;
 use anyhow::Result;
+use anyhow::anyhow;
 use chess::Board;
 use log::error;
 use log::info;
 use log::warn;
-use sandy_engine::util::fen_to_str;
-use sandy_engine::util::Print;
 use sandy_engine::Engine;
+use sandy_engine::util::Print;
+use sandy_engine::util::fen_to_str;
 
 use crate::player::terminal_loop;
 use crate::uci::uci_loop;

@@ -5,8 +5,8 @@ use std::sync::RwLock;
 
 use crate::search::SearchResult;
 use crate::setup::depth::Depth;
-use crate::transposition_table::vl::VlShare;
 use crate::transposition_table::vl::VL;
+use crate::transposition_table::vl::VlShare;
 
 pub mod empty_table;
 pub mod entry;

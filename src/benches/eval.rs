@@ -1,9 +1,9 @@
 //! Benchmarking the evaluation function
 #![allow(missing_docs)]
+use criterion::Criterion;
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
-use criterion::Criterion;
 use sandy_engine::opts::Opts;
 use sandy_engine::search::moveordering::ordered_moves;
 use sandy_engine::util::bench_positions;

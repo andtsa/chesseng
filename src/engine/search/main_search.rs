@@ -5,37 +5,37 @@ use std::thread;
 use std::time::Duration;
 use std::time::Instant;
 
-use anyhow::bail;
 use anyhow::Result;
+use anyhow::bail;
 use chess::ChessMove;
 use lockfree::channel::spsc::Receiver;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
+use crate::Engine;
 use crate::evaluation::evaluate;
 use crate::optlog;
 use crate::opts::opts;
+use crate::search::MV;
+use crate::search::Message;
+use crate::search::RootNode;
+use crate::search::SEARCH_THREADS;
+use crate::search::SearchOptions;
+use crate::search::SearchResult;
 use crate::search::exit_condition;
 use crate::search::info;
+use crate::search::moveordering::MoveOrdering;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
-use crate::search::moveordering::MoveOrdering;
 use crate::search::negamax::negamax;
 use crate::search::negamax::search_to;
 use crate::search::search_until;
 use crate::search::send;
-use crate::search::Message;
-use crate::search::RootNode;
-use crate::search::SearchOptions;
-use crate::search::SearchResult;
-use crate::search::MV;
-use crate::search::SEARCH_THREADS;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
 use crate::transposition_table::TranspositionTable;
 use crate::uci::UCI_LISTENING_FREQUENCY;
-use crate::Engine;
 
 impl Engine {
     /// Begin the search for the best move, spawns a new thread to actually do

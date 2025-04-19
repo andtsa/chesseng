@@ -4,9 +4,9 @@ use std::fmt::Formatter;
 
 use crate::position::Position;
 use crate::setup::values::Value;
-use crate::transposition_table::entry::TableEntry;
-use crate::transposition_table::TranspositionTable;
 use crate::transposition_table::TT;
+use crate::transposition_table::TranspositionTable;
+use crate::transposition_table::entry::TableEntry;
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

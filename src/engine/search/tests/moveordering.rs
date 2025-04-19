@@ -3,8 +3,8 @@ use std::time::Instant;
 
 use chess::Board;
 
-use crate::opts::setopts;
 use crate::opts::Opts;
+use crate::opts::setopts;
 use crate::search::moveordering::ordered_moves;
 use crate::search::moveordering::pv_ordered_moves;
 use crate::search::moveordering::unordered_moves;

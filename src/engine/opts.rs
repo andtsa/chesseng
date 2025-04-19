@@ -2,8 +2,8 @@
 use std::sync::RwLock;
 use std::sync::TryLockError;
 
-use anyhow::bail;
 use anyhow::Result;
+use anyhow::bail;
 use vampirc_uci::UciOptionConfig;
 
 use crate::debug::DebugLevel;

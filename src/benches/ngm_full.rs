@@ -1,16 +1,16 @@
 //! Benchmarks for the negamax search with different depths
 #![allow(missing_docs)]
+use criterion::Criterion;
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
-use criterion::Criterion;
 use sandy_engine::opts::Opts;
 use sandy_engine::position::Position;
 use sandy_engine::search::negamax::ng_bench;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::setup::values::Value;
-use sandy_engine::transposition_table::TranspositionTable;
 use sandy_engine::transposition_table::TT;
+use sandy_engine::transposition_table::TranspositionTable;
 use sandy_engine::util::bench_positions;
 
 /// Search benchmarks with different depths

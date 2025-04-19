@@ -2,9 +2,9 @@
 #![allow(dead_code)]
 use chess::Board;
 use chess::ChessMove;
+use chess::EMPTY;
 use chess::MoveGen;
 use chess::Piece;
-use chess::EMPTY;
 
 use crate::evaluation::material::INITIAL_VALUES;
 use crate::setup::values::Value;

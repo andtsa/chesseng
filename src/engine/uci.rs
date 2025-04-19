@@ -7,11 +7,11 @@ use std::time::Instant;
 use anyhow::Result;
 use lockfree::channel::RecvErr;
 
+use crate::Engine;
 use crate::optlog;
-use crate::search::exit_condition;
 use crate::search::Message;
 use crate::search::SearchInfo;
-use crate::Engine;
+use crate::search::exit_condition;
 
 /// How often to check for new uci messages from the search threads, in *ms*
 pub const UCI_LISTENING_FREQUENCY: usize = 10;
@@ -63,16 +63,19 @@ impl Engine {
                         }) => {
                             println!(
                                 "info depth {} seldepth {} multipv {} nodes {} nps {} hashfull {} tbhits {} time {} score {} pv {}",
-                                depth.0,                              // Depth of the search
-                                sel_depth.0,                          // Selective depth
-                                multi_pv,                             // Number of principal variations
-                                nodes,                                // Total nodes searched
+                                depth.0,     // Depth of the search
+                                sel_depth.0, // Selective depth
+                                multi_pv,    // Number of principal variations
+                                nodes,       // Total nodes searched
                                 (nodes as f64 / time.as_secs_f64()) as usize, // Nodes per second
-                                hashfull,                             // Hash table usage (in per mille)
-                                tb_hits,                              // Tablebase hits
-                                time.as_millis(),                     // Time in milliseconds
-                                score,                                // Score (in centipawns)
-                                pv.iter().map(|m| format!("{}", m.0)).collect::<Vec<_>>().join(" "), // Principal variation
+                                hashfull,    // Hash table usage (in per mille)
+                                tb_hits,     // Tablebase hits
+                                time.as_millis(), // Time in milliseconds
+                                score,       // Score (in centipawns)
+                                pv.iter()
+                                    .map(|m| format!("{}", m.0))
+                                    .collect::<Vec<_>>()
+                                    .join(" "), // Principal variation
                             );
                         }
                     },

@@ -1,8 +1,8 @@
 use std::time::Instant;
 
 use anyhow::Result;
-use sandy_engine::timing::max_instant;
 use sandy_engine::Engine;
+use sandy_engine::timing::max_instant;
 use vampirc_uci::UciTimeControl;
 
 /// Implement this trait for the [`Engine`] to handle time control.
