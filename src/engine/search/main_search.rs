@@ -56,7 +56,12 @@ impl Engine {
 
         let tt = self.table.get();
 
-        let engine_history = self.history.make_contiguous().to_vec();
+        let engine_history = self
+            .history
+            .make_contiguous()
+            .iter_mut()
+            .map(|p| p.chessboard.get_hash())
+            .collect::<Vec<_>>();
 
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
@@ -75,6 +80,14 @@ impl Engine {
 
             let initial_options = SearchOptions {
                 extensions: Depth::ZERO,
+                history: [
+                    *engine_history.first().unwrap_or(&0),
+                    *engine_history.get(1).unwrap_or(&0),
+                    *engine_history.get(2).unwrap_or(&0),
+                    *engine_history.get(3).unwrap_or(&0),
+                    *engine_history.get(4).unwrap_or(&0),
+                    *engine_history.get(5).unwrap_or(&0),
+                ],
             };
 
             // SAFETY: if it fails it's due to poison,

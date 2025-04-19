@@ -106,21 +106,39 @@ pub fn negamax(
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
 
+    let current_hash = pos.chessboard.get_hash();
+    if search_options
+        .history
+        .iter()
+        .filter(|x| **x == current_hash)
+        .count()
+        >= 2
+    {
+        // threefold repetition
+        let ev = evaluate(&pos, true);
+        return SearchResult {
+            pv: vec![],
+            next_position_value: ev,
+            nodes_searched: 1,
+            tb_hits: 0,
+            depth: ONE_PLY,
+        };
+    }
+
     /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
     if opts.use_tt {
-        let current_hash = pos.chessboard.get_hash(); // change
-        if let Ok(Some(tt_entry)) = table.read().map(|l| l.get(current_hash))
-            && tt_entry.is_valid()
-        {
-            if tt_entry.depth() >= to_depth {
-                match tt_entry.bound() {
-                    EvalBound::Exact => return tt_entry.search_result(),
-                    EvalBound::LowerBound => {
-                        alpha = alpha.max(tt_entry.search_result().next_position_value)
-                    }
-                    EvalBound::UpperBound => {
-                        beta = beta.min(tt_entry.search_result().next_position_value)
+        if let Ok(Some(tt_entry)) = table.read().map(|l| l.get(current_hash)) {
+            if tt_entry.is_valid() {
+                if tt_entry.depth() >= to_depth {
+                    match tt_entry.bound() {
+                        EvalBound::Exact => return tt_entry.search_result(),
+                        EvalBound::LowerBound => {
+                            alpha = alpha.max(tt_entry.search_result().next_position_value)
+                        }
+                        EvalBound::UpperBound => {
+                            beta = beta.min(tt_entry.search_result().next_position_value)
+                        }
                     }
                 }
                 if alpha >= beta {
@@ -161,11 +179,13 @@ pub fn negamax(
         // if theres 3 moves or less, search +1 level deeper
     };
 
+    search_options.history.rotate_left(1);
+    search_options.history[5] = current_hash;
     search_options = SearchOptions {
         extensions: search_options
             .extensions
             .max(search_options.extensions + next_depth + 1 - to_depth),
-        // ..search_options
+        history: search_options.history,
     };
 
     let mut best = None;
