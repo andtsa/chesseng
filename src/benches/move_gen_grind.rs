@@ -2,8 +2,8 @@
 use chess::Board;
 use chess::MoveGen;
 use iai::black_box;
-use sandy_engine::move_generation::moveordering::ordered_moves;
-use sandy_engine::move_generation::moveordering::unordered_moves;
+use sandy_engine::move_generation::ordering::ordered_moves;
+use sandy_engine::move_generation::ordering::unordered_moves;
 
 /// how many instructions does the library need to generate moves
 fn lib_move_gen() {

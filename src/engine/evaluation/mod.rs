@@ -12,7 +12,7 @@ use chess::EMPTY;
 use crate::evaluation::material::interpolate;
 use crate::evaluation::material::material;
 use crate::evaluation::position::piece_position_benefit_for_side;
-use crate::move_generation::moveordering::MoveOrdering;
+use crate::move_generation::ordering::MoveOrdering;
 use crate::optlog;
 use crate::opts::Opts;
 use crate::opts::setopts;

@@ -4,7 +4,7 @@ use criterion::Criterion;
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
-use sandy_engine::move_generation::moveordering::ordered_moves;
+use sandy_engine::move_generation::ordering::ordered_moves;
 use sandy_engine::opts::Opts;
 use sandy_engine::util::bench_positions;
 

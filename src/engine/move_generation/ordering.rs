@@ -9,7 +9,7 @@ use chess::Board;
 use chess::ChessMove;
 use chess::MoveGen;
 
-use super::mv_heuristics::move_gen_ordering;
+use super::heuristics::move_gen_ordering;
 
 /// A struct that holds a vector of moves, ordered by importance
 #[derive(Debug)]
@@ -93,5 +93,5 @@ impl IntoIterator for MoveOrdering {
 }
 
 #[cfg(test)]
-#[path = "./tests/moveordering.rs"]
+#[path = "./tests/ordering.rs"]
 mod tests;

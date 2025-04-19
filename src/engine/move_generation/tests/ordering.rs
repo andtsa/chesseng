@@ -4,9 +4,9 @@ use std::time::Instant;
 use chess::Board;
 use chess::MoveGen;
 
-use crate::move_generation::moveordering::ordered_moves;
-use crate::move_generation::moveordering::pv_ordered_moves;
-use crate::move_generation::moveordering::unordered_moves;
+use crate::move_generation::ordering::ordered_moves;
+use crate::move_generation::ordering::pv_ordered_moves;
+use crate::move_generation::ordering::unordered_moves;
 use crate::move_generation::prio_iterator;
 use crate::opts::Opts;
 use crate::opts::setopts;
