@@ -22,7 +22,6 @@ use crate::search::MV;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCHING;
 use crate::search::SearchResult;
-use crate::search::moveordering::ordered_moves;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
@@ -100,7 +99,10 @@ pub fn negamax(
     // the initial move generator
     let mut base_gen = MoveGen::new_legal(&pos.chessboard);
     // slice for already generated moves.
-    let mut pre_generated: [Option<ChessMove>; 5] = [None; 5];
+    let mut pre_generated: [Option<ChessMove>; 4] = [None; 4];
+
+    // we are mated!
+    let out_of_moves = base_gen.len() == 0;
 
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
 
@@ -132,15 +134,8 @@ pub fn negamax(
 
     // ordering wrapper around the move generation iterator
     let mut mgen = prio_iterator(base_gen, &pos.chessboard, &[]);
-    // first move generated in this [`negamax`] call.
-    pre_generated[1] = mgen.next();
-    // Priority of course goes to the previously found best move, since it is more
-    // likely to cause a cutoff. The first generated move is used for checking
-    // if we're mated, since a hash collision would otherwise be catastrophic
 
-    let out_of_moves = pre_generated[1].is_none();
     if to_depth == Depth::ZERO || out_of_moves {
-        // moves.is_empty() {
         let ev = evaluate(&pos, out_of_moves);
         optlog!(search;trace;"return eval: {:?}", ev);
         return SearchResult {
@@ -157,12 +152,12 @@ pub fn negamax(
         Depth::ZERO
     } else {
         // check the first 3 moves generated from the current position,
+        pre_generated[1] = mgen.next();
         pre_generated[2] = mgen.next();
-        pre_generated[3] = mgen.next();
         // if the 4th one is [`None`], then <=> moves.len() <= 3,
-        pre_generated[4] = mgen.next();
+        pre_generated[3] = mgen.next();
         // depth implements addition with booleans.
-        to_depth + (pre_generated[4].is_none()) - 1
+        to_depth + (pre_generated[3].is_none()) - 1
         // if theres 3 moves or less, search +1 level deeper
     };
 
