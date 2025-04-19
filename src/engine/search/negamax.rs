@@ -96,14 +96,6 @@ pub fn negamax(
     opts: &Opts,
     table: &ShareImpl,
 ) -> SearchResult {
-    // the initial move generator
-    let mut base_gen = MoveGen::new_legal(&pos.chessboard);
-    // slice for already generated moves.
-    let mut pre_generated: [Option<ChessMove>; 4] = [None; 4];
-
-    // we are mated!
-    let out_of_moves = base_gen.len() == 0;
-
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
 
     let current_hash = pos.chessboard.get_hash();
@@ -124,6 +116,14 @@ pub fn negamax(
             depth: ONE_PLY,
         };
     }
+
+    // the initial move generator
+    let mut base_gen = MoveGen::new_legal(&pos.chessboard);
+    // slice for already generated moves.
+    let mut pre_generated: [Option<ChessMove>; 4] = [None; 4];
+
+    // we are mated!
+    let out_of_moves = base_gen.len() == 0;
 
     /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
