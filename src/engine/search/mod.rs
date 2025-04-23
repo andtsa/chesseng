@@ -111,7 +111,7 @@ pub struct SearchOptions {
     pub extensions: Depth,
 
     /// previously played position that would cause draw by threefold repetition
-    pub history: [u64; 6],
+    pub history: [u64; 7],
 }
 
 /// wrapper around [`SEARCH_UNTIL`]

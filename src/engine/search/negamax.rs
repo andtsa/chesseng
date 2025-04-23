@@ -179,8 +179,8 @@ pub fn negamax(
         // if theres 3 moves or less, search +1 level deeper
     };
 
-    search_options.history.rotate_left(1);
-    search_options.history[5] = current_hash;
+    search_options.history.rotate_right(1);
+    search_options.history[0] = current_hash;
     search_options = SearchOptions {
         extensions: search_options
             .extensions

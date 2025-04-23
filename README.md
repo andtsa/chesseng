@@ -87,7 +87,7 @@ everything under [`./src/sandy/`](src/sandy/) is part of the frontend (almost)
 - [`./src/sandy/uci/search_controls.rs`](src/sandy/uci/search_controls.rs) does the same for search controls (eg `go depth 4`)
 
 ## Changelog
-- `v0.6.3` TBD, TODO
+- `v0.6.3` one more attempt at fixing 3fold repetition avoidance
 - `v0.6.2` inline move ordering: switch from an allocated `Vec<ChessMove>` to an iterator that only generates moves as needed, performing all move ordering operations on the construction of the iterator.
 - `v0.6.1` variable search depth: when a node has <= 3 children, increase search depth by 1, just for this case. this massively helps lookahead in positions with a lot of checks 
 - lost versions: i did not actually keep a changelog until `v0.6.1`. i do not remember the details here
