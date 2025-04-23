@@ -46,15 +46,17 @@ pub fn evaluate(pos: &Position, out_of_moves: bool) -> Value {
     if out_of_moves {
         return if pos.chessboard.checkers().eq(&EMPTY) {
             optlog!(eval;debug;"eval stalemate");
-            // in stalemate, give a slightly negative score to the side that's winning to
+            // in stalemate, give a negative score to the side that's winning to
             // encourage it to keep playing instead
-            value -= material(&pos.chessboard, stm, (0.0, 0.0, 1.0));
-            value += material(&pos.chessboard, stm.not(), (0.0, 0.0, 1.0));
-            value
+            value += material(&pos.chessboard, stm, (0.0, 0.0, 1.0));
+            value -= material(&pos.chessboard, stm.not(), (0.0, 0.0, 1.0));
+            value += piece_position_benefit_for_side(&pos.chessboard, stm, (0.0, 0.0, 1.0));
+            value -= piece_position_benefit_for_side(&pos.chessboard, stm.not(), (0.0, 0.0, 1.0));
+            -2 * value
         } else {
             // Side to move is checkmated
-            optlog!(eval;debug;"eval checkmate");
-            -Value::MATE // Large negative value
+            optlog!(eval;trace;"eval checkmate");
+            -Value::MATE
         };
     }
 

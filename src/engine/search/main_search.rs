@@ -87,8 +87,11 @@ impl Engine {
                     *engine_history.get(3).unwrap_or(&0),
                     *engine_history.get(4).unwrap_or(&0),
                     *engine_history.get(5).unwrap_or(&0),
+                    *engine_history.get(6).unwrap_or(&0),
                 ],
             };
+
+            optlog!(search;warn;"history:{:?}", initial_options.history);
 
             // SAFETY: if it fails it's due to poison,
             // and that means another thread panicked,

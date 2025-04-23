@@ -71,7 +71,7 @@ impl Engine {
     /// positions to detect threefold repetition.
     pub fn log_position(&mut self, pos: Position) {
         self.history.push_front(pos);
-        self.history.truncate(6);
+        self.history.truncate(7);
     }
 
     /// set the global [`SEARCHING`]
