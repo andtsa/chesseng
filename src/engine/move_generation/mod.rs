@@ -13,6 +13,9 @@ use chess::MoveGen;
 use crate::evaluation::bitboards::CENTER_4;
 use crate::evaluation::bitboards::CENTER_16;
 
+/// how many of the first masks are exclusively captures.
+const CAPTURE_MASKS: usize = 5;
+
 /// An wrapper around [`MoveGen`] that orders the moves based on some heuristics
 pub struct OrderedMoves {
     /// prioritised moves (eg PV)
@@ -118,6 +121,19 @@ impl OrderedMoves {
                 .join(", "),
         );
         ret
+    }
+
+    /// immediately generate all capturing moves.
+    pub fn generate_captures(&mut self) -> Vec<ChessMove> {
+        let mut result = Vec::new();
+        while self.cur_mask < CAPTURE_MASKS {
+            if let Some(mv) = self.next() {
+                result.push(mv);
+            } else {
+                break;
+            }
+        }
+        result
     }
 }
 

@@ -22,6 +22,7 @@ use crate::search::MV;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCHING;
 use crate::search::SearchResult;
+use crate::search::quiescence::quiescence;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
@@ -150,10 +151,15 @@ pub fn negamax(
         }
     }
 
+    if to_depth == Depth::ZERO {
+        // leaf node → do quiescence, not raw eval
+        return quiescence(pos, alpha, beta, search_options, opts);
+    }
+
     // ordering wrapper around the move generation iterator
     let mut mgen = prio_iterator(base_gen, &pos.chessboard, &[]);
 
-    if to_depth == Depth::ZERO || out_of_moves {
+    if out_of_moves {
         let ev = evaluate(&pos, out_of_moves);
         optlog!(search;trace;"return eval: {:?}", ev);
         return SearchResult {
