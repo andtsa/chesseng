@@ -1,0 +1,16 @@
+Score of _sandy_release vs s0_6_3_dev3: 6 - 0 - 2 [0.875]
+...      _sandy_release playing White: 3 - 0 - 1  [0.875] 4
+...      _sandy_release playing Black: 3 - 0 - 1  [0.875] 4
+...      White vs Black: 3 - 3 - 2  [0.500] 8
+Elo difference: 338.0 +/- nan, LOS: 99.3 %, DrawRatio: 25.0 %
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+8 of 8 games finished.
+
+Player: _sandy_release
+   "Draw by 3-fold repetition": 2
+   "Win: Black mates": 3
+   "Win: White mates": 3
+Player: s0_6_3_dev3
+   "Draw by 3-fold repetition": 2
+   "Loss: Black mates": 3
+   "Loss: White mates": 3

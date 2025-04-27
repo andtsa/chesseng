@@ -1,6 +1,7 @@
 //! The search module contains the search logic for the engine.
 mod main_search;
 pub mod negamax;
+pub mod quiescence;
 
 use std::fmt::Display;
 use std::ops::Neg;
