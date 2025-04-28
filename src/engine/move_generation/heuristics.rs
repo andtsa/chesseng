@@ -43,3 +43,7 @@ pub fn mvv_lva_score(b: &Board, mv: &ChessMove) -> Value {
         _ => Value::ZERO,
     }
 }
+
+#[cfg(test)]
+#[path = "./tests/heuristics.rs"]
+mod tests;

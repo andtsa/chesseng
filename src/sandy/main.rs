@@ -41,7 +41,14 @@ fn main() -> Result<()> {
     );
 
     colog::basic_builder()
-        .filter(None, log::LevelFilter::Info)
+        .filter(
+            None,
+            if cfg!(test) {
+                log::LevelFilter::Trace
+            } else {
+                log::LevelFilter::Info
+            },
+        )
         .init();
 
     // take the default panic hook, and make sure that the *entire* process is
@@ -107,7 +114,7 @@ fn main() -> Result<()> {
             ("display" | "fen", _) => {
                 info!("(unchecked) fen display");
                 let b = fen_to_str(cmd_body.to_string());
-                info!("{}", b);
+                info!("{b}");
             }
             ("other", _) => {
                 // used for testing/prototyping snippets

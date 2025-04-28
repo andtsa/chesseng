@@ -27,7 +27,7 @@ fn search_benches(c: &mut Criterion) {
         engine.board = (*startpos).into();
         setopts(Opts::bench().tt(true)).unwrap();
 
-        group.bench_function(format!("id_pos_{}", p_idx), |b| {
+        group.bench_function(format!("id_pos_{p_idx}"), |b| {
             engine
                 .set_search_until(Instant::now() + Duration::from_millis(10000))
                 .unwrap();

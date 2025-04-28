@@ -27,10 +27,10 @@ impl Position {
 
     /// check whether this position, if added to the engine history, will cause
     /// a draw by threefold repetition
-    pub fn causes_threefold(&self, history: &[Position]) -> bool {
+    pub fn causes_threefold(&self, history: &[u64]) -> bool {
         history
             .iter()
-            .filter(|p| p.chessboard.eq(&self.chessboard))
+            .filter(|p| **p == self.chessboard.get_hash())
             .count()
             >= 2
     }

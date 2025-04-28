@@ -11,17 +11,17 @@ use chess::ChessMove;
 use chess::MoveGen;
 
 use super::SearchOptions;
+use crate::engine_opts::EngineOpts;
 use crate::evaluation::evaluate;
 use crate::move_generation::prio_iterator;
 use crate::optlog;
 use crate::opts::Opts;
-use crate::opts::opts;
-use crate::opts::setopts;
 use crate::position::Position;
 use crate::search::MV;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCHING;
 use crate::search::SearchResult;
+use crate::search::quiescence::quiescence;
 use crate::setup::depth::Depth;
 use crate::setup::depth::ONE_PLY;
 use crate::setup::values::Value;
@@ -54,13 +54,9 @@ pub fn ng_test(
     beta: Value,
     set_opts: Opts,
 ) -> Result<SearchResult> {
-    {
-        setopts(set_opts)?;
-    }
-    let opt = opts()?;
     let table = TT::new();
     let position = Position::from(board);
-    ng_bench(position, to_depth, alpha, beta, opt, &table)
+    ng_bench(position, to_depth, alpha, beta, set_opts, &table)
 }
 
 /// same as [`negamax`], but with a fixed signature to be used across benchmarks
@@ -81,7 +77,7 @@ pub fn ng_bench(
         alpha,
         beta,
         Default::default(),
-        &opt,
+        &opt.engine_opts,
         &tt.get(),
     ))
 }
@@ -93,9 +89,30 @@ pub fn negamax(
     mut alpha: Value,
     mut beta: Value,
     mut search_options: SearchOptions,
-    opts: &Opts,
+    opts: &EngineOpts,
     table: &ShareImpl,
 ) -> SearchResult {
+    optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
+
+    let current_hash = pos.chessboard.get_hash();
+    if search_options
+        .history
+        .iter()
+        .filter(|x| **x == current_hash)
+        .count()
+        >= 2
+    {
+        // threefold repetition
+        let ev = evaluate(&pos, true);
+        return SearchResult {
+            pv: vec![],
+            next_position_value: ev,
+            nodes_searched: 1,
+            tb_hits: 0,
+            depth: ONE_PLY,
+        };
+    }
+
     // the initial move generator
     let mut base_gen = MoveGen::new_legal(&pos.chessboard);
     // slice for already generated moves.
@@ -104,12 +121,9 @@ pub fn negamax(
     // we are mated!
     let out_of_moves = base_gen.len() == 0;
 
-    optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
-
     /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
     if opts.use_tt {
-        let current_hash = pos.chessboard.get_hash(); // change
         if let Ok(Some(tt_entry)) = table.read().map(|l| l.get(current_hash)) {
             if tt_entry.is_valid() {
                 if tt_entry.depth() >= to_depth {
@@ -132,10 +146,16 @@ pub fn negamax(
         }
     }
 
+    if to_depth == Depth::ZERO {
+        // leaf node → do quiescence, not raw eval
+        return quiescence(pos, alpha, beta, search_options, opts);
+    }
+
     // ordering wrapper around the move generation iterator
     let mut mgen = prio_iterator(base_gen, &pos.chessboard, &[]);
 
-    if to_depth == Depth::ZERO || out_of_moves {
+    if out_of_moves {
+        //|| to_depth == Depth::ZERO {
         let ev = evaluate(&pos, out_of_moves);
         optlog!(search;trace;"return eval: {:?}", ev);
         return SearchResult {
@@ -161,11 +181,13 @@ pub fn negamax(
         // if theres 3 moves or less, search +1 level deeper
     };
 
+    search_options.history.rotate_right(1);
+    search_options.history[0] = current_hash;
     search_options = SearchOptions {
         extensions: search_options
             .extensions
             .max(search_options.extensions + next_depth + 1 - to_depth),
-        // ..search_options
+        history: search_options.history,
     };
 
     let mut best = None;

@@ -17,7 +17,6 @@ use crate::Engine;
 use crate::evaluation::evaluate;
 use crate::move_generation::prio_iterator;
 use crate::optlog;
-use crate::opts::opts;
 use crate::search::MV;
 use crate::search::Message;
 use crate::search::RootNode;
@@ -56,7 +55,17 @@ impl Engine {
 
         let tt = self.table.get();
 
-        let engine_history = self.history.make_contiguous().to_vec();
+        let engine_history = self
+            .history
+            .make_contiguous()
+            .iter_mut()
+            .map(|p| p.chessboard.get_hash())
+            .collect::<Vec<_>>();
+
+        // copy the currently set options to the search thread.
+        // this means options may not change in the duration of a search.
+        // (if they do, they will be in effect from the next search)
+        let search_options = self.eng_opts;
 
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
@@ -75,12 +84,18 @@ impl Engine {
 
             let initial_options = SearchOptions {
                 extensions: Depth::ZERO,
+                history: [
+                    *engine_history.first().unwrap_or(&0),
+                    *engine_history.get(1).unwrap_or(&0),
+                    *engine_history.get(2).unwrap_or(&0),
+                    *engine_history.get(3).unwrap_or(&0),
+                    *engine_history.get(4).unwrap_or(&0),
+                    *engine_history.get(5).unwrap_or(&0),
+                    *engine_history.get(6).unwrap_or(&0),
+                ],
             };
 
-            // SAFETY: if it fails it's due to poison,
-            // and that means another thread panicked,
-            // so we should panic as well anyway
-            let search_options = opts().unwrap();
+            optlog!(search;warn;"history:{:?}", initial_options.history);
 
             // iterative deepening loop
             while !exit_condition() && target_depth < search_to() {

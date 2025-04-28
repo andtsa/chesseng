@@ -256,3 +256,17 @@ impl Print for Board {
         Position::from(*self).print_move(mv, capture)
     }
 }
+
+/// set up logging
+pub fn setup_logging() {
+    colog::basic_builder()
+        .filter(
+            None,
+            if cfg!(test) {
+                log::LevelFilter::Trace
+            } else {
+                log::LevelFilter::Info
+            },
+        )
+        .init();
+}
