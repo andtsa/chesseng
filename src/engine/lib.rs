@@ -4,6 +4,7 @@
 
 pub mod book;
 pub mod debug;
+pub mod engine_opts;
 pub mod evaluation;
 pub mod move_generation;
 pub mod opts;
@@ -24,9 +25,11 @@ use std::time::Instant;
 use anyhow::Result;
 use anyhow::anyhow;
 use chess::ChessMove;
+use engine_opts::EngineOpts;
 use lockfree::channel::RecvErr;
 use log::info;
 use log::trace;
+use opts::opts;
 
 use crate::position::Position;
 use crate::search::Message;
@@ -47,6 +50,8 @@ pub struct Engine {
     pub table: TT,
     /// recently played positions. used to detect 3-fold repetition.
     pub history: VecDeque<Position>,
+    /// this instance's options
+    pub eng_opts: EngineOpts,
 }
 
 impl Engine {
@@ -58,6 +63,7 @@ impl Engine {
             board: Default::default(),
             table: TT::new(),
             history: VecDeque::new(),
+            eng_opts: opts()?.engine_opts,
         })
     }
 

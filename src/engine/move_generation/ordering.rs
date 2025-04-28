@@ -55,7 +55,7 @@ impl Display for MoveOrdering {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "MoveOrdering: ")?;
         for m in &self.0 {
-            write!(f, "{}, ", m)?
+            write!(f, "{m}, ")?
         }
         Ok(())
     }

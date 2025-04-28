@@ -161,14 +161,14 @@ fn info(
         tb_hits,
         pv: pv.to_vec(),
     })) {
-        debug!("error sending info message: {:?}", e);
+        debug!("error sending info message: {e:?}");
     }
 }
 
 /// shortcut for sending a message to the main thread
 fn send(publisher: &mut Sender<Message>, msg: Message) {
     if let Err(e) = publisher.send(msg) {
-        debug!("error sending message: {:?}", e);
+        debug!("error sending message: {e:?}");
     }
 }
 
