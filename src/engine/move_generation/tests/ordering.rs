@@ -25,7 +25,7 @@ fn ordered_same_as_mg() {
 
         assert_eq!(ordered.len(), mg.len());
         for (i, m) in ordered.into_iter().enumerate() {
-            assert!(mg.contains(&m), "move {} not found in mg", i);
+            assert!(mg.contains(&m), "move {i} not found in mg");
         }
     }
 }
@@ -56,9 +56,9 @@ fn pv_ordered_same_as_mg() {
                     .collect::<Vec<_>>()
                     .join(", ")
             );
-            assert_eq!(pv_ordered.0.first(), Some(m), "pv: {}", pv_ordered);
+            assert_eq!(pv_ordered.0.first(), Some(m), "pv: {pv_ordered}");
             for (i, m) in pv_ordered.0.iter().enumerate() {
-                assert!(mg.contains(m), "move {} not found in mg", i);
+                assert!(mg.contains(m), "move {i} not found in mg");
             }
         }
     }
@@ -91,9 +91,9 @@ fn prio_ordered_same_as_mg() {
                     .collect::<Vec<_>>()
                     .join(", "),
             );
-            assert_eq!(prio_ordered.first(), Some(*m), "pv: {:?}", prio_ordered);
+            assert_eq!(prio_ordered.first(), Some(*m), "pv: {prio_ordered:?}");
             for (i, m) in prio_ordered.enumerate() {
-                assert!(mg.contains(&m), "move {} not found in mg", i);
+                assert!(mg.contains(&m), "move {i} not found in mg");
             }
         }
     }
@@ -124,9 +124,9 @@ fn prio_ordered_same_as_ordered() {
                 "\nprio: {}, \nord: {pv_ordered}",
                 prio_ordered.display(),
             );
-            assert_eq!(prio_ordered.first(), Some(*m), "pv: {:?}", prio_ordered);
+            assert_eq!(prio_ordered.first(), Some(*m), "pv: {prio_ordered:?}");
             for (i, m) in prio_ordered.enumerate() {
-                assert!(pv_ordered.0.contains(&m), "move {} not found in pv", i);
+                assert!(pv_ordered.0.contains(&m), "move {i} not found in pv");
             }
         }
     }
@@ -170,22 +170,13 @@ fn profile_move_ordering() {
     }
     let elapsed_d = start_d.elapsed();
 
-    eprintln!(
-        "pv: {:?}, normal: {:?}, mg: {:?}, uo: {:?}",
-        elapsed_a, elapsed_b, elapsed_c, elapsed_d
-    );
+    eprintln!("pv: {elapsed_a:?}, normal: {elapsed_b:?}, mg: {elapsed_c:?}, uo: {elapsed_d:?}",);
     assert!(
         elapsed_a < 2 * elapsed_b,
-        "pv: {:?}, normal: {:?}, mg: {:?}",
-        elapsed_a,
-        elapsed_b,
-        elapsed_c
+        "pv: {elapsed_a:?}, normal: {elapsed_b:?}, mg: {elapsed_c:?}",
     );
     assert!(
         elapsed_a < 4 * elapsed_c,
-        "pv: {:?}, normal: {:?}, mg: {:?}",
-        elapsed_a,
-        elapsed_b,
-        elapsed_c
+        "pv: {elapsed_a:?}, normal: {elapsed_b:?}, mg: {elapsed_c:?}",
     );
 }

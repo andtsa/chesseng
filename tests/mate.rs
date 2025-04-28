@@ -36,7 +36,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
 
     let mut cmd = Command::new(exec);
 
-    let start_command = format!("position fen {}", startpos);
+    let start_command = format!("position fen {startpos}");
 
     let sequence = [
         "uci",
@@ -85,7 +85,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
         let parts = line.split_whitespace().collect::<Vec<&str>>();
         if parts.len() > 1 && parts[0] == "bestmove" {
             best_move = parts[1].to_string();
-            println!("Best move: {}", best_move);
+            println!("Best move: {best_move}");
             break;
         } else if parts.len() > 1 && parts[0] == "info" {
             println!(
@@ -106,9 +106,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
     // we assert that the engine takes the mate-in-one
     assert!(
         valid_mates.iter().any(|x| *x == best_move),
-        "did not find any of the mates [{:?}], instead picked {}",
-        valid_mates,
-        best_move
+        "did not find any of the mates [{valid_mates:?}], instead picked {best_move}",
     );
 
     child.kill().unwrap();

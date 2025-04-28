@@ -41,7 +41,14 @@ fn main() -> Result<()> {
     );
 
     colog::basic_builder()
-        .filter(None, log::LevelFilter::Info)
+        .filter(
+            None,
+            if cfg!(test) {
+                log::LevelFilter::Trace
+            } else {
+                log::LevelFilter::Info
+            },
+        )
         .init();
 
     // take the default panic hook, and make sure that the *entire* process is

@@ -10,45 +10,26 @@ use chess::MoveGen;
 use super::MV;
 use super::SearchOptions;
 use super::SearchResult;
+use crate::engine_opts::EngineOpts;
 use crate::evaluation::evaluate;
 use crate::move_generation::prio_iterator;
-use crate::opts::Opts;
 use crate::position::Position;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
 
-///    nodes ← 1
-///    stand_pat ← EVALUATE(position, inCheck = false)
+/// make sure that we only statically evaluate after all capture moves have been
+/// played (end of piece exchange)
 ///
-///    // 1) stand-pat test
-///    if stand_pat ≥ β:
-///        return SearchResult(value=stand_pat, nodes=nodes)
-///
-///    α ← max(α, stand_pat)
-///
-///    // 2) generate only tactical moves (captures, promotions, checks-only if
-/// you like)    captures ← GENERATE_CAPTURES(position)
-///    ORDER_MOVES(captures, heuristics)
-///
-///    for move in captures:
-///        childPos ← position.make_move(move)
-///        // recurse, note the negation
-///        childRes ← QUIESCENCE(childPos, -β, -α, searchOptions, opts)
-///        nodes += childRes.nodes
-///        score ← -childRes.value
-///
-///        if score ≥ β:
-///            return SearchResult(value=score, nodes=nodes)
-///
-///        α ← max(α, score)
-///
-///    return SearchResult(value=α, nodes=nodes)
+/// NOTE: this function does not search moves that put a player into check,
+/// even though they are usually considered strategic (non-quiet) moves!
+/// This is solely because I currently have no efficient way of generating
+/// checks, while generating captures can be done independently of quiet moves.
 pub fn quiescence(
     pos: Position,
     mut alpha: Value,
     beta: Value,
     _search_options: SearchOptions,
-    _opts: &Opts,
+    _opts: &EngineOpts,
 ) -> SearchResult {
     let mut nodes = 1;
 

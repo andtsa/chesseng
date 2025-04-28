@@ -27,9 +27,9 @@ fn assert_total_order() {
                 // 2. if a == b then b == a (symmetry)
                 // 3. if a <= b && b <= c then a <= c (transitivity) - checked separately
 
-                assert!(a <= b || a >= b, "Incomparable: {:?} vs {:?}", a, b);
+                assert!(a <= b || a >= b, "Incomparable: {a:?} vs {b:?}");
                 if a == b {
-                    assert_eq!(b, a, "Equality not symmetric: {:?} vs {:?}", a, b);
+                    assert_eq!(b, a, "Equality not symmetric: {a:?} vs {b:?}");
                 }
             }
         }
@@ -45,12 +45,7 @@ fn assert_total_order() {
                     if a <= b && b <= c {
                         assert!(
                             a <= c,
-                            "Transitivity failed: {:?} <= {:?} <= {:?} but {:?} !<= {:?}",
-                            a,
-                            b,
-                            c,
-                            a,
-                            c
+                            "Transitivity failed: {a:?} <= {b:?} <= {c:?} but {a:?} !<= {c:?}",
                         );
                     }
                 }

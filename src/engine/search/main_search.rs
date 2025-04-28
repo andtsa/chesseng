@@ -17,7 +17,6 @@ use crate::Engine;
 use crate::evaluation::evaluate;
 use crate::move_generation::prio_iterator;
 use crate::optlog;
-use crate::opts::opts;
 use crate::search::MV;
 use crate::search::Message;
 use crate::search::RootNode;
@@ -63,6 +62,11 @@ impl Engine {
             .map(|p| p.chessboard.get_hash())
             .collect::<Vec<_>>();
 
+        // copy the currently set options to the search thread.
+        // this means options may not change in the duration of a search.
+        // (if they do, they will be in effect from the next search)
+        let search_options = self.eng_opts;
+
         thread::spawn(move || {
             let mut best_move: Option<ChessMove> = None;
             let mut best_value: Value = Value::MIN;
@@ -92,11 +96,6 @@ impl Engine {
             };
 
             optlog!(search;warn;"history:{:?}", initial_options.history);
-
-            // SAFETY: if it fails it's due to poison,
-            // and that means another thread panicked,
-            // so we should panic as well anyway
-            let search_options = opts().unwrap();
 
             // iterative deepening loop
             while !exit_condition() && target_depth < search_to() {

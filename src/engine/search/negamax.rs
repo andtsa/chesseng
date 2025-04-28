@@ -11,12 +11,11 @@ use chess::ChessMove;
 use chess::MoveGen;
 
 use super::SearchOptions;
+use crate::engine_opts::EngineOpts;
 use crate::evaluation::evaluate;
 use crate::move_generation::prio_iterator;
 use crate::optlog;
 use crate::opts::Opts;
-use crate::opts::opts;
-use crate::opts::setopts;
 use crate::position::Position;
 use crate::search::MV;
 use crate::search::SEARCH_TO;
@@ -55,13 +54,9 @@ pub fn ng_test(
     beta: Value,
     set_opts: Opts,
 ) -> Result<SearchResult> {
-    {
-        setopts(set_opts)?;
-    }
-    let opt = opts()?;
     let table = TT::new();
     let position = Position::from(board);
-    ng_bench(position, to_depth, alpha, beta, opt, &table)
+    ng_bench(position, to_depth, alpha, beta, set_opts, &table)
 }
 
 /// same as [`negamax`], but with a fixed signature to be used across benchmarks
@@ -82,7 +77,7 @@ pub fn ng_bench(
         alpha,
         beta,
         Default::default(),
-        &opt,
+        &opt.engine_opts,
         &tt.get(),
     ))
 }
@@ -94,7 +89,7 @@ pub fn negamax(
     mut alpha: Value,
     mut beta: Value,
     mut search_options: SearchOptions,
-    opts: &Opts,
+    opts: &EngineOpts,
     table: &ShareImpl,
 ) -> SearchResult {
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
@@ -160,6 +155,7 @@ pub fn negamax(
     let mut mgen = prio_iterator(base_gen, &pos.chessboard, &[]);
 
     if out_of_moves {
+        //|| to_depth == Depth::ZERO {
         let ev = evaluate(&pos, out_of_moves);
         optlog!(search;trace;"return eval: {:?}", ev);
         return SearchResult {

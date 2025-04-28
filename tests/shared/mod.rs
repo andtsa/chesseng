@@ -62,14 +62,14 @@ pub fn test_uci(sequence: &[&str]) {
         );
         println!(
             "{}",
-            format!(" max depth: {}", depth)
+            format!(" max depth: {depth}")
                 .black()
                 .bold()
                 .on_bright_green()
         );
         println!(
             "{}",
-            format!(" total nodes searched: {}", nodes)
+            format!(" total nodes searched: {nodes}")
                 .black()
                 .bold()
                 .on_bright_green()
