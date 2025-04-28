@@ -28,7 +28,7 @@ fn negamax_benches(c: &mut Criterion) {
             .map(Position::from)
             .collect::<Vec<Position>>();
 
-        group.bench_function(format!("ngm_full_depth_{}", d_idx), |b| {
+        group.bench_function(format!("ngm_full_depth_{d_idx}"), |b| {
             b.iter(|| {
                 for startpos in positions.iter() {
                     // run 100 positions

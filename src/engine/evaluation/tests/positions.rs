@@ -41,7 +41,7 @@ fn test_single_white_pawn() {
     let pos = Board::from_str("8/P7/8/2k2K2/8/8/8/8 w - - 0 1").unwrap();
     let interp = interpolate(&pos);
     let eval = piece_position_benefit_for_side(&pos, Color::White, interp);
-    assert_eq!(eval, Value(178), "{}", eval);
+    assert_eq!(eval, Value(178), "{eval}");
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn test_single_black_pawn() {
     let pos = Board::from_str("8/8/8/2k2K2/8/8/p7/8 b - - 0 1").unwrap();
     let interp = interpolate(&pos);
     let eval = piece_position_benefit_for_side(&pos, Color::Black, interp);
-    assert_eq!(eval, Value(178), "{}", eval);
+    assert_eq!(eval, Value(178), "{eval}");
 }
 
 #[test]
@@ -63,9 +63,9 @@ fn check_mirror_positions() {
 
     let interp_a = interpolate(&position);
     let interp_b = interpolate(&mirrored);
-    assert_eq!(interp_a, interp_b, "{:?} {:?}", interp_a, interp_b);
+    assert_eq!(interp_a, interp_b, "{interp_a:?} {interp_b:?}");
 
     let eval = piece_position_benefit_for_side(&position, Color::White, interp_a);
     let eval_mirrored = piece_position_benefit_for_side(&mirrored, Color::Black, interp_b);
-    assert_eq!(eval, eval_mirrored, "{}", eval);
+    assert_eq!(eval, eval_mirrored, "{eval}");
 }

@@ -7,6 +7,7 @@ use anyhow::bail;
 use vampirc_uci::UciOptionConfig;
 
 use crate::debug::DebugLevel;
+use crate::engine_opts::EngineOpts;
 use crate::optlog;
 use crate::search::SEARCH_THREADS;
 use crate::transposition_table::DEFAULT_TABLE_SIZE;
@@ -87,20 +88,8 @@ pub struct Opts {
     pub uci: DebugLevel,
     /// the [`DebugLevel`] for other options
     pub opts: DebugLevel,
-    /// should the search use alpha beta pruning?
-    pub use_ab: bool,
-    /// should the search use principal variation search?
-    pub use_pv: bool,
-    /// should the search use transposition tables?
-    pub use_tt: bool,
-    /// should the search use move ordering?
-    pub use_mo: bool,
-    /// should the engine ponder?
-    pub ponder: bool,
-    /// how big should the transposition table be? value in **bytes**
-    pub hash_size: usize,
-    /// how many threads should the search use?
-    pub threads: usize,
+    /// options specific to the engine's execution
+    pub engine_opts: EngineOpts,
 }
 
 impl Opts {
@@ -130,13 +119,15 @@ impl Opts {
             tt: DebugLevel::info,
             uci: DebugLevel::info,
             opts: DebugLevel::debug,
-            use_ab: false,
-            use_pv: false,
-            use_tt: false,
-            use_mo: false,
-            ponder: false,
-            hash_size: DEFAULT_TABLE_SIZE,
-            threads: 1,
+            engine_opts: EngineOpts {
+                use_ab: false,
+                use_pv: false,
+                use_tt: false,
+                use_mo: false,
+                ponder: false,
+                hash_size: DEFAULT_TABLE_SIZE,
+                threads: 1,
+            },
         }
     }
 
@@ -153,13 +144,15 @@ impl Opts {
             tt: DebugLevel::off,
             uci: DebugLevel::off,
             opts: DebugLevel::error,
-            use_ab: true,
-            use_pv: true,
-            use_tt: true,
-            use_mo: true,
-            ponder: false,
-            hash_size: 32 * 1024,
-            threads: 1,
+            engine_opts: EngineOpts {
+                use_ab: true,
+                use_pv: true,
+                use_tt: true,
+                use_mo: true,
+                ponder: false,
+                hash_size: 32 * 1024,
+                threads: 1,
+            },
         }
     }
 
@@ -254,17 +247,17 @@ impl Opts {
                 _ => unreachable!(),
             };
         match name {
-            "use_ab" => self.use_ab = parse_check("use_ab", value)?,
-            "use_pv" => self.use_pv = parse_check("use_pv", value)?,
-            "use_tt" => self.use_tt = parse_check("use_tt", value)?,
-            "use_mo" => self.use_mo = parse_check("use_mo", value)?,
-            "Ponder" => self.ponder = parse_check("Ponder", value)?,
+            "use_ab" => self.engine_opts.use_ab = parse_check("use_ab", value)?,
+            "use_pv" => self.engine_opts.use_pv = parse_check("use_pv", value)?,
+            "use_tt" => self.engine_opts.use_tt = parse_check("use_tt", value)?,
+            "use_mo" => self.engine_opts.use_mo = parse_check("use_mo", value)?,
+            "Ponder" => self.engine_opts.ponder = parse_check("Ponder", value)?,
             "bench_log" => {
                 if parse_check("bench_log", value)? {
                     return Ok(Self::bench()
-                        .ab(self.use_ab)
-                        .pv(self.use_pv)
-                        .tt(self.use_tt));
+                        .ab(self.engine_opts.use_ab)
+                        .pv(self.engine_opts.use_pv)
+                        .tt(self.engine_opts.use_tt));
                 }
             }
             "search_debug" => {
@@ -275,8 +268,11 @@ impl Opts {
             "tt_debug" => self.tt = DebugLevel::from(parse_spin("tt_debug", 0, 5, value)?),
             "uci_debug" => self.uci = DebugLevel::from(parse_spin("uci_debug", 0, 5, value)?),
             // hash input is in megabytes, according to UCI specification
-            "hash" => self.hash_size = 1024 * 1024 * parse_spin("hash", 0, 1024, value)? as usize,
-            "threads" => self.threads = parse_spin("threads", 0, 1024, value)? as usize,
+            "hash" => {
+                self.engine_opts.hash_size =
+                    1024 * 1024 * parse_spin("hash", 0, 1024, value)? as usize
+            }
+            "threads" => self.engine_opts.threads = parse_spin("threads", 0, 1024, value)? as usize,
             unknown => bail!("unknown option: {:?}", unknown),
         }
 
@@ -328,30 +324,57 @@ impl Opts {
 
     /// Enable or disable alpha-beta pruning during search
     pub const fn ab(self, x: bool) -> Self {
-        Self { use_ab: x, ..self }
+        Self {
+            engine_opts: EngineOpts {
+                use_ab: x,
+                ..self.engine_opts
+            },
+            ..self
+        }
     }
 
     /// Enable or disable the use of the principal variation during search (for
     /// move ordering only)
     pub const fn pv(self, x: bool) -> Self {
-        Self { use_pv: x, ..self }
+        Self {
+            engine_opts: EngineOpts {
+                use_pv: x,
+                ..self.engine_opts
+            },
+            ..self
+        }
     }
 
     /// Enable or disable the use of the transposition table during search
     pub const fn tt(self, x: bool) -> Self {
-        Self { use_tt: x, ..self }
+        Self {
+            engine_opts: EngineOpts {
+                use_tt: x,
+                ..self.engine_opts
+            },
+            ..self
+        }
     }
 
     /// Set the transposition table size **in kilobytes**
     pub const fn hash_size(self, x: usize) -> Self {
         Self {
-            hash_size: x,
+            engine_opts: EngineOpts {
+                hash_size: x,
+                ..self.engine_opts
+            },
             ..self
         }
     }
 
     /// Set the number of threads to be used for the search
     pub const fn num_threads(self, x: usize) -> Self {
-        Self { threads: x, ..self }
+        Self {
+            engine_opts: EngineOpts {
+                threads: x,
+                ..self.engine_opts
+            },
+            ..self
+        }
     }
 }

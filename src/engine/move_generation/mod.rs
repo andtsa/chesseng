@@ -116,7 +116,7 @@ impl OrderedMoves {
         ret.push_str(
             &self
                 .enumerate()
-                .map(|(i, m)| format!("{i}:{}", m))
+                .map(|(i, m)| format!("{i}:{m}"))
                 .collect::<Vec<String>>()
                 .join(", "),
         );
