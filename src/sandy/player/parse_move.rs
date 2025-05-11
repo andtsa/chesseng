@@ -2,7 +2,7 @@ use anyhow::Result;
 use chess::Board;
 use chess::ChessMove;
 use inquire::Select;
-use sandy_engine::search::moveordering::ordered_moves;
+use sandy_engine::move_generation::ordering::ordered_moves;
 
 /// Parse a player move from the terminal
 pub fn parse_player_move(pos: &Board) -> Result<ChessMove> {

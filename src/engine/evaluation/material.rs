@@ -25,12 +25,13 @@ pub const MAT_PIECE_TYPES: [Piece; 5] = [
 ];
 
 /// Initial values for each piece type.
-pub const INITIAL_VALUES: [Value; 5] = [
+pub const INITIAL_VALUES: [Value; 6] = [
     Value(100), // Pawn
     Value(290), // Knight
     Value(310), // Bishop
     Value(500), // Rook
     Value(900), // Queen
+    Value(700), // king?
 ];
 
 /// Midgame values for each piece type.
@@ -59,6 +60,17 @@ pub fn material(board: &Board, side: Color, interp: Interp) -> Value {
     let side_board = board.color_combined(side);
     for (idx, piece) in MAT_PIECE_TYPES.iter().enumerate() {
         let count = board.pieces(*piece).bitand(side_board).popcnt();
+        // let blocked = if side == board.side_to_move() {
+        //     board.pieces(*piece).bitand(board.pinned()).popcnt()
+        // } else {
+        //     board
+        //         .null_move()
+        //         .map(|b| b.pieces(*piece).bitand(b.pinned()).popcnt())
+        //         // .unwrap_or(0)
+        //         .unwrap_or(board.color_combined(!side).popcnt())
+        // };
+        // let adj = count.saturating_add(count).saturating_sub(blocked).checked_shr(1).
+        // unwrap_or_default();
         value += (INITIAL_VALUES[idx] * Value::from(count)) * interp.0;
         value += (MIDGAME_VALUES[idx] * Value::from(count)) * interp.1;
         value += (ENDGAME_VALUES[idx] * Value::from(count)) * interp.2;

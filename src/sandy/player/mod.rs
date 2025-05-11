@@ -34,7 +34,7 @@ pub fn terminal_loop(mut engine: Engine) -> Result<()> {
                     break;
                 }
                 Err(e) => {
-                    error!("Invalid FEN: {}", e);
+                    error!("Invalid FEN: {e}");
                 }
             }
         },
@@ -74,7 +74,7 @@ pub fn terminal_loop(mut engine: Engine) -> Result<()> {
             engine.best_move(search_depth, search_time)?
         };
         let capture = engine.board.chessboard.piece_on(mv.get_dest()).is_some();
-        engine.board = engine.board.make_move(mv);
+        engine.make_move(mv);
 
         info!("{}", engine.board.print_move(mv, capture));
 

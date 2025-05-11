@@ -9,7 +9,7 @@ use chess::Board;
 use chess::ChessMove;
 use chess::MoveGen;
 
-use crate::search::mv_heuristics::move_gen_ordering;
+use super::heuristics::move_gen_ordering;
 
 /// A struct that holds a vector of moves, ordered by importance
 #[derive(Debug)]
@@ -55,7 +55,7 @@ impl Display for MoveOrdering {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "MoveOrdering: ")?;
         for m in &self.0 {
-            write!(f, "{}, ", m)?
+            write!(f, "{m}, ")?
         }
         Ok(())
     }
@@ -93,5 +93,5 @@ impl IntoIterator for MoveOrdering {
 }
 
 #[cfg(test)]
-#[path = "./tests/moveordering.rs"]
+#[path = "./tests/ordering.rs"]
 mod tests;

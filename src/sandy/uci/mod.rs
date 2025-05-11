@@ -71,8 +71,14 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                     Err(e) => optlog!(uci;error;"error setting option: {}", e),
                     Ok(opt) => {
                         setopts(opt)?;
-                        let entry_count = engine.resize_table(opt.hash_size)?;
-                        println!("info string table resized to {entry_count} entries.");
+                        engine.eng_opts = opt.engine_opts;
+                        println!("info string resizing table...");
+                        let start_alloc_time = Instant::now();
+                        let entry_count = engine.resize_table(engine.eng_opts.hash_size)?;
+                        println!(
+                            "info string table resized to {entry_count} entries in {}s",
+                            start_alloc_time.elapsed().as_secs_f32()
+                        );
 
                         optlog!(uci;info;
                              "option {name} set to {}.",
