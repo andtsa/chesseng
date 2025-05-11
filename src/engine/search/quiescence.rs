@@ -36,8 +36,8 @@ pub fn quiescence(
     let mgen = MoveGen::new_legal(&pos.chessboard);
     let mut pgen = prio_iterator(mgen, &pos.chessboard, &[]);
 
-    let first_move = pgen.next();
-    let stand_pat = evaluate(&pos, first_move.is_none());
+    let mut current_move = pgen.next();
+    let stand_pat = evaluate(&pos, current_move.is_none());
 
     // 1. stand-pat test
     if stand_pat >= beta {
@@ -52,20 +52,17 @@ pub fn quiescence(
 
     alpha = alpha.max(stand_pat);
 
-    // 2. generate only tactical moves
-    let captures = pgen.generate_captures();
-
     let mut pv = None;
     let mut max_depth = Depth::ZERO;
-    for mv in first_move.iter().chain(captures.iter()) {
-        let child = -quiescence(pos.make_move(*mv), -beta, -alpha, _search_options, _opts);
+    while let Some(mv) = current_move {
+        let child = -quiescence(pos.make_move(mv), -beta, -alpha, _search_options, _opts);
 
         max_depth = max_depth.max(child.depth);
         nodes += child.nodes_searched;
 
         if child.next_position_value >= beta {
             return SearchResult {
-                pv: vec![MV(*mv, child.next_position_value)],
+                pv: vec![MV(mv, child.next_position_value)],
                 next_position_value: child.next_position_value,
                 nodes_searched: nodes,
                 depth: max_depth + 1,
@@ -75,8 +72,10 @@ pub fn quiescence(
 
         if child.next_position_value >= alpha {
             alpha = child.next_position_value;
-            pv = Some(*mv);
+            pv = Some(mv);
         }
+
+        current_move = pgen.generate_captures();
     }
 
     let pv_move = if let Some(pm) = pv {

@@ -123,17 +123,13 @@ impl OrderedMoves {
         ret
     }
 
-    /// immediately generate all capturing moves.
-    pub fn generate_captures(&mut self) -> Vec<ChessMove> {
-        let mut result = Vec::new();
-        while self.cur_mask < CAPTURE_MASKS {
-            if let Some(mv) = self.next() {
-                result.push(mv);
-            } else {
-                break;
-            }
+    /// generate only capturing moves.
+    pub fn generate_captures(&mut self) -> Option<ChessMove> {
+        if self.cur_mask < CAPTURE_MASKS {
+            self.next()
+        } else {
+            None
         }
-        result
     }
 }
 
