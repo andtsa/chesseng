@@ -12,6 +12,11 @@ use crate::optlog;
 use crate::search::SEARCH_THREADS;
 use crate::transposition_table::DEFAULT_TABLE_SIZE;
 
+/// limit transposition table size to 64gb.
+/// this limit depends on the currenly used implementation for the hash table,
+/// as unfortunately bigger isn't always better.
+const MAX_HASH_SIZE: i64 = 65536;
+
 /// Read the global options for the engine, attempting to go through the
 /// [`RwLock`] of [`OPTS`] to do so
 #[inline(always)]
@@ -217,7 +222,7 @@ impl Opts {
                 name: "hash".to_string(),
                 default: Some((DEFAULT_TABLE_SIZE / (1024 * 1024)).max(1) as i64),
                 min: Some(0),
-                max: Some(4096),
+                max: Some(MAX_HASH_SIZE),
             },
             UciOptionConfig::Spin {
                 name: "threads".to_string(),
@@ -270,7 +275,7 @@ impl Opts {
             // hash input is in megabytes, according to UCI specification
             "hash" => {
                 self.engine_opts.hash_size =
-                    1024 * 1024 * parse_spin("hash", 0, 1024, value)? as usize
+                    1024 * 1024 * parse_spin("hash", 0, MAX_HASH_SIZE, value)? as usize
             }
             "threads" => self.engine_opts.threads = parse_spin("threads", 0, 1024, value)? as usize,
             unknown => bail!("unknown option: {:?}", unknown),
