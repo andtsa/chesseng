@@ -130,6 +130,7 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             UciMessage::Quit => {
                 // clean up and EXIT
                 optlog!(uci;info;"quitting");
+                println!("info string quitting sandy");
                 break;
             }
             UciMessage::Id { .. } => {}
