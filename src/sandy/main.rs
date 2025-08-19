@@ -87,6 +87,7 @@ fn main() -> Result<()> {
         match (cmd_name, parts) {
             ("uci", _) => {
                 info!("Entering UCI mode");
+                println!("info string entering uci mode");
                 uci_loop(engine)?;
                 break;
             }
