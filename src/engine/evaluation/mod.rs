@@ -12,11 +12,11 @@ use chess::EMPTY;
 use crate::evaluation::material::interpolate;
 use crate::evaluation::material::material;
 use crate::evaluation::position::piece_position_benefit_for_side;
+use crate::move_generation::ordering::MoveOrdering;
 use crate::optlog;
 use crate::opts::Opts;
 use crate::opts::setopts;
 use crate::position::Position;
-use crate::search::moveordering::MoveOrdering;
 use crate::setup::values::Value;
 
 /// a bonus given to the side-to-move for having a tempo advantage
@@ -46,17 +46,18 @@ pub fn evaluate(pos: &Position, out_of_moves: bool) -> Value {
     if out_of_moves {
         return if pos.chessboard.checkers().eq(&EMPTY) {
             optlog!(eval;debug;"eval stalemate");
-            // in stalemate, give a slightly negative score to the side that's winning to
+            // in stalemate, give a negative score to the side that's winning to
             // encourage it to keep playing instead
-            value -= material(&pos.chessboard, stm, (0.0, 0.0, 1.0));
-            value += material(&pos.chessboard, stm.not(), (0.0, 0.0, 1.0));
-            // value is small as to not significantly impact the search tree
-            value.0 = value.0.checked_shr(3).unwrap_or_default();
-            value
+            let interp = interpolate(&pos.chessboard);
+            value += material(&pos.chessboard, stm, interp);
+            value -= material(&pos.chessboard, stm.not(), interp);
+            value += piece_position_benefit_for_side(&pos.chessboard, stm, interp);
+            value -= piece_position_benefit_for_side(&pos.chessboard, stm.not(), interp);
+            -2 * (value + TEMPO + TEMPO)
         } else {
             // Side to move is checkmated
-            optlog!(eval;debug;"eval checkmate");
-            -Value::MATE // Large negative value
+            optlog!(eval;trace;"eval checkmate");
+            -Value::MATE
         };
     }
 

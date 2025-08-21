@@ -3,31 +3,15 @@ use std::str::FromStr;
 use chess::Board;
 
 use crate::evaluation;
+use crate::move_generation::ordering::ordered_moves;
 use crate::opts::Opts;
-use crate::search::moveordering::ordered_moves;
 use crate::setup::values::Value;
 
-// #[test]
-// fn startpos_is_tempo() {
-//     let pos = Board::default();
-//     let moves = ordered_moves(&pos);
-//     assert_eq!(
-//         evaluation::evaluate(&pos, &moves, DbOpt { debug: true }),
-//         TEMPO
-//     );
-// }
-
-// #[test]
-// fn mate_is_mate() {
-//     let pos = Board::from_str("8/8/8/8/8/8/8/5KQk b - - 0 1").unwrap();
-//     let moves = ordered_moves(&pos);
-//     assert_eq!(
-//         evaluation::evaluate(&pos, &moves, DbOpt { debug: true }),
-//         -Value::MATE,
-//         "{}",
-//         pos.print()
-//     );
-// }
+#[test]
+fn mate_is_mate() {
+    let pos = Board::from_str("8/8/8/8/8/8/8/5KQk b - - 0 1").unwrap();
+    assert_eq!(evaluation::evaluate(&pos.into(), true), -Value::MATE);
+}
 
 #[test]
 fn white_completely_winning() {

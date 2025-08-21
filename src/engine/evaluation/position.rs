@@ -1,8 +1,10 @@
 //! evaluating the positions of the pieces on the board
 use std::ops::BitAnd;
 
+use chess::BitBoard;
 use chess::Board;
 use chess::Color;
+use chess::Piece;
 use chess::Square;
 
 use crate::evaluation::Interp;
@@ -10,6 +12,11 @@ use crate::evaluation::bitboards::EG_PESTO_TABLE;
 use crate::evaluation::bitboards::MG_PESTO_TABLE;
 use crate::evaluation::bitboards::POS_PIECE_TYPES;
 use crate::setup::values::Value;
+
+/// bitboard of dark squares
+const DARK_SQUARES: BitBoard = BitBoard(0xAA55AA55AA55AA55);
+/// bitboard of light squares
+const LIGHT_SQUARES: BitBoard = BitBoard(0x55AA55AA55AA55AA);
 
 /// returns the benefit this side has from its pieces' positions
 pub fn piece_position_benefit_for_side(pos: &Board, color: Color, interp: Interp) -> Value {
@@ -46,6 +53,23 @@ pub fn sq_pi(sq: Square, color: Color) -> (usize, usize) {
         7 - rank
     };
     (rank, file)
+}
+
+/// check how much are my bishops blocked by other pieces.
+///
+/// issue: engine sacks bishops to minimise penalty
+#[allow(dead_code)]
+pub fn bishop_penalty(pos: &Board, side: Color) -> Value {
+    let bishop_squares = pos.pieces(Piece::Bishop) & pos.color_combined(side);
+    let mut penalty = Value::ZERO;
+
+    let dark_bishops = bishop_squares.bitand(DARK_SQUARES);
+    let light_bishops = bishop_squares.bitand(LIGHT_SQUARES);
+
+    penalty += Value::from((pos.combined() & DARK_SQUARES).popcnt() * dark_bishops.popcnt());
+    penalty += Value::from((pos.combined() & LIGHT_SQUARES).popcnt() * light_bishops.popcnt());
+
+    penalty
 }
 
 #[cfg(test)]

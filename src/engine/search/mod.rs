@@ -1,8 +1,7 @@
 //! The search module contains the search logic for the engine.
 mod main_search;
-pub mod moveordering;
-pub mod mv_heuristics;
 pub mod negamax;
+pub mod quiescence;
 
 use std::fmt::Display;
 use std::ops::Neg;
@@ -111,6 +110,9 @@ pub struct SearchOptions {
     /// how many times have we already extended the search? this is necessary to
     /// ensure the recursion terminates, and to prevent stack overflow.
     pub extensions: Depth,
+
+    /// previously played position that would cause draw by threefold repetition
+    pub history: [u64; 7],
 }
 
 /// wrapper around [`SEARCH_UNTIL`]
