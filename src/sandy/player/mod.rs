@@ -34,7 +34,7 @@ pub fn terminal_loop(mut engine: Engine) -> Result<()> {
                     break;
                 }
                 Err(e) => {
-                    error!("Invalid FEN: {}", e);
+                    error!("Invalid FEN: {e}");
                 }
             }
         },
