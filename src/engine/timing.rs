@@ -124,12 +124,11 @@ impl Engine {
         };
 
         // hard cap by absolute remaining time, if present.
-        if let Some(t) = our_time {
-            if let Some(cap) = now.checked_add(t.saturating_sub(SUBMIT_DURATION).max(MIN_THINK)) {
-                if deadline > cap {
-                    deadline = cap;
-                }
-            }
+        if let Some(t) = our_time
+            && let Some(cap) = now.checked_add(t.saturating_sub(SUBMIT_DURATION).max(MIN_THINK))
+            && deadline > cap
+        {
+            deadline = cap;
         }
 
         // if completely unconstrained, choose to ponder or set a generous cap.
@@ -137,10 +136,10 @@ impl Engine {
             deadline = now.checked_add(MAX_THINK).unwrap_or_else(max_instant);
         }
 
-        if let Some(rem) = deadline.checked_duration_since(now) {
-            if let Some(t) = our_time {
-                debug_assert!(rem <= t.saturating_sub(SUBMIT_DURATION).max(MIN_THINK));
-            }
+        if let Some(rem) = deadline.checked_duration_since(now)
+            && let Some(t) = our_time
+        {
+            debug_assert!(rem <= t.saturating_sub(SUBMIT_DURATION).max(MIN_THINK));
         }
 
         self.set_search_until(deadline)

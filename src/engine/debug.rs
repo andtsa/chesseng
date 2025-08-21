@@ -160,7 +160,7 @@ impl From<i64> for DebugLevel {
             3 => Self::info,
             4 => Self::debug,
             5 => Self::trace,
-            _ => panic!("invalid value for DebugLevel: {}", value),
+            _ => panic!("invalid value for DebugLevel: {value}"),
         }
     }
 }

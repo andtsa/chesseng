@@ -108,7 +108,7 @@ fn main() -> Result<()> {
             ("display" | "fen", _) => {
                 info!("(unchecked) fen display");
                 let b = fen_to_str(cmd_body.to_string());
-                info!("{}", b);
+                info!("{b}");
             }
             ("other", _) => {
                 // used for testing/prototyping snippets

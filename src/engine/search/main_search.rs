@@ -194,11 +194,11 @@ impl Engine {
                         root.pv.extend(search_result.pv);
 
                         // UCI guess, not final move but have one ready in case stop is received
-                        if let Some(mv) = best_move {
-                            if let Err(e) = publisher.send(Message::BestGuess(MV(mv, best_value))) {
-                                optlog!(comm;debug;"error sending best guess: {:?}", e);
-                                break;
-                            }
+                        if let Some(mv) = best_move
+                            && let Err(e) = publisher.send(Message::BestGuess(MV(mv, best_value)))
+                        {
+                            optlog!(comm;debug;"error sending best guess: {:?}", e);
+                            break;
                         }
                     }
 
