@@ -102,7 +102,7 @@ impl Engine {
             .map_err(|e| anyhow!("SEARCH_UNTIL [set,read] lock error: {e}"))?
             .is_some_and(|u| u < Instant::now())
         {
-            SEARCHING.store(false, Ordering::Relaxed);
+            self.set_search(true);
         }
         Ok(())
     }

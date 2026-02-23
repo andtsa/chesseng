@@ -103,10 +103,12 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                     engine.board = Default::default();
                 } else if let Some(fen) = fen {
                     engine.board = Position::from(Board::from_str(&fen.0).expect("invalid FEN"));
+                    optlog!(uci;info;"engine board set to {:?}", engine.board);
                 }
 
                 for mv in moves {
                     engine.make_move(mv);
+                    optlog!(uci;info;"move hist {:?}", engine.history);
                 }
 
                 optlog!(uci;info;"fen position: {}", engine.board);

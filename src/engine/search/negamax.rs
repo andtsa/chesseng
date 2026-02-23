@@ -132,6 +132,7 @@ pub fn negamax(
         >= 2
     {
         // threefold repetition
+        println!("info string threefold repetition at #{current_hash}");
         let ev = evaluate(&pos, true);
         return SearchResult {
             pv: vec![],
