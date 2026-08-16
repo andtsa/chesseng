@@ -88,28 +88,34 @@ pub fn negamax(
     to_depth: Depth,
     mut alpha: Value,
     mut beta: Value,
-    mut search_options: SearchOptions,
+    mut search_options: SearchOptions<'_>,
     opts: &EngineOpts,
     table: &ShareImpl,
 ) -> SearchResult {
     optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
 
     let current_hash = pos.chessboard.get_hash();
-    if search_options
-        .history
-        .iter()
-        .filter(|x| **x == current_hash)
-        .count()
-        >= 2
+    // the game is already drawn here, by repetition, by the fifty-move
+    // counter, or because neither side has the material to mate.
+    //
+    // a repetition counts on the *first* repeat rather than on the third
+    // occurrence: the game will be drawn if both sides keep playing this line,
+    // and treating it as a draw here lets the search steer away several plies
+    // earlier than a strict threefold rule would.
+    //
+    // the first two depend on how the position was reached, so `from_draw`
+    // keeps the result out of the transposition table.
+    if search_options.repetition_count(current_hash) >= 1
+        || pos.is_fifty_move_draw()
+        || pos.is_insufficient_material()
     {
-        // threefold repetition
-        let ev = evaluate(&pos, true);
         return SearchResult {
             pv: vec![],
-            next_position_value: ev,
+            next_position_value: Value::DRAW,
             nodes_searched: 1,
             tb_hits: 0,
             depth: ONE_PLY,
+            from_draw: true,
         };
     }
 
@@ -120,28 +126,6 @@ pub fn negamax(
 
     // we are mated!
     let out_of_moves = base_gen.len() == 0;
-
-    optlog!(search;trace;"ng: {pos}, td: {to_depth:?}, a: {alpha:?}, b: {beta:?}");
-
-    let current_hash = pos.chessboard.get_hash();
-    if search_options
-        .history
-        .iter()
-        .filter(|x| **x == current_hash)
-        .count()
-        >= 2
-    {
-        // threefold repetition
-        println!("info string threefold repetition at #{current_hash}");
-        let ev = evaluate(&pos, true);
-        return SearchResult {
-            pv: vec![],
-            next_position_value: ev,
-            nodes_searched: 1,
-            tb_hits: 0,
-            depth: ONE_PLY,
-        };
-    }
 
     /* source: https://en.wikipedia.org/wiki/Negamax */
     let alpha_orig = alpha;
@@ -186,6 +170,7 @@ pub fn negamax(
             nodes_searched: 1,
             tb_hits: 0,
             depth: ONE_PLY,
+            from_draw: false,
         };
     }
 
@@ -203,16 +188,15 @@ pub fn negamax(
         // if theres 3 moves or less, search +1 level deeper
     };
 
-    search_options.history.rotate_left(1);
-    search_options.history[6] = current_hash;
     search_options = SearchOptions {
         extensions: search_options
             .extensions
             .max(search_options.extensions + next_depth + 1 - to_depth),
-        history: search_options.history,
+        ..search_options.descend(current_hash)
     };
 
     let mut best = None;
+    let mut best_from_draw = false;
     let mut pv = vec![];
     let mut total_nodes = 0;
     let mut tb_hits = 0;
@@ -244,6 +228,7 @@ pub fn negamax(
             .is_none_or(|b: &MV| b.1 < deeper.next_position_value)
         {
             best = Some(MV(mv, deeper.next_position_value));
+            best_from_draw = deeper.from_draw;
             // Build the principal variation by prepending the current move
             pv = vec![MV(mv, deeper.next_position_value)];
             pv.extend(deeper.pv);
@@ -270,10 +255,15 @@ pub fn negamax(
         nodes_searched: total_nodes,
         tb_hits,
         depth: max_depth + ONE_PLY,
+        from_draw: best_from_draw,
     };
 
     /* from https://en.wikipedia.org/wiki/Negamax */
-    if opts.use_tt {
+    // an entry without a move is useless for move ordering, and packing one
+    // would index into an empty pv. a value that came from a repetition or the
+    // fifty-move counter is only true along the path that reached it, so it is
+    // not shareable either.
+    if opts.use_tt && !search_result.pv.is_empty() && !search_result.from_draw {
         let bound = if search_result.next_position_value <= alpha_orig {
             EvalBound::UpperBound
         } else if search_result.next_position_value >= beta {

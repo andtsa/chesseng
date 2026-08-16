@@ -1,4 +1,4 @@
-//! test if the engine will correctly find checkmate
+//! test if the engine will correctly avoid draw by repetition
 use std::io::BufRead;
 use std::io::Write;
 use std::path::PathBuf;
@@ -11,40 +11,58 @@ use colored::Colorize;
 
 /// how long to let the test run for before killing it, in ms
 pub const TEST_DURATION: u64 = 10_000;
-/// slack around the test duration
-pub const STRICTNESS_THRESHOLD: u64 = 1_000;
+/// how long the engine is given to think, in ms
+pub const MOVE_TIME: u64 = 3_000;
 
-/// make sure that the engine will find the checkmate from these positions.
+/// the engine is a queen up and has already shuffled back to the starting
+/// position once. repeating the shuffle a third time is a draw, so any move
+/// that walks back into the repetition must be rejected in favour of the win.
 #[test]
-fn main() {
-    let startpos = "1r2k3/8/K3p3/4p3/4q3/8/5bpr/6q1 b - - 0 44";
-    let valid_best_moves = ["b8a8", "e4a4", "e4a8", "g1a1"];
-    test_mating(startpos, &valid_best_moves);
+fn avoids_repetition() {
+    // white: Kh1 + Qa1, black: Ke8. white to move, black not in check.
+    let winning = "4k3/8/8/8/8/8/8/Q6K w - - 0 1";
+    // a1/a2 d8/e8 shuffle, returning to the position above a second time.
+    let shuffle = "a1a2 e8d8 a2a1 d8e8";
+    // playing this now would repeat a position for the third time
+    let repeating_move = "a1a2";
 
-    let mate_in_2 = "8/1k6/8/8/7n/4Nn2/8/1rq2R1K b - - 0 1";
-    let valid_best_moves = ["c1f1"];
-    test_mating(mate_in_2, &valid_best_moves);
+    let (best_move, last_score) = run_engine(&format!("position fen {winning} moves {shuffle}"));
 
-    let castling_mate_in_1 = "rn3r2/pbppq1p1/1p2pN2/8/6NP/6P1/PPPPBP1R/R3K1k1 w Q - 0 1";
-    let valid_best_moves = ["e1c1"];
-    test_mating(castling_mate_in_1, &valid_best_moves);
+    assert_ne!(
+        best_move, repeating_move,
+        "engine walked into the repetition instead of playing for the win",
+    );
+
+    // the draw score must not be propagating up as the score of the whole
+    // search: a queen up, this should be a mate score or a large advantage.
+    let winning_score = last_score.starts_with("mate ")
+        || last_score
+            .strip_prefix("cp ")
+            .and_then(|cp| cp.parse::<i32>().ok())
+            .is_some_and(|cp| cp > 200);
+    assert!(
+        winning_score,
+        "expected a winning score, got `{last_score}` (best move {best_move})",
+    );
 }
 
-/// Test whether the engine will find one of the valid mating moves
-fn test_mating(startpos: &str, valid_mates: &[&str]) {
+/// drive the engine over UCI with `position_command`, and return the move it
+/// picks along with the score of the last `info` line it sent.
+fn run_engine(position_command: &str) -> (String, String) {
     let exec = PathBuf::from(env!("CARGO_BIN_EXE_chesseng"));
 
     let mut cmd = Command::new(exec);
 
-    let start_command = format!("position fen {startpos}");
+    let go_command = format!("go movetime {MOVE_TIME}");
 
     let sequence = [
         "uci",
         "setoption name use_tt value on",
         "debug off",
         "isready",
-        &start_command,
-        "go movetime 5000",
+        "ucinewgame",
+        position_command,
+        &go_command,
     ];
 
     cmd.stdin(Stdio::piped());
@@ -66,9 +84,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
     }
 
     thread::spawn(move || {
-        thread::sleep(std::time::Duration::from_millis(
-            TEST_DURATION + STRICTNESS_THRESHOLD,
-        ));
+        thread::sleep(std::time::Duration::from_millis(TEST_DURATION));
         if let Err(e) = writer.write_all(b"quit\n") {
             eprintln!("killer encountered error: {e}");
         }
@@ -79,6 +95,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
 
     let start = Instant::now();
     let mut best_move = String::new();
+    let mut last_score = String::new();
     loop {
         let mut line = String::new();
         if reader.read_line(&mut line).unwrap() == 0 {
@@ -92,6 +109,9 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
             println!("Best move: {best_move}");
             break;
         } else if parts.len() > 1 && parts[0] == "info" {
+            if let Some(at) = parts.iter().position(|p| *p == "score") {
+                last_score = parts[at + 1..at + 3].join(" ");
+            }
             println!(
                 "{}",
                 format!(
@@ -107,11 +127,7 @@ fn test_mating(startpos: &str, valid_mates: &[&str]) {
         }
     }
 
-    // we assert that the engine takes the mate-in-one
-    assert!(
-        valid_mates.iter().any(|x| *x == best_move),
-        "did not find any of the mates [{valid_mates:?}], instead picked {best_move}",
-    );
-
     child.kill().unwrap();
+
+    (best_move, last_score)
 }

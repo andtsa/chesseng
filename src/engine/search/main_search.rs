@@ -14,12 +14,12 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 
 use crate::Engine;
-use crate::evaluation::evaluate;
 use crate::move_generation::prio_iterator;
 use crate::optlog;
 use crate::search::MV;
 use crate::search::Message;
 use crate::search::RootNode;
+use crate::search::SEARCH_PATH_LEN;
 use crate::search::SEARCH_THREADS;
 use crate::search::SearchOptions;
 use crate::search::SearchResult;
@@ -55,12 +55,13 @@ impl Engine {
 
         let tt = self.table.get();
 
-        let engine_history = self
-            .history
-            .make_contiguous()
-            .iter_mut()
-            .map(|p| p.chessboard.get_hash())
-            .collect::<Vec<_>>();
+        // the position we're searching from must be part of the history, or a
+        // line that returns to it wouldn't be recognised as a repetition.
+        let mut engine_history = self.history.clone();
+        let root_hash = self.board.chessboard.get_hash();
+        if engine_history.last() != Some(&root_hash) {
+            engine_history.push(root_hash);
+        }
 
         // copy the currently set options to the search thread.
         // this means options may not change in the duration of a search.
@@ -84,18 +85,11 @@ impl Engine {
 
             let initial_options = SearchOptions {
                 extensions: Depth::ZERO,
-                history: [
-                    *engine_history.first().unwrap_or(&0),
-                    *engine_history.get(1).unwrap_or(&0),
-                    *engine_history.get(2).unwrap_or(&0),
-                    *engine_history.get(3).unwrap_or(&0),
-                    *engine_history.get(4).unwrap_or(&0),
-                    *engine_history.get(5).unwrap_or(&0),
-                    *engine_history.get(6).unwrap_or(&0),
-                ],
+                game_history: &engine_history,
+                path: [0; SEARCH_PATH_LEN],
             };
 
-            optlog!(search;warn;"history:{:?}", initial_options.history);
+            optlog!(search;debug;"history:{:?}", initial_options.game_history);
 
             // iterative deepening loop
             while !exit_condition() && target_depth < search_to() {
@@ -132,34 +126,25 @@ impl Engine {
 
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
+                // [`negamax`] checks for repetition at the top of every node,
+                // including this one, so the root needs no special case.
                 let search_fn = |mv: &ChessMove| {
-                    let next_position = root.board.make_move(*mv);
-                    if next_position.causes_threefold(&engine_history) {
-                        SearchResult {
-                            pv: vec![],
-                            next_position_value: -evaluate(&next_position, true),
-                            nodes_searched: 1,
-                            tb_hits: 0,
-                            depth: ONE_PLY,
-                        }
-                    } else {
-                        let partial = -negamax(
-                            next_position,
-                            target_depth - 1,
-                            Value(par_alpha.load(Ordering::Relaxed)),
-                            Value::MAX,
-                            initial_options,
-                            &search_options,
-                            &tt,
-                        );
-                        par_alpha.store(
-                            par_alpha
-                                .load(Ordering::Acquire)
-                                .max(partial.next_position_value.0),
-                            Ordering::Release,
-                        );
-                        partial
-                    }
+                    let partial = -negamax(
+                        root.board.make_move(*mv),
+                        target_depth - 1,
+                        Value(par_alpha.load(Ordering::Relaxed)),
+                        Value::MAX,
+                        initial_options,
+                        &search_options,
+                        &tt,
+                    );
+                    par_alpha.store(
+                        par_alpha
+                            .load(Ordering::Acquire)
+                            .max(partial.next_position_value.0),
+                        Ordering::Release,
+                    );
+                    partial
                 };
 
                 // if we want the search to be single-threaded, we use the current thread and a

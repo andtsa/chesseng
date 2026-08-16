@@ -16,7 +16,6 @@ pub mod transposition_table;
 pub mod uci;
 pub mod util;
 
-use std::collections::VecDeque;
 use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
@@ -32,6 +31,7 @@ use log::trace;
 use opts::opts;
 
 use crate::position::Position;
+use crate::position::is_irreversible;
 use crate::search::Message;
 use crate::search::SEARCH_TO;
 use crate::search::SEARCH_UNTIL;
@@ -48,8 +48,9 @@ pub struct Engine {
     pub board: Position,
     /// the transposition table
     pub table: TT,
-    /// recently played positions. used to detect 3-fold repetition.
-    pub history: VecDeque<Position>,
+    /// hashes of the positions played since the last irreversible move,
+    /// oldest first. used to detect repetition.
+    pub history: Vec<u64>,
     /// this instance's options
     pub eng_opts: EngineOpts,
 }
@@ -62,22 +63,36 @@ impl Engine {
         Ok(Self {
             board: Default::default(),
             table: TT::new(),
-            history: VecDeque::new(),
+            history: Vec::new(),
             eng_opts: opts()?.engine_opts,
         })
     }
 
     /// register a new move that has been played in the game.
     pub fn make_move(&mut self, mv: ChessMove) {
+        let previous = self.board.chessboard;
         self.board = self.board.make_move(mv);
+
+        // positions from before an irreversible move can never occur again, so
+        // they are dropped. this keeps the history short enough that scanning
+        // it at every search node is free.
+        if is_irreversible(&previous, &self.board.chessboard, mv) {
+            self.history.clear();
+        }
+
         self.log_position(self.board.clone());
     }
 
-    /// add a new position to the engine history, preserving only enough
-    /// positions to detect threefold repetition.
+    /// add a new position to the engine history.
     pub fn log_position(&mut self, pos: Position) {
-        self.history.push_front(pos);
-        self.history.truncate(7);
+        self.history.push(pos.chessboard.get_hash());
+    }
+
+    /// forget the game history and start it again from the current board.
+    /// used whenever a new position is set over UCI.
+    pub fn reset_history(&mut self) {
+        self.history.clear();
+        self.log_position(self.board.clone());
     }
 
     /// set the global [`SEARCHING`]
@@ -115,6 +130,17 @@ impl Engine {
             .write()
             .map_err(|e| anyhow!("table lock error: {e}"))?
             .resize(size))
+    }
+
+    /// forget every transposition table entry, so that a new game doesn't
+    /// inherit the previous one's results.
+    pub fn clear_table(&mut self) -> Result<()> {
+        self.table
+            .get()
+            .write()
+            .map_err(|e| anyhow!("table lock error: {e}"))?
+            .clear();
+        Ok(())
     }
 
     /// # begin setting up the engine
