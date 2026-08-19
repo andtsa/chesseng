@@ -62,7 +62,11 @@ pub fn ng_test(
 /// same as [`negamax`], but with a fixed signature to be used across benchmarks
 ///
 /// unlike [`ng_test`], this function does not and should not do any extra work
-/// or allocations, in order to preserve benchmark accuracy.
+/// or allocations, in order to preserve benchmark accuracy. the one exception
+/// is [`SEARCHING`], which has to be set for the search to run at all:
+/// [`negamax`] bails out of every node while it is false, so without this a
+/// benchmark measures a handful of nodes instead of a search. it is
+/// deliberately not restored afterwards, since every caller wants it set.
 pub fn ng_bench(
     position: Position,
     to_depth: Depth,
@@ -71,6 +75,7 @@ pub fn ng_bench(
     opt: Opts,
     tt: &TT,
 ) -> Result<SearchResult> {
+    SEARCHING.store(true, Ordering::Relaxed);
     Ok(negamax(
         position,
         to_depth,
