@@ -186,6 +186,10 @@ impl TEntry for TableEntry {
             nodes_searched: 1,
             tb_hits: 1,
             depth: ONE_PLY,
+            // values read back out of the table are never path dependent:
+            // draw-derived results are not stored in the first place.
+            from_draw: false,
+            aborted: false,
         }
     }
 

@@ -5,6 +5,8 @@ use std::time::Duration;
 use std::time::Instant;
 
 use anyhow::Result;
+use chess::ChessMove;
+use chess::MoveGen;
 use lockfree::channel::RecvErr;
 
 use crate::Engine;
@@ -19,7 +21,21 @@ pub const UCI_LISTENING_FREQUENCY: usize = 10;
 impl Engine {
     /// Start the engine!!
     pub fn uci_go(&mut self) -> Result<()> {
-        let mut listener = self.begin_search()?;
+        // whatever happens, a `go` has to answer with exactly one bestmove, or
+        // the GUI might wait forever. a legal move from the current position is kept
+        // aside so there is always something to send.
+        let fallback = MoveGen::new_legal(&self.board.chessboard).next();
+
+        let mut listener = match self.begin_search() {
+            Ok(l) => l,
+            Err(e) => {
+                // the search never started, usually because the time budget was
+                // already spent by the time we got here.
+                optlog!(comm;warn;"search did not start: {e}");
+                send_bestmove(fallback, None);
+                return Ok(());
+            }
+        };
 
         optlog!(comm;debug;"creating listener thread for {:?}", listener);
 
@@ -93,16 +109,27 @@ impl Engine {
                     break;
                 }
             }
-            if let Some(mv) = &best {
-                print!("bestmove {}", mv.0);
-            }
-            if let Some(mv) = &ponder {
-                print!(" ponder {}", mv.0);
-            }
-            println!();
+            // a ponder move only makes sense next to a real search result
+            let pondered = best.as_ref().and(ponder.as_ref()).map(|mv| mv.0);
+            send_bestmove(best.as_ref().map(|mv| mv.0).or(fallback), pondered);
             optlog!(comm;info;"best move {} pondered {} in {}ms", best.unwrap_or_default(), ponder.unwrap_or_default(), start.elapsed().as_millis());
         });
 
         Ok(())
+    }
+}
+
+/// `mv` is [`None`] only when the position has no legal moves at all,
+/// in which case the protocol's null move says so explicitly.
+fn send_bestmove(mv: Option<ChessMove>, ponder: Option<ChessMove>) {
+    match mv {
+        Some(mv) => {
+            print!("bestmove {mv}");
+            if let Some(ponder) = ponder {
+                print!(" ponder {ponder}");
+            }
+            println!();
+        }
+        None => println!("bestmove 0000"),
     }
 }

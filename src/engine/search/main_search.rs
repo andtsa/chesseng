@@ -14,12 +14,12 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 
 use crate::Engine;
-use crate::evaluation::evaluate;
 use crate::move_generation::prio_iterator;
 use crate::optlog;
 use crate::search::MV;
 use crate::search::Message;
 use crate::search::RootNode;
+use crate::search::SEARCH_PATH_LEN;
 use crate::search::SEARCH_THREADS;
 use crate::search::SearchOptions;
 use crate::search::SearchResult;
@@ -49,18 +49,17 @@ impl Engine {
         let mut root = RootNode {
             board: self.board.clone(),
             pv: Vec::new(),
-            eval: Value::MIN,
-            previous_eval: Value::MIN,
         };
 
         let tt = self.table.get();
 
-        let engine_history = self
-            .history
-            .make_contiguous()
-            .iter_mut()
-            .map(|p| p.chessboard.get_hash())
-            .collect::<Vec<_>>();
+        // the position we're searching from must be part of the history, or a
+        // line that returns to it wouldn't be recognised as a repetition.
+        let mut engine_history = self.history.clone();
+        let root_hash = self.board.chessboard.get_hash();
+        if engine_history.last() != Some(&root_hash) {
+            engine_history.push(root_hash);
+        }
 
         // copy the currently set options to the search thread.
         // this means options may not change in the duration of a search.
@@ -74,7 +73,6 @@ impl Engine {
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
             let mut max_depth = Depth::ZERO;
-            let mut min_depth = Depth::MAX;
 
             // for now I'm using tablebase_hits to refer to transposition table hits,
             // because it is displayed more prominently on cutechess UI, and I
@@ -84,18 +82,11 @@ impl Engine {
 
             let initial_options = SearchOptions {
                 extensions: Depth::ZERO,
-                history: [
-                    *engine_history.first().unwrap_or(&0),
-                    *engine_history.get(1).unwrap_or(&0),
-                    *engine_history.get(2).unwrap_or(&0),
-                    *engine_history.get(3).unwrap_or(&0),
-                    *engine_history.get(4).unwrap_or(&0),
-                    *engine_history.get(5).unwrap_or(&0),
-                    *engine_history.get(6).unwrap_or(&0),
-                ],
+                game_history: &engine_history,
+                path: [0; SEARCH_PATH_LEN],
             };
 
-            optlog!(search;warn;"history:{:?}", initial_options.history);
+            optlog!(search;debug;"history:{:?}", initial_options.game_history);
 
             // iterative deepening loop
             while !exit_condition() && target_depth < search_to() {
@@ -132,34 +123,26 @@ impl Engine {
 
                 // call the [`negamax`] search, update the alpha value and return the
                 // [`SearchResult`]
+                // [`negamax`] checks for repetition at the top of every node,
+                // including this one, so the root needs no special case.
                 let search_fn = |mv: &ChessMove| {
-                    let next_position = root.board.make_move(*mv);
-                    if next_position.causes_threefold(&engine_history) {
-                        SearchResult {
-                            pv: vec![],
-                            next_position_value: -evaluate(&next_position, true),
-                            nodes_searched: 1,
-                            tb_hits: 0,
-                            depth: ONE_PLY,
-                        }
-                    } else {
-                        let partial = -negamax(
-                            next_position,
-                            target_depth - 1,
-                            Value(par_alpha.load(Ordering::Relaxed)),
-                            Value::MAX,
-                            initial_options,
-                            &search_options,
-                            &tt,
-                        );
-                        par_alpha.store(
-                            par_alpha
-                                .load(Ordering::Acquire)
-                                .max(partial.next_position_value.0),
-                            Ordering::Release,
-                        );
-                        partial
-                    }
+                    let root_alpha = Value(par_alpha.load(Ordering::Relaxed));
+                    let partial = -negamax(
+                        root.board.make_move(*mv),
+                        target_depth - 1,
+                        Value::MIN,
+                        -root_alpha,
+                        initial_options,
+                        &search_options,
+                        &tt,
+                    );
+                    par_alpha.store(
+                        par_alpha
+                            .load(Ordering::Acquire)
+                            .max(partial.next_position_value.0),
+                        Ordering::Release,
+                    );
+                    partial
                 };
 
                 // if we want the search to be single-threaded, we use the current thread and a
@@ -192,7 +175,6 @@ impl Engine {
                     tb_hits += search_result.tb_hits;
 
                     max_depth = max_depth.max(search_result.depth);
-                    min_depth = min_depth.min(search_result.depth);
 
                     // we found a better match, update:
                     // * best available value for a next position
@@ -201,7 +183,9 @@ impl Engine {
                     // * alpha value
                     // + check if we should stop searching
                     // + send info to the UCI thread
-                    if search_result.next_position_value > best_value {
+                    // an aborted search never finished this move, so its value
+                    // is not a real score and must not decide the best move
+                    if !search_result.aborted && search_result.next_position_value > best_value {
                         best_value = search_result.next_position_value;
                         best_move = Some(*mv);
 
@@ -223,10 +207,6 @@ impl Engine {
                         return;
                     }
                 } // we have checked all moves for this depth
-
-                // save previous evaluation of the root node
-                root.previous_eval = root.eval;
-                root.eval = best_value;
 
                 {
                     // new depth info

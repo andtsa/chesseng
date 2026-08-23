@@ -46,14 +46,10 @@ pub fn evaluate(pos: &Position, out_of_moves: bool) -> Value {
     if out_of_moves {
         return if pos.chessboard.checkers().eq(&EMPTY) {
             optlog!(eval;debug;"eval stalemate");
-            // in stalemate, give a negative score to the side that's winning to
-            // encourage it to keep playing instead
-            let interp = interpolate(&pos.chessboard);
-            value += material(&pos.chessboard, stm, interp);
-            value -= material(&pos.chessboard, stm.not(), interp);
-            value += piece_position_benefit_for_side(&pos.chessboard, stm, interp);
-            value -= piece_position_benefit_for_side(&pos.chessboard, stm.not(), interp);
-            -2 * (value + TEMPO + TEMPO)
+            // a stalemate is a draw, and is scored as one. the winning side
+            // still avoids it without any extra nudging, because every line
+            // that isn't stalemate scores above zero for it.
+            Value::DRAW
         } else {
             // Side to move is checkmated
             optlog!(eval;trace;"eval checkmate");

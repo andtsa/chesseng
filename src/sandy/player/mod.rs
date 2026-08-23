@@ -11,6 +11,7 @@ use chess::Color;
 use log::error;
 use log::info;
 use sandy_engine::Engine;
+use sandy_engine::position::Position;
 use sandy_engine::setup::depth::Depth;
 use sandy_engine::util::Print;
 
@@ -25,12 +26,16 @@ pub fn terminal_loop(mut engine: Engine) -> Result<()> {
     .raw_prompt()?
     .index
     {
-        0 => engine.board = Default::default(),
+        0 => {
+            engine.board = Default::default();
+            engine.reset_history();
+        }
         1 => loop {
             let fen = inquire::Text::new("Enter FEN:").prompt()?;
             match Board::from_str(&fen) {
                 Ok(b) => {
-                    engine.board.chessboard = b;
+                    engine.board = Position::from(b);
+                    engine.reset_history();
                     break;
                 }
                 Err(e) => {

@@ -4,17 +4,24 @@ use std::time::Duration;
 
 use chess::Board;
 use chess::BoardStatus;
+use chess::ChessMove;
 use chess::Color;
 use chess::MoveGen;
 
 use crate::Engine;
 use crate::move_generation::prio_iterator;
+use crate::position::FIFTY_MOVE_LIMIT;
 use crate::position::Position;
+use crate::position::is_irreversible;
+use crate::search::SEARCH_PATH_LEN;
 use crate::search::SEARCHING;
+use crate::search::SearchOptions;
 use crate::search::negamax::Opts;
+use crate::search::negamax::negamax;
 use crate::search::negamax::ng_test;
 use crate::setup::depth::Depth;
 use crate::setup::values::Value;
+use crate::transposition_table::TT;
 use crate::util::Print;
 use crate::util::short_benches;
 
@@ -242,4 +249,211 @@ fn checkmate_the_author() {
         "depth=2 move={mv} pos={}",
         pos.print()
     );
+}
+
+/// the positions actually played in the game must stay visible however deep
+/// the search goes. before, game history and search path shared one small
+/// array, so the root position was evicted after a few plies and a line
+/// returning to it could never be recognised.
+#[test]
+fn game_history_survives_descent() {
+    let root_hash = 0xdead_beef_u64;
+    let history = [root_hash];
+    let mut options = SearchOptions {
+        extensions: Depth::ZERO,
+        game_history: &history,
+        path: [0; SEARCH_PATH_LEN],
+    };
+
+    assert_eq!(options.repetition_count(root_hash), 1);
+
+    for ply in 1..(SEARCH_PATH_LEN as u64 * 4) {
+        options = options.descend(ply);
+        assert_eq!(
+            options.repetition_count(root_hash),
+            1,
+            "root position was forgotten after {ply} plies",
+        );
+    }
+
+    // the search path itself is remembered too, for the most recent plies
+    assert_eq!(options.repetition_count(SEARCH_PATH_LEN as u64 * 4 - 1), 1);
+}
+
+/// a repeated position is scored as a draw, not as a win for whoever is ahead.
+#[test]
+fn repetition_scores_as_draw() {
+    // white is a queen up, but this position has already been played
+    let board = Board::from_str("4k3/8/8/8/8/8/8/Q6K w - - 0 1").unwrap();
+    let history = [board.get_hash()];
+
+    SEARCHING.store(true, Ordering::Relaxed);
+    let tt = TT::new();
+    let result = negamax(
+        Position::from(board),
+        Depth(6),
+        Value::MIN,
+        Value::MAX,
+        SearchOptions {
+            extensions: Depth::ZERO,
+            game_history: &history,
+            path: [0; SEARCH_PATH_LEN],
+        },
+        &Opts::new().engine_opts,
+        &tt.get(),
+    );
+
+    assert_eq!(
+        result.next_position_value,
+        Value::DRAW,
+        "a repetition should be a draw, not {}",
+        result.next_position_value
+    );
+}
+
+/// the fifty-move counter is a draw once it reaches its limit, and any capture
+/// or pawn move restarts it.
+#[test]
+fn fifty_move_rule_is_a_draw() {
+    // white is a rook up, but has shuffled for fifty moves
+    let board = Board::from_str("4k3/8/8/8/8/8/8/R3K3 w - - 0 1").unwrap();
+    let mut pos = Position::from(board);
+    pos.halfmove_clock = FIFTY_MOVE_LIMIT;
+
+    SEARCHING.store(true, Ordering::Relaxed);
+    let tt = TT::new();
+    let result = negamax(
+        pos,
+        Depth(4),
+        Value::MIN,
+        Value::MAX,
+        SearchOptions::default(),
+        &Opts::new().engine_opts,
+        &tt.get(),
+    );
+
+    assert_eq!(
+        result.next_position_value,
+        Value::DRAW,
+        "the fifty-move limit should be a draw, not {}",
+        result.next_position_value
+    );
+}
+
+/// only pawn moves and captures reset the counter; losing castling rights
+/// makes earlier positions unreachable but leaves the clock running.
+#[test]
+fn halfmove_clock_resets_on_pawn_moves_and_captures() {
+    let board = Board::from_str("r3k3/8/8/8/8/8/1P6/R3K3 w Q - 0 1").unwrap();
+    let mut pos = Position::from(board);
+    pos.halfmove_clock = 20;
+
+    // a quiet rook move keeps counting, even though it gives up the castling
+    // rights, so it still has to clear the repetition history
+    let quiet = ChessMove::from_str("a1b1").unwrap();
+    assert_eq!(pos.make_move(quiet).halfmove_clock, 21);
+    assert!(is_irreversible(
+        &pos.chessboard,
+        &pos.make_move(quiet).chessboard,
+        quiet
+    ));
+
+    // a pawn move restarts the count
+    let pawn = ChessMove::from_str("b2b3").unwrap();
+    assert_eq!(pos.make_move(pawn).halfmove_clock, 0);
+
+    // and so does a capture
+    let capture = ChessMove::from_str("a1a8").unwrap();
+    assert!(board.piece_on(capture.get_dest()).is_some());
+    assert_eq!(pos.make_move(capture).halfmove_clock, 0);
+}
+
+/// neither side can mate, so the position is drawn however good the search
+/// thinks the material looks.
+#[test]
+fn insufficient_material_is_a_draw() {
+    for fen in [
+        "4k3/8/8/8/8/8/8/4K3 w - - 0 1",  // bare kings
+        "4k3/8/8/8/8/8/8/3BK3 w - - 0 1", // king and bishop
+        "4k3/8/8/8/8/8/8/3NK3 w - - 0 1", // king and knight
+    ] {
+        let board = Board::from_str(fen).unwrap();
+        assert!(
+            Position::from(board).is_insufficient_material(),
+            "{fen} should be a draw by insufficient material"
+        );
+
+        SEARCHING.store(true, Ordering::Relaxed);
+        let tt = TT::new();
+        let result = negamax(
+            Position::from(board),
+            Depth(3),
+            Value::MIN,
+            Value::MAX,
+            SearchOptions::default(),
+            &Opts::new().engine_opts,
+            &tt.get(),
+        );
+        assert_eq!(result.next_position_value, Value::DRAW, "{fen}");
+    }
+
+    // a single pawn can promote, so it is not insufficient
+    let with_pawn = Board::from_str("4k3/8/8/8/8/8/P7/4K3 w - - 0 1").unwrap();
+    assert!(!Position::from(with_pawn).is_insufficient_material());
+}
+
+/// the root hands each child the negated, swapped window, the same convention
+/// [`negamax`] uses for its own children. passing the root's own window through
+/// unchanged inverts every cutoff below the root, which can lose material:
+/// in the endgame position below it made the engine walk past a free pawn.
+#[test]
+fn root_window_matches_a_full_window_search() {
+    SEARCHING.store(true, Ordering::SeqCst);
+    // no transposition table, so the window is the only thing under test
+    let opts = Opts::new().tt(false);
+
+    for fen in [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 1",
+        "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 11",
+        "4rrk1/pp1n3p/3q2pQ/2p1pb2/2PP4/2P3N1/P2B2PP/4RRK1 b - - 7 19",
+    ] {
+        let board = Board::from_str(fen).unwrap();
+        for d in 2..5u16 {
+            // a full-window search of the root is by definition the true value
+            let tt = TT::new();
+            let reference = negamax(
+                Position::from(board),
+                Depth(d),
+                Value::MIN,
+                Value::MAX,
+                SearchOptions::default(),
+                &opts.engine_opts,
+                &tt.get(),
+            )
+            .next_position_value;
+
+            // now score the root the way the root loop does, one move at a time
+            let mut best = Value::MIN;
+            for mv in MoveGen::new_legal(&board) {
+                let tt = TT::new();
+                let v = -negamax(
+                    Position::from(board).make_move(mv),
+                    Depth(d) - 1,
+                    Value::MIN,
+                    -best,
+                    SearchOptions::default(),
+                    &opts.engine_opts,
+                    &tt.get(),
+                )
+                .next_position_value;
+                best = best.max(v);
+            }
+
+            assert_eq!(
+                best, reference,
+                "root disagreed with a full-window search at depth {d} in {fen}"
+            );
+        }
+    }
 }

@@ -44,10 +44,6 @@ pub struct RootNode {
     pub board: Position,
     /// the principal variation
     pub pv: Vec<MV>,
-    /// the current evaluation of the root node
-    pub eval: Value,
-    /// the previous evaluation of the root node
-    pub previous_eval: Value,
 }
 
 /// The result of a single negamax search call
@@ -63,6 +59,16 @@ pub struct SearchResult {
     pub tb_hits: u32,
     /// actual depth the search reached
     pub depth: Depth,
+    /// did this value come from a draw that depends on how the position was
+    /// reached (a repetition, or the fifty-move counter)? such a value is only
+    /// correct along the path that produced it, so it must never be written to
+    /// the transposition table.
+    pub from_draw: bool,
+    /// was this value produced by a search that was cut off before it finished?
+    /// [`crate::search::negamax::negamax`] abandons every node once
+    /// [`SEARCHING`] clears, and the value it returns then is not a real search
+    /// result, so the root must not choose a move from it.
+    pub aborted: bool,
 }
 
 /// A message that can be sent from the search threads to the main/UCI thread
@@ -106,13 +112,39 @@ pub struct SearchInfo {
 /// information for a search root to pass to its children, in order to inform
 /// dependent heuristics.
 #[derive(Debug, Copy, Clone, Default)]
-pub struct SearchOptions {
+pub struct SearchOptions<'a> {
     /// how many times have we already extended the search? this is necessary to
     /// ensure the recursion terminates, and to prevent stack overflow.
     pub extensions: Depth,
 
-    /// previously played position that would cause draw by threefold repetition
-    pub history: [u64; 7],
+    /// hashes of the positions actually played in the game since the last
+    /// irreversible move, oldest first. constant for the whole search.
+    pub game_history: &'a [u64],
+
+    /// hashes of the positions along the current search path. oldest at index
+    /// 0, newest at index [`SEARCH_PATH_LEN`]` - 1`, zero-padded at the front.
+    pub path: [u64; SEARCH_PATH_LEN],
+}
+
+/// how many plies of the current search path are remembered for repetition
+/// detection. a repetition cycle is 4 plies, so this covers two of them.
+pub const SEARCH_PATH_LEN: usize = 8;
+
+impl SearchOptions<'_> {
+    /// how many times `hash` has already occurred, counting both the moves
+    /// actually played in the game and the current search path.
+    pub fn repetition_count(&self, hash: u64) -> usize {
+        self.game_history.iter().filter(|h| **h == hash).count()
+            + self.path.iter().filter(|h| **h == hash).count()
+    }
+
+    /// descend one ply: record `hash` as the newest position on the search
+    /// path, dropping the oldest one.
+    pub fn descend(mut self, hash: u64) -> Self {
+        self.path.rotate_left(1);
+        self.path[SEARCH_PATH_LEN - 1] = hash;
+        self
+    }
 }
 
 /// wrapper around [`SEARCH_UNTIL`]

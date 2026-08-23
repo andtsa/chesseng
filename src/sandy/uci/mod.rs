@@ -93,6 +93,9 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
             UciMessage::UciNewGame => {
                 // clear any existing game state, such as transposition tables
                 // or search history ...
+                engine.board = Default::default();
+                engine.reset_history();
+                engine.clear_table()?;
             }
             UciMessage::Position {
                 startpos,
@@ -103,10 +106,26 @@ pub fn uci_loop(mut engine: Engine) -> Result<()> {
                     engine.board = Default::default();
                 } else if let Some(fen) = fen {
                     engine.board = Position::from(Board::from_str(&fen.0).expect("invalid FEN"));
+                    // [`chess::Board`] discards the halfmove clock when it
+                    // parses a FEN, so it is read back out of the string here.
+                    // without this, a mid-game FEN would restart the
+                    // fifty-move count from zero.
+                    engine.board.halfmove_clock = fen
+                        .0
+                        .split_whitespace()
+                        .nth(4)
+                        .and_then(|c| c.parse().ok())
+                        .unwrap_or(0);
+                    optlog!(uci;info;"engine board set to {:?}", engine.board);
                 }
+
+                // GUIs resend the whole move list every move, so the history
+                // has to start again from the position given here.
+                engine.reset_history();
 
                 for mv in moves {
                     engine.make_move(mv);
+                    optlog!(uci;info;"move hist {:?}", engine.history);
                 }
 
                 optlog!(uci;info;"fen position: {}", engine.board);
