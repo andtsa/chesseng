@@ -31,7 +31,7 @@ pub fn quiescence(
     pos: Position,
     mut alpha: Value,
     beta: Value,
-    search_options: SearchOptions<'_>,
+    _search_options: SearchOptions<'_>,
     opts: &EngineOpts,
 ) -> SearchResult {
     let mut nodes = 1;
@@ -54,6 +54,7 @@ pub fn quiescence(
             tb_hits: 0,
             depth: Depth::ZERO,
             from_draw: false,
+            aborted: false,
         };
     }
 
@@ -70,7 +71,7 @@ pub fn quiescence(
             break;
         }
 
-        let child = -quiescence(pos.make_move(mv), -beta, -alpha, search_options, opts);
+        let child = -quiescence(pos.make_move(mv), -beta, -alpha, _search_options, opts);
 
         max_depth = max_depth.max(child.depth);
         nodes += child.nodes_searched;
@@ -83,6 +84,7 @@ pub fn quiescence(
                 depth: max_depth + 1,
                 tb_hits: 0,
                 from_draw: child.from_draw,
+                aborted: false,
             };
         }
 
@@ -107,6 +109,7 @@ pub fn quiescence(
         depth: max_depth,
         tb_hits: 0,
         from_draw: false,
+        aborted: false,
     }
 }
 

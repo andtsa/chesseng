@@ -44,10 +44,6 @@ pub struct RootNode {
     pub board: Position,
     /// the principal variation
     pub pv: Vec<MV>,
-    /// the current evaluation of the root node
-    pub eval: Value,
-    /// the previous evaluation of the root node
-    pub previous_eval: Value,
 }
 
 /// The result of a single negamax search call
@@ -68,6 +64,11 @@ pub struct SearchResult {
     /// correct along the path that produced it, so it must never be written to
     /// the transposition table.
     pub from_draw: bool,
+    /// was this value produced by a search that was cut off before it finished?
+    /// [`crate::search::negamax::negamax`] abandons every node once
+    /// [`SEARCHING`] clears, and the value it returns then is not a real search
+    /// result, so the root must not choose a move from it.
+    pub aborted: bool,
 }
 
 /// A message that can be sent from the search threads to the main/UCI thread

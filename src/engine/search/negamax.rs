@@ -121,6 +121,7 @@ pub fn negamax(
             tb_hits: 0,
             depth: ONE_PLY,
             from_draw: true,
+            aborted: false,
         };
     }
 
@@ -176,6 +177,7 @@ pub fn negamax(
             tb_hits: 0,
             depth: ONE_PLY,
             from_draw: false,
+            aborted: false,
         };
     }
 
@@ -223,8 +225,9 @@ pub fn negamax(
 
         if !searching() {
             optlog!(search;trace;"searching() == false, breaking early");
-            deeper.next_position_value = evaluate(&pos, out_of_moves);
+            // this node never finished, so it has no value worth reporting.
             deeper.nodes_searched = total_nodes;
+            deeper.aborted = true;
             return deeper;
         }
 
@@ -261,6 +264,8 @@ pub fn negamax(
         tb_hits,
         depth: max_depth + ONE_PLY,
         from_draw: best_from_draw,
+        // reaching here means the move loop ran to completion
+        aborted: false,
     };
 
     /* from https://en.wikipedia.org/wiki/Negamax */

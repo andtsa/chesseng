@@ -189,6 +189,7 @@ impl TEntry for TableEntry {
             // values read back out of the table are never path dependent:
             // draw-derived results are not stored in the first place.
             from_draw: false,
+            aborted: false,
         }
     }
 

@@ -241,15 +241,18 @@ impl Opts {
             _ => bail!("you need to specify a value (on/off) for {check}"),
         };
         let parse_spin: fn(&str, i64, i64, Option<&str>) -> Result<i64> =
-            |check: &str, low, high, value: Option<&str>| match value
-                .unwrap_or_default()
-                .parse::<i64>()
-                .unwrap()
-            {
-                x if x <= high && x >= low => Ok(x),
-                y if y > high => bail!("value {y} is too high for {check}. max allowed is {high}."),
-                z if z < low => bail!("value {z} is too low for {check}. min allowed is {low}."),
-                _ => unreachable!(),
+            |check: &str, low, high, value: Option<&str>| {
+                let raw = value.unwrap_or_default();
+                let Ok(parsed) = raw.parse::<i64>() else {
+                    bail!("`{raw}` is not a whole number, which {check} needs.");
+                };
+                match parsed {
+                    x if x <= high && x >= low => Ok(x),
+                    y if y > high => {
+                        bail!("value {y} is too high for {check}. max allowed is {high}.")
+                    }
+                    z => bail!("value {z} is too low for {check}. min allowed is {low}."),
+                }
             };
         match name {
             "use_ab" => self.engine_opts.use_ab = parse_check("use_ab", value)?,
@@ -277,7 +280,7 @@ impl Opts {
                 self.engine_opts.hash_size =
                     1024 * 1024 * parse_spin("hash", 0, MAX_HASH_SIZE, value)? as usize
             }
-            "threads" => self.engine_opts.threads = parse_spin("threads", 0, 1024, value)? as usize,
+            "threads" => self.engine_opts.threads = parse_spin("threads", 1, 1024, value)? as usize,
             unknown => bail!("unknown option: {:?}", unknown),
         }
 

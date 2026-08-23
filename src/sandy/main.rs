@@ -90,7 +90,7 @@ fn main() -> Result<()> {
         }
         let mut parts = command.split_ascii_whitespace();
         let cmd_name = parts.next().unwrap();
-        let cmd_body = read_line.trim_start_matches(cmd_name).trim();
+        let cmd_body = read_line.trim_start()[cmd_name.len()..].trim();
         match (cmd_name, parts) {
             ("uci", _) => {
                 info!("Entering UCI mode");
@@ -103,7 +103,7 @@ fn main() -> Result<()> {
                 terminal_loop(engine)?;
                 break;
             }
-            ("quit" | "stop" | "EXIT" | "end", _) => {
+            ("quit" | "stop" | "exit" | "end", _) => {
                 info!("Quitting");
                 break;
             }

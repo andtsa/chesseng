@@ -62,6 +62,9 @@ impl TranspositionTable<u64, TableEntry> for VL {
     }
 
     fn get(&self, hash: u64) -> Option<TableEntry> {
+        if self.size == 0 {
+            return None;
+        }
         let idx = (hash as usize) % self.size;
         let entry = self.table.get(idx);
         if entry.is_some_and(|e| hash.equals(&e.key())) {
@@ -72,6 +75,9 @@ impl TranspositionTable<u64, TableEntry> for VL {
     }
 
     fn insert(&mut self, hash: u64, entry: TableEntry) {
+        if self.size == 0 {
+            return;
+        }
         let idx = (hash as usize) % self.size;
         if !self.table[idx].is_valid_entry() {
             self.occupied += 1;
@@ -150,6 +156,7 @@ mod tests {
             tb_hits: 0,
             depth: ONE_PLY,
             from_draw: false,
+            aborted: false,
         };
         for hash in 1..8u64 {
             table.insert(
@@ -182,6 +189,7 @@ mod tests {
             tb_hits: 0,
             depth: ONE_PLY,
             from_draw: false,
+            aborted: false,
         };
         table.insert(
             3,

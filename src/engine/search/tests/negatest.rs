@@ -401,3 +401,59 @@ fn insufficient_material_is_a_draw() {
     let with_pawn = Board::from_str("4k3/8/8/8/8/8/P7/4K3 w - - 0 1").unwrap();
     assert!(!Position::from(with_pawn).is_insufficient_material());
 }
+
+/// the root hands each child the negated, swapped window, the same convention
+/// [`negamax`] uses for its own children. passing the root's own window through
+/// unchanged inverts every cutoff below the root, which can lose material:
+/// in the endgame position below it made the engine walk past a free pawn.
+#[test]
+fn root_window_matches_a_full_window_search() {
+    SEARCHING.store(true, Ordering::SeqCst);
+    // no transposition table, so the window is the only thing under test
+    let opts = Opts::new().tt(false);
+
+    for fen in [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 1",
+        "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 11",
+        "4rrk1/pp1n3p/3q2pQ/2p1pb2/2PP4/2P3N1/P2B2PP/4RRK1 b - - 7 19",
+    ] {
+        let board = Board::from_str(fen).unwrap();
+        for d in 2..5u16 {
+            // a full-window search of the root is by definition the true value
+            let tt = TT::new();
+            let reference = negamax(
+                Position::from(board),
+                Depth(d),
+                Value::MIN,
+                Value::MAX,
+                SearchOptions::default(),
+                &opts.engine_opts,
+                &tt.get(),
+            )
+            .next_position_value;
+
+            // now score the root the way the root loop does, one move at a time
+            let mut best = Value::MIN;
+            for mv in MoveGen::new_legal(&board) {
+                let tt = TT::new();
+                let v = -negamax(
+                    Position::from(board).make_move(mv),
+                    Depth(d) - 1,
+                    Value::MIN,
+                    -best,
+                    SearchOptions::default(),
+                    &opts.engine_opts,
+                    &tt.get(),
+                )
+                .next_position_value;
+                best = best.max(v);
+            }
+
+            assert_eq!(
+                best, reference,
+                "root disagreed with a full-window search at depth {d} in {fen}"
+            );
+        }
+    }
+}

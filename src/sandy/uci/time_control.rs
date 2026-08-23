@@ -39,9 +39,28 @@ impl TimeControl for Engine {
 }
 
 /// chrono_duration_to_std_time
-fn cdt(d: chrono::Duration) -> std::time::Duration {
-    std::time::Duration::new(
-        d.num_seconds() as u64,
-        d.num_microseconds().unwrap_or(0) as u32,
-    )
+pub(crate) fn cdt(d: chrono::Duration) -> std::time::Duration {
+    // a player may be reported with a negative clock,
+    // which has no std equivalent
+    d.to_std().unwrap_or(std::time::Duration::ZERO)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::cdt;
+
+    #[test]
+    fn matches_chrono() {
+        for ms in [0i64, 1, 50, 500, 999, 1_500, 10_000, 60_000, 300_000] {
+            let d = chrono::Duration::milliseconds(ms);
+            assert_eq!(cdt(d), d.to_std().unwrap(), "{ms}ms converted wrong");
+            assert_eq!(cdt(d).as_millis(), ms as u128, "{ms}ms not reflexive");
+        }
+    }
+
+    #[test]
+    fn negative_clocks_are_no_time_left() {
+        let flagged = chrono::Duration::milliseconds(-500);
+        assert_eq!(cdt(flagged), std::time::Duration::ZERO);
+    }
 }

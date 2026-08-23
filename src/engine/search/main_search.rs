@@ -49,8 +49,6 @@ impl Engine {
         let mut root = RootNode {
             board: self.board.clone(),
             pv: Vec::new(),
-            eval: Value::MIN,
-            previous_eval: Value::MIN,
         };
 
         let tt = self.table.get();
@@ -75,7 +73,6 @@ impl Engine {
             let mut target_depth = Depth(0);
             let mut total_nodes = 0;
             let mut max_depth = Depth::ZERO;
-            let mut min_depth = Depth::MAX;
 
             // for now I'm using tablebase_hits to refer to transposition table hits,
             // because it is displayed more prominently on cutechess UI, and I
@@ -129,11 +126,12 @@ impl Engine {
                 // [`negamax`] checks for repetition at the top of every node,
                 // including this one, so the root needs no special case.
                 let search_fn = |mv: &ChessMove| {
+                    let root_alpha = Value(par_alpha.load(Ordering::Relaxed));
                     let partial = -negamax(
                         root.board.make_move(*mv),
                         target_depth - 1,
-                        Value(par_alpha.load(Ordering::Relaxed)),
-                        Value::MAX,
+                        Value::MIN,
+                        -root_alpha,
                         initial_options,
                         &search_options,
                         &tt,
@@ -177,7 +175,6 @@ impl Engine {
                     tb_hits += search_result.tb_hits;
 
                     max_depth = max_depth.max(search_result.depth);
-                    min_depth = min_depth.min(search_result.depth);
 
                     // we found a better match, update:
                     // * best available value for a next position
@@ -186,7 +183,9 @@ impl Engine {
                     // * alpha value
                     // + check if we should stop searching
                     // + send info to the UCI thread
-                    if search_result.next_position_value > best_value {
+                    // an aborted search never finished this move, so its value
+                    // is not a real score and must not decide the best move
+                    if !search_result.aborted && search_result.next_position_value > best_value {
                         best_value = search_result.next_position_value;
                         best_move = Some(*mv);
 
@@ -208,10 +207,6 @@ impl Engine {
                         return;
                     }
                 } // we have checked all moves for this depth
-
-                // save previous evaluation of the root node
-                root.previous_eval = root.eval;
-                root.eval = best_value;
 
                 {
                     // new depth info

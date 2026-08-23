@@ -24,6 +24,7 @@ use std::time::Instant;
 use anyhow::Result;
 use anyhow::anyhow;
 use chess::ChessMove;
+use chess::MoveGen;
 use engine_opts::EngineOpts;
 use lockfree::channel::RecvErr;
 use log::info;
@@ -117,7 +118,8 @@ impl Engine {
             .map_err(|e| anyhow!("SEARCH_UNTIL [set,read] lock error: {e}"))?
             .is_some_and(|u| u < Instant::now())
         {
-            self.set_search(true);
+            // the deadline is already behind us, so the search must not run.
+            self.set_search(false);
         }
         Ok(())
     }
@@ -166,6 +168,10 @@ impl Engine {
         self.set_search_to(to_depth);
         self.set_search_until(Instant::now() + move_time)?;
 
+        // as in [`Self::uci_go`], keep a legal move aside so that a search which
+        // produces nothing still yields a move to play rather than an error.
+        let fallback = MoveGen::new_legal(&self.board.chessboard).next();
+
         let mut move_listener = self.begin_search()?;
 
         let mut best = None;
@@ -187,10 +193,9 @@ impl Engine {
                     thread::sleep(Duration::from_millis(50));
                 }
                 Err(RecvErr::NoSender) => {
-                    return if let Some(mv) = best {
-                        Ok(mv.0)
-                    } else {
-                        Err(anyhow!("sender dropped before best move found"))
+                    return match best.map(|mv| mv.0).or(fallback) {
+                        Some(mv) => Ok(mv),
+                        None => Err(anyhow!("no legal moves in this position")),
                     };
                 }
             }
